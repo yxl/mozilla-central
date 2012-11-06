@@ -823,7 +823,12 @@ PeerConnectionImpl::CreateOffer(MediaConstraints& constraints)
   cc_media_constraints_t* cc_constraints = nullptr;
   constraints.buildArray(&cc_constraints);
 
+  CSFLogDebug(logTag, "CreateOffer cc_constraints = %p", cc_constraints);
+
   mCall->createOffer(cc_constraints);
+
+  CSFLogDebug(logTag, "CreateOffer success");
+
   return NS_OK;
 }
 

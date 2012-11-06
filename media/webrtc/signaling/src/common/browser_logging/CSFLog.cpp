@@ -25,6 +25,14 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 
   vsnprintf(message, MAX_MESSAGE_LENGTH, format, args);
 
+  // HACK HACK HACK
+  // TEMP send Logging straight out to local file
+  FILE *fp = fopen("csflogoutput.txt", "a");
+  fprintf(fp, "%s", message);
+  fclose(fp);
+  // END HACK
+
+
   if (gLogModuleInfo == NULL)
     gLogModuleInfo = PR_NewLogModule("ikran");
 
