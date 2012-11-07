@@ -28,7 +28,7 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   // HACK HACK HACK
   // TEMP send Logging straight out to local file
   FILE *fp = fopen("csflogoutput.txt", "a");
-  fprintf(fp, "%s", message);
+  fprintf(fp, "%s%s", message, (message[strlen(message) - 1] == '\n') ? "" : "\n");
   fclose(fp);
   // END HACK
 
