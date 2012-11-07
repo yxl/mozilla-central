@@ -780,8 +780,10 @@ cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
         msgq->currentCount++;
         return CPR_MSGQ_POST_SUCCESS;
     } else {
-        CSFLogError(logTag, "Error sending to message queue %d : %d", msgq->queueId, errno);
+        CSFLogError(logTag, "Error sending to message queue %d : %p : %d",
+            msgq->queueId, mbuf.usrPtr, errno);
 
+        /*
         count = 0;
         do {
             CSFLogError(logTag, "Trying again: %d", errno);
@@ -790,6 +792,7 @@ cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
         } while (count < 100 &&
             msgsnd(msgq->queueId, &mbuf,
                 sizeof(struct msgbuffer) - offsetof(struct msgbuffer, msgPtr), IPC_NOWAIT) == -1);
+        */
     }
 
     /*
