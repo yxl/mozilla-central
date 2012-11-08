@@ -778,11 +778,11 @@ cprPostMessage (cpr_msg_queue_t *msgq, void *msg, void **ppUserData)
     		 sizeof(struct msgbuffer) - offsetof(struct msgbuffer, msgPtr),
                IPC_NOWAIT) != -1) {
         msgq->currentCount++;
-        CSFLogDebug(logTag, "Success sending to message queue %d", msgq->queueId);
+        CSFLogDebug(logTag, "Success sending to message queue %d : %p", msgq->queueId, mbuf.msgPtr);
         return CPR_MSGQ_POST_SUCCESS;
     } else {
-        CSFLogError(logTag, "Error sending to message queue %d : %p : %d",
-            msgq->queueId, mbuf.usrPtr, errno);
+        CSFLogError(logTag, "Error sending to message queue %d : %p : %p : %d",
+            msgq->queueId, mbuf.msgPtr, mbuf.usrPtr, errno);
 
         /*
         count = 0;
