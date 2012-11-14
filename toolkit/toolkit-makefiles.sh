@@ -632,6 +632,7 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
     image/decoders/icon/android/Makefile
     netwerk/system/android/Makefile
     widget/android/Makefile
+    toolkit/system/androidproxy/Makefile
   "
   if [ "$MOZ_BUILD_APP" = "mobile/xul" -o "$MOZ_BUILD_APP" = "b2g" ]; then
     add_makefiles "
@@ -1737,3 +1738,11 @@ if [ "$MOZ_SPEEX_RESAMPLER" ]; then
     media/libspeex_resampler/src/Makefile
   "
 fi
+
+if [ "$MOZ_SOUNDTOUCH" ]; then
+  add_makefiles "
+    media/libsoundtouch/Makefile
+    media/libsoundtouch/src/Makefile
+  "
+fi
+

@@ -6,7 +6,6 @@
 #include "nsIInputStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsCharsetAlias.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsStreamUtils.h"
@@ -16,6 +15,10 @@
 #include "nsSAXLocator.h"
 #include "nsSAXXMLReader.h"
 #include "nsCharsetSource.h"
+
+#include "mozilla/dom/EncodingUtils.h"
+
+using mozilla::dom::EncodingUtils;
 
 #define XMLNS_URI "http://www.w3.org/2000/xmlns/"
 
@@ -176,8 +179,8 @@ nsSAXXMLReader::HandleStartDTD(const PRUnichar *aName,
   mPublicId = aPublicId;
   if (mLexicalHandler) {
     return mLexicalHandler->StartDTD(nsDependentString(aName),
-                                     nsDependentString(aSystemId),
-                                     nsDependentString(aPublicId));
+                                     nsDependentString(aPublicId),
+                                     nsDependentString(aSystemId));
   }
 
   return NS_OK;
@@ -633,7 +636,7 @@ nsSAXXMLReader::TryChannelCharset(nsIChannel *aChannel,
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
       nsAutoCString preferred;
-      if (NS_FAILED(nsCharsetAlias::GetPreferred(charsetVal, preferred)))
+      if (!EncodingUtils::FindEncodingForLabel(charsetVal, preferred))
         return false;
 
       aCharset = preferred;

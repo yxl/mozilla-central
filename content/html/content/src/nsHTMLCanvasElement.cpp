@@ -14,8 +14,7 @@
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
 
-#include "nsICanvasRenderingContextInternal.h"
-#include "nsIDOMCanvasRenderingContext2D.h"
+#include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
@@ -42,6 +41,9 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 namespace {
+
+typedef mozilla::dom::HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
+HTMLImageOrCanvasOrVideoElement;
 
 class ToBlobRunnable : public nsRunnable
 {
@@ -311,7 +313,6 @@ nsHTMLCanvasElement::GetOriginalCanvas()
   return mOriginalCanvas ? mOriginalCanvas.get() : this;
 }
 
-
 nsresult
 nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest)
 {
@@ -322,12 +323,17 @@ nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest)
     nsHTMLCanvasElement* self = const_cast<nsHTMLCanvasElement*>(this);
     dest->mOriginalCanvas = self;
 
+    HTMLImageOrCanvasOrVideoElement element;
+    element.SetAsHTMLCanvasElement() = this;
     nsCOMPtr<nsISupports> cxt;
     dest->GetContext(NS_LITERAL_STRING("2d"), JSVAL_VOID, getter_AddRefs(cxt));
-    nsCOMPtr<nsIDOMCanvasRenderingContext2D> context2d = do_QueryInterface(cxt);
+    nsRefPtr<CanvasRenderingContext2D> context2d =
+      static_cast<CanvasRenderingContext2D*>(cxt.get());
     if (context2d && !self->mPrintCallback) {
-      context2d->DrawImage(self,
-                           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
+      ErrorResult err;
+      context2d->DrawImage(element,
+                           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, err);
+      rv = err.ErrorCode();
     }
   }
   return rv;
@@ -622,6 +628,11 @@ nsHTMLCanvasElement::ToBlob(nsIFileCallback* aCallback,
   nsRefPtr<nsDOMMemoryFile> blob =
     new nsDOMMemoryFile(imgData, imgSize, type);
 
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  if (cx) {
+    JS_updateMallocCounter(cx, imgSize);
+  }
+
   nsRefPtr<ToBlobRunnable> runnable = new ToBlobRunnable(aCallback, blob);
   return NS_DispatchToCurrentThread(runnable);
 }
@@ -667,6 +678,11 @@ nsHTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
   rv = NS_ReadInputStreamToBuffer(stream, &imgData, (uint32_t)imgSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  if (cx) {
+    JS_updateMallocCounter(cx, imgSize);
+  }
+
   // The DOMFile takes ownership of the buffer
   nsRefPtr<nsDOMMemoryFile> file =
     new nsDOMMemoryFile(imgData, (uint32_t)imgSize, aName, type);
@@ -680,6 +696,16 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
                                       nsICanvasRenderingContextInternal **aContext)
 {
   NS_ENSURE_ARG(aContext);
+
+  if (aContextId.EqualsLiteral("2d")) {
+    Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
+    nsRefPtr<CanvasRenderingContext2D> ctx =
+      new CanvasRenderingContext2D();
+
+    ctx->SetCanvasElement(this);
+    ctx.forget(aContext);
+    return NS_OK;
+  }
 
   NS_ConvertUTF16toUTF8 ctxId(aContextId);
 

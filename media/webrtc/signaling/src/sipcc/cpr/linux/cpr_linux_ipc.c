@@ -41,7 +41,7 @@
 #include "plat_api.h"
 #include "CSFLog.h"
 
-const char *logTag = "cpr_linux_ipc";
+static const char *logTag = "cpr_linux_ipc";
 
 #define STATIC static
 

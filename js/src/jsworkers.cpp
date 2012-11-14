@@ -8,9 +8,12 @@
 
 #if JS_ION
 # include "ion/IonBuilder.h"
+# include "ion/ExecutionModeInlines.h"
 #endif
 
 using namespace js;
+
+using mozilla::DebugOnly;
 
 #ifdef JS_PARALLEL_COMPILATION
 
@@ -88,7 +91,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
     /* Cancel any pending entries for which processing hasn't started. */
     for (size_t i = 0; i < state.ionWorklist.length(); i++) {
         ion::IonBuilder *builder = state.ionWorklist[i];
-        if (CompiledScriptMatches(compartment, script, builder->script())) {
+        if (CompiledScriptMatches(compartment, script, builder->script().unsafeGet())) {
             FinishOffThreadIonCompile(builder);
             state.ionWorklist[i--] = state.ionWorklist.back();
             state.ionWorklist.popBack();
@@ -99,7 +102,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
     for (size_t i = 0; i < state.numThreads; i++) {
         const WorkerThread &helper = state.threads[i];
         while (helper.ionBuilder &&
-               CompiledScriptMatches(compartment, script, helper.ionBuilder->script()))
+               CompiledScriptMatches(compartment, script, helper.ionBuilder->script().unsafeGet()))
         {
             helper.ionBuilder->cancel();
             state.wait(WorkerThreadState::MAIN);
@@ -111,7 +114,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
     /* Cancel code generation for any completed entries. */
     for (size_t i = 0; i < compilations.length(); i++) {
         ion::IonBuilder *builder = compilations[i];
-        if (CompiledScriptMatches(compartment, script, builder->script())) {
+        if (CompiledScriptMatches(compartment, script, builder->script().unsafeGet())) {
             ion::FinishOffThreadBuilder(builder);
             compilations[i--] = compilations.back();
             compilations.popBack();
@@ -292,7 +295,8 @@ WorkerThread::threadLoop()
 
         ionBuilder = state.ionWorklist.popCopy();
 
-        JS_ASSERT(ionBuilder->script()->ion == ION_COMPILING_SCRIPT);
+        ion::ExecutionMode executionMode = ionBuilder->info().executionMode();
+        JS_ASSERT(GetIonScript(ionBuilder->script().unsafeGet(), executionMode) == ION_COMPILING_SCRIPT);
 
         state.unlock();
 
