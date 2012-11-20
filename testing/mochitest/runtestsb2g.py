@@ -212,7 +212,7 @@ class B2GMochitest(Mochitest):
         self.originalProfilesIni = None
 
     def copyRemoteFile(self, src, dest):
-        if self._dm.useDDCopy:
+        if self._dm._useDDCopy:
             self._dm._checkCmdAs(['shell', 'dd', 'if=%s' % src,'of=%s' % dest])
         else:
             self._dm._checkCmdAs(['shell', 'cp', src, dest])
@@ -482,7 +482,8 @@ def main():
         host,port = options.marionette.split(':')
         kwargs['host'] = host
         kwargs['port'] = int(port)
-    marionette = Marionette(**kwargs)
+
+    marionette = Marionette.getMarionetteOrExit(**kwargs)
 
     auto.marionette = marionette
 

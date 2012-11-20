@@ -1078,11 +1078,6 @@ if [ "$ENABLE_TESTS" ]; then
       toolkit/components/url-classifier/tests/mochitest/Makefile
     "
   fi
-  if [ "$MOZ_XTF" ]; then
-    add_makefiles "
-      content/xtf/test/Makefile
-    "
-  fi
   if [ "$MOZ_XUL" ]; then
     add_makefiles "
       content/xul/templates/tests/chrome/Makefile
@@ -1159,11 +1154,6 @@ if [ "$ACCESSIBILITY" ]; then
     accessible/src/jsat/Makefile
     accessible/src/xpcom/Makefile
   "
-  if [ ! "$DISABLE_XFORMS_HOOKS" ]; then
-    add_makefiles "
-      accessible/src/xforms/Makefile
-    "
-  fi
   if [ "$MOZ_XUL" ]; then
     add_makefiles "
       accessible/src/xul/Makefile
@@ -1736,13 +1726,6 @@ if [ "$MOZ_SPEEX_RESAMPLER" ]; then
   add_makefiles "
     media/libspeex_resampler/Makefile
     media/libspeex_resampler/src/Makefile
-  "
-fi
-
-if [ "$MOZ_SOUNDTOUCH" ]; then
-  add_makefiles "
-    media/libsoundtouch/Makefile
-    media/libsoundtouch/src/Makefile
   "
 fi
 

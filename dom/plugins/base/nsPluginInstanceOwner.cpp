@@ -93,6 +93,7 @@ using namespace mozilla::dom;
 #endif
 
 using namespace mozilla;
+using namespace mozilla::layers;
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
@@ -3470,8 +3471,7 @@ nsObjectFrame* nsPluginInstanceOwner::GetFrame()
 // |value| for certain inputs of |name|
 void nsPluginInstanceOwner::FixUpURLS(const nsString &name, nsAString &value)
 {
-  if (name.LowerCaseEqualsLiteral("pluginurl") ||
-      name.LowerCaseEqualsLiteral("pluginspage")) {        
+  if (name.LowerCaseEqualsLiteral("pluginspage")) {
     nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
     nsAutoString newURL;
     NS_MakeAbsoluteURI(newURL, value, baseURI);

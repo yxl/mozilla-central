@@ -1012,15 +1012,11 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
 
-    gBrowser.addEventListener("PluginNotFound",     gPluginHandler, true);
-    gBrowser.addEventListener("PluginCrashed",      gPluginHandler, true);
-    gBrowser.addEventListener("PluginBlocklisted",  gPluginHandler, true);
-    gBrowser.addEventListener("PluginOutdated",     gPluginHandler, true);
-    gBrowser.addEventListener("PluginDisabled",     gPluginHandler, true);
-    gBrowser.addEventListener("PluginClickToPlay",  gPluginHandler, true);
-    gBrowser.addEventListener("PluginPlayPreview",  gPluginHandler, true);
-    gBrowser.addEventListener("PluginVulnerableUpdatable", gPluginHandler, true);
-    gBrowser.addEventListener("PluginVulnerableNoUpdate", gPluginHandler, true);
+    // Note that the XBL binding is untrusted
+    gBrowser.addEventListener("PluginBindingAttached", gPluginHandler, true, true);
+    gBrowser.addEventListener("PluginCrashed",         gPluginHandler, true);
+    gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
+
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
 #ifdef XP_MACOSX
     gBrowser.addEventListener("npapi-carbon-event-model-failure", gPluginHandler, true);
@@ -1471,10 +1467,12 @@ var gBrowserInit = {
     }
 
     // Enable Error Console?
-    let consoleEnabled = gPrefService.getBoolPref("devtools.errorconsole.enabled") ||
+    // Temporarily enabled. See bug 798925.
+    let consoleEnabled = true || gPrefService.getBoolPref("devtools.errorconsole.enabled") ||
                          gPrefService.getBoolPref("devtools.chrome.enabled");
     if (consoleEnabled) {
       let cmd = document.getElementById("Tools:ErrorConsole");
+      cmd.removeAttribute("disabled");
       cmd.removeAttribute("hidden");
     }
 
@@ -3486,7 +3484,8 @@ function FillHistoryMenu(aParent) {
 }
 
 function addToUrlbarHistory(aUrlToAdd) {
-  if (aUrlToAdd &&
+  if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
+      aUrlToAdd &&
       !aUrlToAdd.contains(" ") &&
       !/[\x00-\x1F]/.test(aUrlToAdd))
     PlacesUIUtils.markPageAsTyped(aUrlToAdd);
@@ -5359,7 +5358,8 @@ function contentAreaClick(event, isPanelClick)
   // pages loaded in frames are embed visits and lost with the session, while
   // visits across frames should be preserved.
   try {
-    PlacesUIUtils.markPageAsFollowedLink(href);
+    if (!PrivateBrowsingUtils.isWindowPrivate(window))
+      PlacesUIUtils.markPageAsFollowedLink(href);
   } catch (ex) { /* Skip invalid URIs. */ }
 }
 
@@ -5483,7 +5483,8 @@ function BrowserSetForcedCharacterSet(aCharset)
 {
   gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
-  PlacesUtils.history.setCharsetForURI(gBrowser.currentURI, aCharset);
+  if (!PrivateBrowsingUtils.isWindowPrivate(window))
+    PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
   BrowserCharsetReload();
 }
 
