@@ -414,10 +414,6 @@ pref("dom.mozTCPSocket.enabled", true);
 // by bug 710563.
 pref("layout.frame_rate.precise", true);
 
-// Temporary remote js console hack
-pref("b2g.remote-js.enabled", true);
-pref("b2g.remote-js.port", 9999);
-
 // Handle hardware buttons in the b2g chrome package
 pref("b2g.keys.menu.enabled", true);
 
@@ -583,6 +579,9 @@ pref("browser.prompt.allowNative", false);
 pref("network.activity.blipIntervalMilliseconds", 250);
 
 pref("jsloader.reuseGlobal", true);
+
+// Enable font inflation for browser tab content.
+pref("font.size.inflation.minTwips", 120);
 
 // Enable freeing dirty pages when minimizing memory; this reduces memory
 // consumption when applications are sent to the background.
