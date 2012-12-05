@@ -9,3 +9,6 @@
 # architectures, though note that if you want to override options set in
 # another mozconfig file, you'll need to use mozconfig.common.override instead
 # of this file.
+
+# Bug 817971 - Run leaking Mochitests by default
+export MOZ_WEBRTC_LEAKING_TESTS=1
