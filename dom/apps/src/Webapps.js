@@ -105,6 +105,12 @@ WebappsRegistry.prototype = {
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
+        if (!AppsUtils.checkManifestContentType(installOrigin, this._getOrigin(aURL),
+                                                xhr.getResponseHeader("content-type"))) {
+          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+          return;
+        }
+
         let manifest;
         try {
           manifest = JSON.parse(xhr.responseText, installOrigin);
@@ -214,6 +220,12 @@ WebappsRegistry.prototype = {
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
+        if (!AppsUtils.checkManifestContentType(installOrigin, this._getOrigin(aURL),
+                                                xhr.getResponseHeader("content-type"))) {
+          Services.DOMRequest.fireError(request, "INVALID_MANIFEST");
+          return;
+        }
+
         let manifest;
         try {
           manifest = JSON.parse(xhr.responseText, installOrigin);
@@ -744,8 +756,12 @@ WebappsApplicationMgmt.prototype = {
         break;
       case "Webapps:Uninstall:Return:OK":
         if (this._onuninstall) {
+          let detail = {
+            manifestURL: msg.manifestURL,
+            origin: msg.origin
+          };
           let event = new this._window.MozApplicationEvent("applicationuninstall",
-                           { application : createApplicationObject(this._window, { origin: msg.origin }) });
+                           { application : createApplicationObject(this._window, detail) });
           this._onuninstall.handleEvent(event);
         }
         break;

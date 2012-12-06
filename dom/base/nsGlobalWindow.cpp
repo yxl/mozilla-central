@@ -32,7 +32,6 @@
 // Helper Classes
 #include "nsXPIDLString.h"
 #include "nsJSUtils.h"
-#include "prmem.h"
 #include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
 #include "jsfriendapi.h"        // for JS_GetGlobalForFrame
@@ -7034,11 +7033,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
                    reinterpret_cast<void**>(&thisSupports));
     NS_ASSERTION(thisSupports, "Failed to QI to nsCycleCollectionISupports!");
 
-    nsresult rv = nsContentUtils::HoldJSObjects(thisSupports, participant);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("nsContentUtils::HoldJSObjects failed!");
-      return;
-    }
+    nsContentUtils::HoldJSObjects(thisSupports, participant);
   }
 
   mCachedXBLPrototypeHandlers.Put(aKey, aHandler.get());

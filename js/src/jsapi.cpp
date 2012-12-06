@@ -801,8 +801,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcFoundBlackGrayEdges(false),
     gcSweepingCompartments(NULL),
     gcCompartmentGroupIndex(0),
-    gcRemainingCompartmentGroups(NULL),
-    gcCompartmentGroup(NULL),
+    gcCompartmentGroups(NULL),
+    gcCurrentCompartmentGroup(NULL),
     gcSweepPhase(0),
     gcSweepCompartment(NULL),
     gcSweepKindIndex(0),
@@ -940,6 +940,8 @@ JSRuntime::init(uint32_t maxbytes)
     dtoaState = js_NewDtoaState();
     if (!dtoaState)
         return false;
+
+    dateTimeInfo.updateTimeZoneAdjustment();
 
     if (!stackSpace.init())
         return false;
@@ -6671,7 +6673,7 @@ JS_ClearDateCaches(JSContext *cx)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    js_ClearDateCaches();
+    cx->runtime->dateTimeInfo.updateTimeZoneAdjustment();
 }
 
 /************************************************************************/
@@ -6871,8 +6873,8 @@ JS_ReportPendingException(JSContext *cx)
 }
 
 struct JSExceptionState {
-    JSBool throwing;
-    jsval  exception;
+    bool throwing;
+    jsval exception;
 };
 
 JS_PUBLIC_API(JSExceptionState *)
@@ -7094,9 +7096,9 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
         return JS_FALSE;
 
     if (script)
-        *script = i.script().get(nogc);
+        *script = i.script();
     if (lineno)
-        *lineno = js::PCToLineNumber(i.script().get(nogc), i.pc());
+        *lineno = js::PCToLineNumber(i.script(), i.pc());
     return JS_TRUE;
 }
 

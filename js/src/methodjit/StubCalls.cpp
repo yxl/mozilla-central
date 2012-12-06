@@ -98,6 +98,15 @@ stubs::Name(VMFrame &f)
 }
 
 void JS_FASTCALL
+stubs::IntrinsicName(VMFrame &f, PropertyName *name)
+{
+    RootedValue rval(f.cx);
+    if (!f.cx->global().get()->getIntrinsicValue(f.cx, name, &rval))
+        THROW();
+    f.regs.sp[0] = rval;
+}
+
+void JS_FASTCALL
 stubs::GetElem(VMFrame &f)
 {
     MutableHandleValue lval = MutableHandleValue::fromMarkedLocation(&f.regs.sp[-2]);
@@ -857,7 +866,7 @@ stubs::RecompileForInline(VMFrame &f)
 {
     AutoAssertNoGC nogc;
     ExpandInlineFrames(f.cx->compartment);
-    Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), f.script().get(nogc));
+    Recompiler::clearStackReferences(f.cx->runtime->defaultFreeOp(), f.script());
     f.jit()->destroyChunk(f.cx->runtime->defaultFreeOp(), f.chunkIndex(), /* resetUses = */ false);
 }
 
@@ -1325,7 +1334,7 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
 {
     AutoAssertNoGC nogc;
     jsbytecode *jpc = pc;
-    JSScript *script = f.fp()->script().get(nogc);
+    UnrootedScript script = f.fp()->script();
 
     /* This is correct because the compiler adjusts the stack beforehand. */
     Value lval = f.regs.sp[-1];
@@ -1651,7 +1660,7 @@ stubs::AssertArgumentTypes(VMFrame &f)
     AutoAssertNoGC nogc;
     StackFrame *fp = f.fp();
     JSFunction *fun = fp->fun();
-    RawScript script = fun->nonLazyScript().get(nogc);
+    UnrootedScript script = fun->nonLazyScript();
 
     /*
      * Don't check the type of 'this' for constructor frames, the 'this' value
@@ -1696,7 +1705,7 @@ stubs::InvariantFailure(VMFrame &f, void *rval)
     *frameAddr = repatchCode;
 
     /* Recompile the outermost script, and don't hoist any bounds checks. */
-    RawScript script = f.fp()->script().get(nogc);
+    UnrootedScript script = f.fp()->script();
     JS_ASSERT(!script->failedBoundsCheck);
     script->failedBoundsCheck = true;
 
