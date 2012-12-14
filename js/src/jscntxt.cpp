@@ -517,7 +517,7 @@ checkReportFlags(JSContext *cx, unsigned *flags)
          * the nearest scripted frame is strict, see bug 536306.
          */
         JSScript *script = cx->stack.currentScript();
-        if (script && script->strictModeCode)
+        if (script && script->strict)
             *flags &= ~JSREPORT_WARNING;
         else if (cx->hasStrictOption())
             *flags |= JSREPORT_WARNING;
@@ -573,7 +573,7 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
 {
     const char *usageStr = "usage";
     PropertyName *usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
-    DebugOnly<Shape *> shape = callee->nativeLookup(cx, NameToId(usageAtom));
+    DebugOnly<RawShape> shape = static_cast<RawShape>(callee->nativeLookup(cx, NameToId(usageAtom)));
     JS_ASSERT(!shape->configurable());
     JS_ASSERT(!shape->writable());
     JS_ASSERT(shape->hasDefaultGetter());

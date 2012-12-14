@@ -1520,7 +1520,7 @@ let RIL = {
       if (DEBUG) debug("PLMN Selector: Process PLMN Selector");
 
       let length = Buf.readUint32();
-      this.iccInfoPrivate.PLMN = this.readPLMNEntries(length/6);
+      this.iccInfoPrivate.PLMN = this.readPLMNEntries(length/3);
       Buf.readStringDelimiter(length);
 
       if (DEBUG) debug("PLMN Selector: " + JSON.stringify(this.iccInfoPrivate.PLMN));
@@ -1570,7 +1570,7 @@ let RIL = {
           continue;
         case SPDI_TAG_PLMN_LIST:
           // This PLMN list is what we want.
-          this.iccInfoPrivate.SPDI = readPLMNEntries(tlvLen/6);
+          this.iccInfoPrivate.SPDI = this.readPLMNEntries(tlvLen/3);
           readLen += tlvLen;
           endLoop = true;
           break;
@@ -2317,7 +2317,7 @@ let RIL = {
             plmn[1] != 0xFF &&
             plmn[2] != 0xFF) {
           let semiOctets = [];
-          for (let i = 0; i < plmn.length; i++) {
+          for (let idx = 0; idx < plmn.length; idx++) {
             semiOctets.push((plmn[idx] & 0xF0) >> 4);
             semiOctets.push(plmn[idx] & 0x0F);
           }
@@ -3855,6 +3855,7 @@ let RIL = {
           case ICC_EF_MBDN:
           case ICC_EF_PLMNsel:
           case ICC_EF_SPN:
+          case ICC_EF_SPDI:
           case ICC_EF_SST:
           case ICC_EF_CBMI:
           case ICC_EF_CBMIR:
@@ -5259,12 +5260,17 @@ let RIL = {
            " commandQualifier = " + cmdDetails.commandQualifier);
     }
 
-    let param = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
-    if (param) {
-      cmdDetails.rilMessageType = "stkcommand";
-      cmdDetails.options = param;
-      RIL.sendDOMMessage(cmdDetails);
+    // STK_CMD_MORE_TIME need not to propagate event to DOM.
+    if (cmdDetails.typeOfCommand == STK_CMD_MORE_TIME) {
+      RIL.sendStkTerminalResponse({
+        command: cmdDetails,
+        resultCode: STK_RESULT_OK});
+      return;
     }
+
+    cmdDetails.rilMessageType = "stkcommand";
+    cmdDetails.options = StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
+    RIL.sendDOMMessage(cmdDetails);
   },
 
   /**
@@ -8150,9 +8156,6 @@ let StkCommandParamsFactory = {
       case STK_CMD_REFRESH:
         param = this.processRefresh(cmdDetails, ctlvs);
         break;
-      case STK_CMD_MORE_TIME:
-        param = this.processMoreTime(cmdDetails, ctlvs);
-        break;
       case STK_CMD_POLL_INTERVAL:
         param = this.processPollInterval(cmdDetails, ctlvs);
         break;
@@ -8217,7 +8220,7 @@ let StkCommandParamsFactory = {
       case STK_REFRESH_FILE_CHANGE:
       case STK_REFRESH_NAA_INIT_AND_FILE_CHANGE:
         let ctlv = StkProactiveCmdHelper.searchForTag(
-          COMPREHENSIONTLV_FILE_LIST, ctlvs);
+          COMPREHENSIONTLV_TAG_FILE_LIST, ctlvs);
         if (ctlv) {
           let list = ctlv.value.fileList;
           if (DEBUG) {
@@ -8227,21 +8230,6 @@ let StkCommandParamsFactory = {
         }
         break;
     }
-    return {};
-  },
-
-  /**
-   * Construct a param for MORE TIME.
-   *
-   * @param cmdDetails
-   *        The value object of CommandDetails TLV.
-   * @param ctlvs
-   *        The all TLVs in this proactive command.
-   */
-  processMoreTime: function processMoreTime(cmdDetails, ctlvs) {
-    RIL.sendStkTerminalResponse({
-      command: cmdDetails,
-      resultCode: STK_RESULT_OK});
     return null;
   },
 
@@ -8275,7 +8263,7 @@ let StkCommandParamsFactory = {
    *        The all TLVs in this proactive command.
    */
   processPollOff: function processPollOff(cmdDetails, ctlvs) {
-    return {};
+    return null;
   },
 
   /**

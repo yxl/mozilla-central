@@ -2353,8 +2353,8 @@ CodeGenerator::visitConcat(LConcat *lir)
     return true;
 }
 
-typedef bool (*EnsureLinearFn)(JSContext *, JSString *);
-static const VMFunction EnsureLinearInfo = FunctionInfo<EnsureLinearFn>(JSString::ensureLinear);
+typedef bool (*CharCodeAtFn)(JSContext *, HandleString, int32_t, uint32_t *);
+static const VMFunction CharCodeAtInfo = FunctionInfo<CharCodeAtFn>(ion::CharCodeAt);
 
 bool
 CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
@@ -2363,7 +2363,7 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
     Register index = ToRegister(lir->index());
     Register output = ToRegister(lir->output());
 
-    OutOfLineCode *ool = oolCallVM(EnsureLinearInfo, lir, (ArgList(), str), StoreNothing());
+    OutOfLineCode *ool = oolCallVM(CharCodeAtInfo, lir, (ArgList(), str, index), StoreRegisterTo(output));
     if (!ool)
         return false;
 
@@ -2371,13 +2371,13 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
     masm.loadPtr(lengthAndFlagsAddr, output);
 
     masm.branchTest32(Assembler::Zero, output, Imm32(JSString::FLAGS_MASK), ool->entry());
-    masm.bind(ool->rejoin());
 
     // getChars
     Address charsAddr(str, JSString::offsetOfChars());
     masm.loadPtr(charsAddr, output);
     masm.load16ZeroExtend(BaseIndex(output, index, TimesTwo, 0), output);
 
+    masm.bind(ool->rejoin());
     return true;
 }
 
@@ -2709,7 +2709,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
     masm.bind(&callStub);
     saveLive(ins);
 
-    pushArg(Imm32(current->mir()->strictModeCode()));
+    pushArg(Imm32(current->mir()->strict()));
     pushArg(value);
     if (index->isConstant())
         pushArg(*index->toConstant());
@@ -3350,7 +3350,7 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 bool
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)
 {
-    pushArg(Imm32(current->mir()->strictModeCode()));
+    pushArg(Imm32(current->mir()->strict()));
     pushArg(ToValue(lir, LCallSetElement::Value));
     pushArg(ToValue(lir, LCallSetElement::Index));
     pushArg(ToRegister(lir->getOperand(0)));
@@ -3733,7 +3733,7 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
     pushArg(ImmGCPtr(lir->mir()->name()));
     pushArg(ToValue(lir, LCallDeleteProperty::Value));
 
-    if (lir->mir()->block()->info().script()->strictModeCode)
+    if (lir->mir()->block()->info().script()->strict)
         return callVM(DeletePropertyStrictInfo, lir);
     else
         return callVM(DeletePropertyNonStrictInfo, lir);

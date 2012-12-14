@@ -191,7 +191,7 @@ class Bindings
     unsigned count() const { return numArgs() + numVars(); }
 
     /* Return the initial shape of call objects created for this scope. */
-    Shape *callObjShape() const { return callObjShape_; }
+    UnrootedShape callObjShape() const { return callObjShape_.get(); }
 
     /* Convenience method to get the var index of 'arguments'. */
     static unsigned argumentsVarIndex(JSContext *cx, InternalBindingsHandle);
@@ -210,7 +210,7 @@ struct RootMethods<Bindings> {
     static Bindings initial();
     static ThingRootKind kind() { return THING_ROOT_BINDINGS; }
     static bool poisoned(const Bindings &bindings) {
-        return IsPoisonedPtr(bindings.callObjShape());
+        return IsPoisonedPtr(static_cast<RawShape>(bindings.callObjShape()));
     }
 };
 
@@ -462,7 +462,7 @@ struct JSScript : public js::gc::Cell
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
     bool            savedCallerFun:1; /* can call getCallerFunction() */
-    bool            strictModeCode:1; /* code is in strict mode */
+    bool            strict:1; /* code is in strict mode */
     bool            explicitUseStrict:1; /* code has "use strict"; explicitly */
     bool            compileAndGo:1;   /* see Parser::compileAndGo */
     bool            bindingsAccessedDynamically:1; /* see ContextFlags' field of the same name */
@@ -560,7 +560,7 @@ struct JSScript : public js::gc::Cell
      * opcodes won't be emitted at all.
      */
     bool argsObjAliasesFormals() const {
-        return needsArgsObj() && !strictModeCode;
+        return needsArgsObj() && !strict;
     }
 
     bool hasAnyIonScript() const {
