@@ -56,6 +56,7 @@
 
 #include "jsarrayinlines.h"
 #include "jsatominlines.h"
+#include "jsboolinlines.h"
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -517,7 +518,7 @@ JSBool
 js_HasOwnProperty(JSContext *cx, LookupGenericOp lookup, HandleObject obj, HandleId id,
                   MutableHandleObject objp, MutableHandleShape propp)
 {
-    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
     if (lookup) {
         if (!lookup(cx, obj, id, objp, propp))
             return false;
@@ -1008,7 +1009,7 @@ obj_keys(JSContext *cx, unsigned argc, Value *vp)
 static bool
 HasProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp, bool *foundp)
 {
-    if (!JSObject::hasProperty(cx, obj, id, foundp, JSRESOLVE_QUALIFIED | JSRESOLVE_DETECTING))
+    if (!JSObject::hasProperty(cx, obj, id, foundp, JSRESOLVE_QUALIFIED))
         return false;
     if (!*foundp) {
         vp.setUndefined();
@@ -2416,7 +2417,7 @@ js_CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
  * checking whether document.all is defined.
  */
 static bool
-Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
+Detecting(JSContext *cx, UnrootedScript script, jsbytecode *pc)
 {
     /* General case: a branch or equality op follows the access. */
     JSOp op = JSOp(*pc);
@@ -2467,7 +2468,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
      * handle the case of cross-compartment property access.
      */
     jsbytecode *pc;
-    JSScript *script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+    UnrootedScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
     if (!script)
         return defaultFlags;
 
@@ -2476,13 +2477,8 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
     unsigned flags = 0;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
-    if (format & JOF_SET) {
+    if (format & JOF_SET)
         flags |= JSRESOLVE_ASSIGNING;
-    } else if (cs->length >= 0) {
-        pc += cs->length;
-        if (pc < script->code + script->length && Detecting(cx, script, pc))
-            flags |= JSRESOLVE_DETECTING;
-    }
     return flags;
 }
 
@@ -4069,6 +4065,8 @@ static JS_ALWAYS_INLINE bool
 LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                               MutableHandleObject objp, MutableHandleShape propp)
 {
+    AssertCanGC();
+
     /* Search scopes starting with obj and following the prototype link. */
     RootedObject current(cx, obj);
     while (true) {
@@ -4201,12 +4199,14 @@ js_NativeGetInline(JSContext *cx, Handle<JSObject*> receiver, Handle<JSObject*> 
     if (shape->hasDefaultGetter())
         return true;
 
-    jsbytecode *pc;
-    JSScript *script = cx->stack.currentScript(&pc);
-    if (script && script->hasAnalysis()) {
-        analyze::Bytecode *code = script->analysis()->maybeCode(pc);
-        if (code)
-            code->accessGetter = true;
+    {
+        jsbytecode *pc;
+        UnrootedScript script = cx->stack.currentScript(&pc);
+        if (script && script->hasAnalysis()) {
+            analyze::Bytecode *code = script->analysis()->maybeCode(pc);
+            if (code)
+                code->accessGetter = true;
+        }
     }
 
     if (!shape->get(cx, receiver, obj, pobj, vp))
@@ -4316,7 +4316,7 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
                 return true;
 
             /* Don't warn repeatedly for the same script. */
-            JSScript *script = cx->stack.currentScript();
+            RootedScript script(cx, cx->stack.currentScript());
             if (!script || script->warnedAboutUndefinedProp)
                 return true;
 
@@ -4332,8 +4332,6 @@ js_GetPropertyHelperInline(JSContext *cx, HandleObject obj, HandleObject receive
                 pc += js_CodeSpec[op].length;
                 if (Detecting(cx, script, pc))
                     return JS_TRUE;
-            } else if (cx->resolveFlags & JSRESOLVE_DETECTING) {
-                return JS_TRUE;
             }
 
             unsigned flags = JSREPORT_WARNING | JSREPORT_STRICT;
@@ -4431,13 +4429,15 @@ js::GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, Mut
 JS_FRIEND_API(bool)
 js::CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
-    JSScript *script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
-    if (!script)
-        return true;
+    {
+        UnrootedScript script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        if (!script)
+            return true;
 
-    /* If neither cx nor the code is strict, then no check is needed. */
-    if (!script->strict && !cx->hasStrictOption())
-        return true;
+        /* If neither cx nor the code is strict, then no check is needed. */
+        if (!script->strict && !cx->hasStrictOption())
+            return true;
+    }
 
     JSAutoByteString bytes(cx, propname);
     return !!bytes &&
@@ -5019,7 +5019,11 @@ js::CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
 JSType
 baseops::TypeOf(JSContext *cx, HandleObject obj)
 {
-    return obj->isCallable() ? JSTYPE_FUNCTION : JSTYPE_OBJECT;
+    if (EmulatesUndefined(obj))
+        return JSTYPE_VOID;
+    if (obj->isCallable())
+        return JSTYPE_FUNCTION;
+    return JSTYPE_OBJECT;
 }
 
 bool

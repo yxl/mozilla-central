@@ -49,12 +49,14 @@ webidl_files = \
   HTMLPropertiesCollection.webidl \
   ImageData.webidl \
   Node.webidl \
+  NodeFilter.webidl \
   NodeList.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
   Performance.webidl \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
+  RGBColor.webidl \
   Screen.webidl \
   SVGLengthList.webidl \
   SVGNumberList.webidl \
@@ -69,6 +71,7 @@ webidl_files = \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \
   XMLSerializer.webidl \
+  XPathEvaluator.webidl \
   $(NULL)
 
 ifdef MOZ_WEBGL

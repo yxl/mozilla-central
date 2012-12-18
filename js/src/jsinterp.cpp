@@ -9,6 +9,7 @@
  * JavaScript bytecode interpreter.
  */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <stdio.h>
@@ -50,6 +51,7 @@
 #include "ion/Ion.h"
 
 #include "jsatominlines.h"
+#include "jsboolinlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -527,7 +529,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChain, cons
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!script->ensureRanAnalysis(cx))
+    if (!JSScript::ensureRanAnalysis(cx, script))
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
@@ -637,12 +639,13 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     }
 
     if (lval.isNullOrUndefined()) {
-        *result = rval.isNullOrUndefined();
+        *result = rval.isNullOrUndefined() ||
+                  (rval.isObject() && EmulatesUndefined(&rval.toObject()));
         return true;
     }
 
     if (rval.isNullOrUndefined()) {
-        *result = false;
+        *result = (lval.isObject() && EmulatesUndefined(&lval.toObject()));
         return true;
     }
 
@@ -1174,6 +1177,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     RootedPropertyName rootName0(cx);
     RootedId rootId0(cx);
     RootedShape rootShape0(cx);
+    RootedScript rootScript0(cx);
     DebugOnly<uint32_t> blockDepth;
 
     if (!entryFrame)
@@ -1343,11 +1347,8 @@ ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED1)
 ADD_EMPTY_CASE(JSOP_UNUSED2)
 ADD_EMPTY_CASE(JSOP_UNUSED3)
-ADD_EMPTY_CASE(JSOP_UNUSED10)
-ADD_EMPTY_CASE(JSOP_UNUSED11)
 ADD_EMPTY_CASE(JSOP_UNUSED12)
 ADD_EMPTY_CASE(JSOP_UNUSED13)
-ADD_EMPTY_CASE(JSOP_UNUSED15)
 ADD_EMPTY_CASE(JSOP_UNUSED17)
 ADD_EMPTY_CASE(JSOP_UNUSED18)
 ADD_EMPTY_CASE(JSOP_UNUSED19)
@@ -1794,6 +1795,10 @@ BEGIN_CASE(JSOP_BINDGNAME)
     PUSH_OBJECT(regs.fp()->global());
 END_CASE(JSOP_BINDGNAME)
 
+BEGIN_CASE(JSOP_BINDINTRINSIC)
+    PUSH_OBJECT(*cx->global()->intrinsicsHolder());
+END_CASE(JSOP_BINDGNAME)
+
 BEGIN_CASE(JSOP_BINDNAME)
 {
     RootedObject &scopeChain = rootObject0;
@@ -2234,6 +2239,18 @@ BEGIN_CASE(JSOP_CALLPROP)
 }
 END_CASE(JSOP_GETPROP)
 
+BEGIN_CASE(JSOP_SETINTRINSIC)
+{
+    HandleValue value = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    if (!SetIntrinsicOperation(cx, script, regs.pc, value))
+        goto error;
+
+    regs.sp[-2] = regs.sp[-1];
+    regs.sp--;
+}
+END_CASE(JSOP_SETINTRINSIC)
+
 BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
 {
@@ -2360,7 +2377,7 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RawScript funScript = fun->getOrCreateScript(cx);
+    RootedScript funScript(cx, fun->getOrCreateScript(cx));
     if (!funScript)
         goto error;
     if (!cx->stack.pushInlineFrame(cx, regs, args, *fun, funScript, initial))
@@ -2471,18 +2488,18 @@ BEGIN_CASE(JSOP_CALLNAME)
 }
 END_CASE(JSOP_NAME)
 
-BEGIN_CASE(JSOP_INTRINSICNAME)
+BEGIN_CASE(JSOP_GETINTRINSIC)
 BEGIN_CASE(JSOP_CALLINTRINSIC)
 {
     RootedValue &rval = rootValue0;
 
-    if (!IntrinsicNameOperation(cx, script, regs.pc, &rval))
+    if (!GetIntrinsicOperation(cx, script, regs.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
     TypeScript::Monitor(cx, script, regs.pc, rval);
 }
-END_CASE(JSOP_INTRINSICNAME)
+END_CASE(JSOP_GETINTRINSIC)
 
 BEGIN_CASE(JSOP_UINT16)
     PUSH_INT32((int32_t) GET_UINT16(regs.pc));
@@ -3069,58 +3086,56 @@ BEGIN_CASE(JSOP_INITPROP)
 }
 END_CASE(JSOP_INITPROP);
 
-BEGIN_CASE(JSOP_INITELEM_INC)
 BEGIN_CASE(JSOP_INITELEM)
 {
-    /* Pop the element's value into rval. */
     JS_ASSERT(regs.stackDepth() >= 3);
-    HandleValue rref = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+    HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+    MutableHandleValue id = MutableHandleValue::fromMarkedLocation(&regs.sp[-2]);
 
     RootedObject &obj = rootObject0;
+    obj = &regs.sp[-3].toObject();
 
-    /* Find the object being initialized at top of stack. */
-    const Value &lref = regs.sp[-3];
-    JS_ASSERT(lref.isObject());
-    obj = &lref.toObject();
+    if (!InitElemOperation(cx, obj, id, val))
+        goto error;
 
-    /* Fetch id now that we have obj. */
-    RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(obj, -2, id);
-
-    /*
-     * If rref is a hole, do not call JSObject::defineProperty. In this case,
-     * obj must be an array, so if the current op is the last element
-     * initialiser, set the array length to one greater than id.
-     */
-    if (rref.isMagic(JS_ARRAY_HOLE)) {
-        JS_ASSERT(obj->isArray());
-        JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        JSOp next = JSOp(*(regs.pc + GetBytecodeLength(regs.pc)));
-        if ((next == JSOP_ENDINIT && op == JSOP_INITELEM) ||
-            (next == JSOP_POP && op == JSOP_INITELEM_INC))
-        {
-            if (!SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
-                goto error;
-        }
-    } else {
-        if (!JSObject::defineGeneric(cx, obj, id, rref, NULL, NULL, JSPROP_ENUMERATE))
-            goto error;
-    }
-    if (op == JSOP_INITELEM_INC) {
-        JS_ASSERT(obj->isArray());
-        if (JSID_TO_INT(id) == INT32_MAX) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_SPREAD_TOO_LARGE);
-            goto error;
-        }
-        regs.sp[-2].setInt32(JSID_TO_INT(id) + 1);
-        regs.sp--;
-    } else {
-        regs.sp -= 2;
-    }
+    regs.sp -= 2;
 }
 END_CASE(JSOP_INITELEM)
+
+BEGIN_CASE(JSOP_INITELEM_ARRAY)
+{
+    JS_ASSERT(regs.stackDepth() >= 2);
+    HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    RootedObject &obj = rootObject0;
+    obj = &regs.sp[-2].toObject();
+
+    JS_ASSERT(obj->isDenseArray());
+
+    uint32_t index = GET_UINT24(regs.pc);
+    if (!InitArrayElemOperation(cx, regs.pc, obj, index, val))
+        goto error;
+
+    regs.sp--;
+}
+END_CASE(JSOP_INITELEM_ARRAY)
+
+BEGIN_CASE(JSOP_INITELEM_INC)
+{
+    JS_ASSERT(regs.stackDepth() >= 3);
+    HandleValue val = HandleValue::fromMarkedLocation(&regs.sp[-1]);
+
+    RootedObject &obj = rootObject0;
+    obj = &regs.sp[-3].toObject();
+
+    uint32_t index = regs.sp[-2].toInt32();
+    if (!InitArrayElemOperation(cx, regs.pc, obj, index, val))
+        goto error;
+
+    regs.sp[-2].setInt32(index + 1);
+    regs.sp--;
+}
+END_CASE(JSOP_INITELEM_INC)
 
 BEGIN_CASE(JSOP_SPREAD)
 {

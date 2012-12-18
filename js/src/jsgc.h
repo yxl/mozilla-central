@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* JS Garbage Collector. */
+
 #ifndef jsgc_h___
 #define jsgc_h___
 
-/*
- * JS Garbage Collector.
- */
 #include <setjmp.h>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 #include "jsalloc.h"
@@ -941,13 +941,13 @@ struct GCMarker : public JSTracer {
     }
 
   public:
-    explicit GCMarker();
+    explicit GCMarker(JSRuntime *rt);
     bool init();
 
     void setSizeLimit(size_t size) { stack.setSizeLimit(size); }
     size_t sizeLimit() const { return stack.sizeLimit; }
 
-    void start(JSRuntime *rt);
+    void start();
     void stop();
     void reset();
 

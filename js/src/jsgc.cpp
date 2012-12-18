@@ -8,6 +8,7 @@
 /* JS Mark-and-Sweep Garbage Collector. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 /*
@@ -1531,7 +1532,7 @@ SliceBudget::checkOverBudget()
     return over;
 }
 
-GCMarker::GCMarker()
+GCMarker::GCMarker(JSRuntime *rt)
   : stack(size_t(-1)),
     color(BLACK),
     started(false),
@@ -1539,6 +1540,7 @@ GCMarker::GCMarker()
     markLaterArenas(0),
     grayFailed(false)
 {
+    InitTracer(this, rt, NULL);
 }
 
 bool
@@ -1548,9 +1550,8 @@ GCMarker::init()
 }
 
 void
-GCMarker::start(JSRuntime *rt)
+GCMarker::start()
 {
-    InitTracer(this, rt, NULL);
     JS_ASSERT(!started);
     started = true;
     color = BLACK;
@@ -2586,7 +2587,7 @@ BeginMarkPhase(JSRuntime *rt)
             c->arenas.purge();
     }
 
-    rt->gcMarker.start(rt);
+    rt->gcMarker.start();
     JS_ASSERT(!rt->gcMarker.callback);
     JS_ASSERT(IS_GC_MARKING_TRACER(&rt->gcMarker));
 
@@ -2643,6 +2644,8 @@ BeginMarkPhase(JSRuntime *rt)
      * If the maybeAlive is false, then we set the scheduledForDestruction flag.
      * At any time later in the GC, if we try to mark an object whose
      * compartment is scheduled for destruction, we will assert.
+     * NOTE: Due to bug 811587, we only assert if gcManipulatingDeadCompartments
+     * is true (e.g., if we're doing a brain transplant).
      *
      * The purpose of this check is to ensure that a compartment that we would
      * normally destroy is not resurrected by a read barrier or an
@@ -4571,7 +4574,7 @@ js::StopPCCountProfiling(JSContext *cx)
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
+            RawScript script = i.get<JSScript>();
             if (script->hasScriptCounts && script->types) {
                 ScriptAndCounts sac;
                 sac.script = script;

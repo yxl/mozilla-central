@@ -159,9 +159,6 @@ DOMCI_CLASS(CSSRect)
 // DOM Chrome Window class, almost identical to Window
 DOMCI_CLASS(ChromeWindow)
 
-// RGBColor object used by getComputedStyle
-DOMCI_CLASS(CSSRGBColor)
-
 // ContentList object used for various live NodeLists
 DOMCI_CLASS(ContentList)
   
@@ -323,7 +320,6 @@ DOMCI_CLASS(WindowUtils)
 DOMCI_CLASS(XSLTProcessor)
 
 // DOM Level 3 XPath objects
-DOMCI_CLASS(XPathEvaluator)
 DOMCI_CLASS(XPathExpression)
 DOMCI_CLASS(XPathNSResolver)
 DOMCI_CLASS(XPathResult)
@@ -335,7 +331,6 @@ DOMCI_CLASS(StorageItem)
 
 // XMLHttpRequest
 DOMCI_CLASS(XMLHttpProgressEvent)
-DOMCI_CLASS(XMLHttpRequest)
 
 // Server-sent events
 DOMCI_CLASS(EventSource)
@@ -413,8 +408,6 @@ DOMCI_CLASS(TimeRanges)
 DOMCI_CLASS(MediaStream)
 DOMCI_CLASS(LocalMediaStream)
 #endif
-
-DOMCI_CLASS(XMLHttpRequestUpload)
 
 // DOM Traversal NodeIterator class
 DOMCI_CLASS(NodeIterator)
