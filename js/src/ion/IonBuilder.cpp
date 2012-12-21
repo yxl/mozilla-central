@@ -42,7 +42,8 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     inliningDepth(inliningDepth),
     failedBoundsCheck_(info->script()->failedBoundsCheck),
     failedShapeGuard_(info->script()->failedShapeGuard),
-    lazyArguments_(NULL)
+    lazyArguments_(NULL),
+    callee_(NULL)
 {
     script_.init(info->script());
     pc = info->startPC();
@@ -574,6 +575,15 @@ IonBuilder::initScopeChain()
 {
     MInstruction *scope = NULL;
 
+    // Add callee, it will be removed if it is not used by neither the scope
+    // chain nor the function body.
+    JSFunction *fun = info().fun();
+    if (fun) {
+        JS_ASSERT(!callee_);
+        callee_ = MCallee::New();
+        current->add(callee_);
+    }
+
     // If the script doesn't use the scopechain, then it's already initialized
     // from earlier.
     if (!script()->analysis()->usesScopeChain())
@@ -586,22 +596,19 @@ IonBuilder::initScopeChain()
     if (!script()->compileAndGo)
         return abort("non-CNG global scripts are not supported");
 
-    if (JSFunction *fun = info().fun()) {
-        MCallee *callee = MCallee::New();
-        current->add(callee);
-
-        scope = MFunctionEnvironment::New(callee);
+    if (fun) {
+        scope = MFunctionEnvironment::New(callee_);
         current->add(scope);
 
         // This reproduce what is done in CallObject::createForFunction
         if (fun->isHeavyweight()) {
             if (fun->isNamedLambda()) {
-                scope = createDeclEnvObject(callee, scope);
+                scope = createDeclEnvObject(callee_, scope);
                 if (!scope)
                     return false;
             }
 
-            scope = createCallObject(callee, scope);
+            scope = createCallObject(callee_, scope);
             if (!scope)
                 return false;
         }
@@ -1034,12 +1041,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_this();
 
       case JSOP_CALLEE:
-      {
-        MCallee *callee = MCallee::New();
-        current->add(callee);
-        current->push(callee);
-        return callee;
-      }
+        JS_ASSERT(callee_);
+        current->push(callee_);
+        return true;
 
       case JSOP_GETPROP:
       case JSOP_CALLPROP:
@@ -3130,12 +3134,11 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32_t argc, bool construc
     for (int32_t i = argc; i >= 0; i--)
         argv[i] = current->pop();
 
-    // Compilation information is allocated for the duration of the current tempLifoAlloc
-    // lifetime.
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     RootedScript calleeScript(cx, callee->nonLazyScript());
-    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(calleeScript.get(), callee,
-                                                              (jsbytecode *)NULL, constructing,
-                                                              SequentialExecution);
+    CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), callee,
+                                                 (jsbytecode *)NULL, constructing,
+                                                 SequentialExecution);
     if (!info)
         return false;
 
@@ -4106,6 +4109,103 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     return makeCallBarrier(target, argc, constructing, types, barrier);
 }
 
+static bool
+TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func,
+                  JSJitInfo::OpType opType)
+{
+    if (!func->isNative() || !func->jitInfo())
+        return false;
+    // If all the DOM objects flowing through are legal with this
+    // property, we can bake in a call to the bottom half of the DOM
+    // accessor
+    DOMInstanceClassMatchesProto instanceChecker =
+        GetDOMCallbacks(cx->runtime)->instanceClassMatchesProto;
+
+    const JSJitInfo *jinfo = func->jitInfo();
+    if (jinfo->type != opType)
+        return false;
+
+    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
+        types::TypeObject *curType = inTypes->getTypeObject(i);
+
+        if (!curType) {
+            JSObject *curObj = inTypes->getSingleObject(i);
+
+            if (!curObj)
+                continue;
+
+            curType = curObj->getType(cx);
+        }
+
+        JSObject *typeProto = curType->proto;
+        RootedObject proto(cx, typeProto);
+        if (!instanceChecker(proto, jinfo->protoID, jinfo->depth))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+TestAreKnownDOMTypes(JSContext *cx, types::TypeSet *inTypes)
+{
+    if (inTypes->unknownObject())
+        return false;
+
+    // First iterate to make sure they all are DOM objects, then freeze all of
+    // them as such if they are.
+    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
+        types::TypeObject *curType = inTypes->getTypeObject(i);
+
+        if (!curType) {
+            JSObject *curObj = inTypes->getSingleObject(i);
+
+            // Skip holes in TypeSets.
+            if (!curObj)
+                continue;
+
+            curType = curObj->getType(cx);
+        }
+
+        if (curType->unknownProperties())
+            return false;
+
+        // Unlike TypeSet::HasObjectFlags, TypeObject::hasAnyFlags doesn't add a
+        // freeze.
+        if (curType->hasAnyFlags(types::OBJECT_FLAG_NON_DOM))
+            return false;
+    }
+
+    // If we didn't check anything, no reason to say yes.
+    if (inTypes->getObjectCount() > 0)
+        return true;
+
+    return false;
+}
+
+static void
+FreezeDOMTypes(JSContext *cx, types::StackTypeSet *inTypes)
+{
+    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
+        types::TypeObject *curType = inTypes->getTypeObject(i);
+
+        if (!curType) {
+            JSObject *curObj = inTypes->getSingleObject(i);
+
+            // Skip holes in TypeSets.
+            if (!curObj)
+                continue;
+
+            curType = curObj->getType(cx);
+        }
+
+        // Add freeze by asking the question.
+        DebugOnly<bool> wasntDOM =
+            types::HeapTypeSet::HasObjectFlags(cx, curType, types::OBJECT_FLAG_NON_DOM);
+        JS_ASSERT(!wasntDOM);
+    }
+}
+
 MCall *
 IonBuilder::makeCallHelper(HandleFunction target, uint32_t argc, bool constructing)
 {
@@ -4167,9 +4267,20 @@ IonBuilder::makeCallHelper(HandleFunction target, uint32_t argc, bool constructi
     // Pass |this| and function.
     call->addArg(0, thisArg);
 
+    if (target && JSOp(*pc) == JSOP_CALL) {
+        // We know we have a single call target.  Check whether the "this" types
+        // are DOM types and our function a DOM function, and if so flag the
+        // MCall accordingly.
+        types::StackTypeSet *thisTypes = oracle->getCallArg(script(), argc, 0, pc);
+        if (thisTypes &&
+            TestAreKnownDOMTypes(cx, thisTypes) &&
+            TestShouldDOMCall(cx, thisTypes, target, JSJitInfo::Method))
+        {
+            FreezeDOMTypes(cx, thisTypes);
+            call->setDOMFunction();
+        }
+    }
     MDefinition *fun = current->pop();
-    if (fun->isDOMFunction())
-        call->setDOMFunction();
     call->initFunction(fun);
 
     current->add(call);
@@ -5947,103 +6058,6 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
     return true;
 }
 
-static bool
-TestShouldDOMCall(JSContext *cx, types::TypeSet *inTypes, HandleFunction func,
-                  JSJitInfo::OpType opType)
-{
-    if (!func->isNative() || !func->jitInfo())
-        return false;
-    // If all the DOM objects flowing through are legal with this
-    // property, we can bake in a call to the bottom half of the DOM
-    // accessor
-    DOMInstanceClassMatchesProto instanceChecker =
-        GetDOMCallbacks(cx->runtime)->instanceClassMatchesProto;
-
-    const JSJitInfo *jinfo = func->jitInfo();
-    if (jinfo->type != opType)
-        return false;
-
-    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
-        types::TypeObject *curType = inTypes->getTypeObject(i);
-
-        if (!curType) {
-            JSObject *curObj = inTypes->getSingleObject(i);
-
-            if (!curObj)
-                continue;
-
-            curType = curObj->getType(cx);
-        }
-
-        JSObject *typeProto = curType->proto;
-        RootedObject proto(cx, typeProto);
-        if (!instanceChecker(proto, jinfo->protoID, jinfo->depth))
-            return false;
-    }
-
-    return true;
-}
-
-static bool
-TestAreKnownDOMTypes(JSContext *cx, types::TypeSet *inTypes)
-{
-    if (inTypes->unknown())
-        return false;
-
-    // First iterate to make sure they all are DOM objects, then freeze all of
-    // them as such if they are.
-    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
-        types::TypeObject *curType = inTypes->getTypeObject(i);
-
-        if (!curType) {
-            JSObject *curObj = inTypes->getSingleObject(i);
-
-            // Skip holes in TypeSets.
-            if (!curObj)
-                continue;
-
-            curType = curObj->getType(cx);
-        }
-
-        if (curType->unknownProperties())
-            return false;
-
-        // Unlike TypeSet::HasObjectFlags, TypeObject::hasAnyFlags doesn't add a
-        // freeze.
-        if (curType->hasAnyFlags(types::OBJECT_FLAG_NON_DOM))
-            return false;
-    }
-
-    // If we didn't check anything, no reason to say yes.
-    if (inTypes->getObjectCount() > 0)
-        return true;
-
-    return false;
-}
-
-static void
-FreezeDOMTypes(JSContext *cx, types::StackTypeSet *inTypes)
-{
-    for (unsigned i = 0; i < inTypes->getObjectCount(); i++) {
-        types::TypeObject *curType = inTypes->getTypeObject(i);
-
-        if (!curType) {
-            JSObject *curObj = inTypes->getSingleObject(i);
-
-            // Skip holes in TypeSets.
-            if (!curObj)
-                continue;
-
-            curType = curObj->getType(cx);
-        }
-
-        // Add freeze by asking the question.
-        DebugOnly<bool> wasntDOM =
-            types::HeapTypeSet::HasObjectFlags(cx, curType, types::OBJECT_FLAG_NON_DOM);
-        JS_ASSERT(!wasntDOM);
-    }
-}
-
 bool
 IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
                                     types::StackTypeSet *objTypes, types::StackTypeSet *pushedTypes)
@@ -6308,15 +6322,6 @@ IonBuilder::getPropTryConstant(bool *emitted, HandleId id, types::StackTypeSet *
         obj->setFoldedUnchecked();
 
     MConstant *known = MConstant::New(ObjectValue(*singleton));
-    if (singleton->isFunction()) {
-        RootedFunction singletonFunc(cx, singleton->toFunction());
-        if (TestAreKnownDOMTypes(cx, unaryTypes.inTypes) &&
-            TestShouldDOMCall(cx, unaryTypes.inTypes, singletonFunc, JSJitInfo::Method))
-        {
-            FreezeDOMTypes(cx, unaryTypes.inTypes);
-            known->setDOMFunction();
-        }
-    }
 
     current->add(known);
     current->push(known);
@@ -6651,21 +6656,6 @@ IonBuilder::jsop_lambda(JSFunction *fun)
     MLambda *ins = MLambda::New(current->scopeChain(), fun);
     current->add(ins);
     current->push(ins);
-
-    return resumeAfter(ins);
-}
-
-bool
-IonBuilder::jsop_deflocalfun(uint32_t local, JSFunction *fun)
-{
-    JS_ASSERT(script()->analysis()->usesScopeChain());
-
-    MLambda *ins = MLambda::New(current->scopeChain(), fun);
-    current->add(ins);
-    current->push(ins);
-
-    current->setLocal(local);
-    current->pop();
 
     return resumeAfter(ins);
 }

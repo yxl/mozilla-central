@@ -386,7 +386,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDidThrottleAudioDecoding(false),
   mDidThrottleVideoDecoding(false),
   mRequestedNewDecodeThread(false),
-  mEventManager(aDecoder)
+  mEventManager(aDecoder),
+  mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED)
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -467,29 +468,34 @@ int64_t MediaDecoderStateMachine::GetDecodedAudioDuration() {
 void MediaDecoderStateMachine::DecodeThreadRun()
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mReader->OnDecodeThreadStart();
+  
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  if (mState == DECODER_STATE_DECODING_METADATA) {
-    if (NS_FAILED(DecodeMetadata())) {
+    if (mState == DECODER_STATE_DECODING_METADATA &&
+        NS_FAILED(DecodeMetadata())) {
       NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
                    "Should be in shutdown state if metadata loading fails.");
       LOG(PR_LOG_DEBUG, ("Decode metadata failed, shutting down decode thread"));
     }
-  }
 
-  while (mState != DECODER_STATE_SHUTDOWN &&
-         mState != DECODER_STATE_COMPLETED &&
-         !mStopDecodeThread)
-  {
-    if (mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) {
-      DecodeLoop();
-    } else if (mState == DECODER_STATE_SEEKING) {
-      DecodeSeek();
+    while (mState != DECODER_STATE_SHUTDOWN &&
+           mState != DECODER_STATE_COMPLETED &&
+           !mStopDecodeThread)
+    {
+      if (mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) {
+        DecodeLoop();
+      } else if (mState == DECODER_STATE_SEEKING) {
+        DecodeSeek();
+      }
     }
-  }
 
-  mDecodeThreadIdle = true;
-  LOG(PR_LOG_DEBUG, ("%p Decode thread finished", mDecoder.get()));
+    mDecodeThreadIdle = true;
+    LOG(PR_LOG_DEBUG, ("%p Decode thread finished", mDecoder.get()));
+  }
+  
+  mReader->OnDecodeThreadFinish();
 }
 
 void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
@@ -550,11 +556,11 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
   aStream->mAudioFramesWritten += aAudio->mFrames - int32_t(offset);
 }
 
-static void WriteVideoToMediaStream(mozilla::layers::Image* aImage,
+static void WriteVideoToMediaStream(layers::Image* aImage,
                                     int64_t aDuration, const gfxIntSize& aIntrinsicSize,
                                     VideoSegment* aOutput)
 {
-  nsRefPtr<mozilla::layers::Image> image = aImage;
+  nsRefPtr<layers::Image> image = aImage;
   aOutput->AppendFrame(image.forget(), aDuration, aIntrinsicSize);
 }
 
@@ -2464,8 +2470,14 @@ VideoData* MediaDecoderStateMachine::FindStartTime()
 void MediaDecoderStateMachine::UpdateReadyState() {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
+  MediaDecoderOwner::NextFrameStatus nextFrameStatus = GetNextFrameStatus();
+  if (nextFrameStatus == mLastFrameStatus) {
+    return;
+  }
+  mLastFrameStatus = nextFrameStatus;
+
   nsCOMPtr<nsIRunnable> event;
-  switch (GetNextFrameStatus()) {
+  switch (nextFrameStatus) {
     case MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING:
       event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::NextFrameUnavailableBuffering);
       break;
@@ -2607,10 +2619,6 @@ void MediaDecoderStateMachine::TimeoutExpired()
   // Otherwise, an event has already been dispatched to run the state machine
   // as soon as possible. Nothing else needed to do, the state machine is
   // going to run anyway.
-}
-
-nsresult MediaDecoderStateMachine::ScheduleStateMachine() {
-  return ScheduleStateMachine(0);
 }
 
 void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder() {
