@@ -17,7 +17,6 @@
 
 interface Attr;
 interface CDATASection;
-interface DocumentFragment;
 interface Comment;
 interface NodeIterator;
 interface ProcessingInstruction;
@@ -28,6 +27,9 @@ interface Touch;
 interface TouchList;
 interface TreeWalker;
 interface WindowProxy;
+interface nsISupports;
+
+enum VisibilityState { "hidden", "visible" };
 
 /* http://dom.spec.whatwg.org/#interface-document */
 [Constructor]
@@ -352,9 +354,8 @@ partial interface Document {
 */
   readonly attribute boolean hidden;
   readonly attribute boolean mozHidden;
-  readonly attribute DOMString visibilityState;
-  readonly attribute DOMString mozVisibilityState;
-  // "hidden", "visible", "prerender", "unloaded"
+  readonly attribute VisibilityState visibilityState;
+  readonly attribute VisibilityState mozVisibilityState;
 /*
 };
 
@@ -410,6 +411,8 @@ partial interface Document {
   // nsIDOMDocumentTouch
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.
+  // XXXbz commented out for now because quickstubs can't do pref-ability
+  /*
   [SetterThrows, Pref="dom.w3c_touch_events.expose"]
   attribute EventHandler ontouchstart;
   [SetterThrows, Pref="dom.w3c_touch_events.expose"]
@@ -444,6 +447,7 @@ partial interface Document {
   TouchList createTouchList(Touch touch);
   [Creator, Pref="dom.w3c_touch_events.expose"]
   TouchList createTouchList(sequence<Touch> touches);
+  */
 };
 
 Document implements XPathEvaluator;

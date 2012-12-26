@@ -21,11 +21,14 @@ webidl_files = \
   Blob.webidl \
   CanvasRenderingContext2D.webidl \
   ClientRectList.webidl \
+  CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
   CSSValue.webidl \
   CSSValueList.webidl \
   DelayNode.webidl \
+  Document.webidl \
+  DocumentFragment.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \
   DOMSettableTokenList.webidl \
@@ -75,6 +78,7 @@ webidl_files = \
   SVGAnimatedNumberList.webidl \
   SVGAnimatedPreserveAspectRatio.webidl \
   SVGAnimatedTransformList.webidl \
+  SVGElement.webidl \
   SVGLengthList.webidl \
   SVGMatrix.webidl \
   SVGNumberList.webidl \
