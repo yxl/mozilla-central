@@ -30,6 +30,7 @@ EXTRA_COMPONENTS = \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
         NSSDialogService.js \
+        CMManager.js \
         SiteSpecificUserAgent.js \
         PaymentsUI.js \
         $(NULL)

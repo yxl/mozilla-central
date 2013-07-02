@@ -3064,7 +3064,24 @@ SearchService.prototype = {
 
         return;
       }
-
+      // Hack for tablet Baidu search.
+      try {
+          let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+          if (sysInfo.get("tablet")) {
+            for (var i = 0; i < names.length; i++) {
+                if (names[i] == 'baidu-zh-CN' || names[i] == 'taobao') {
+                    names.splice(i, 1);
+                }
+            }
+          } else {
+            for (var i = 0; i < names.length; i++) {
+                if (names[i] == 'baidu-zh-CN-tablet' || names[i] == 'taobao-tablet') {
+                    names.splice(i, 1);
+                }
+            }
+          }
+      } catch (ex) {
+      }
       names.forEach(function (n) uris.push(root + n + ".xml"));
     });
     

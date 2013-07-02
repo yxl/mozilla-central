@@ -299,6 +299,7 @@ DIST_FILES += \
   removed-files \
   recommended-addons.json \
   distribution \
+  assets \
   $(NULL)
 
 NON_DIST_FILES = \

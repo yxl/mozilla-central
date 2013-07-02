@@ -61,9 +61,11 @@ FENNEC_JAVA_FILES = \
   animation/Rotate3DAnimation.java \
   animation/ViewHelper.java \
   awesomebar/AwesomeBarTab.java \
+  awesomebar/BaiduTab.java \
   awesomebar/AllPagesTab.java \
   awesomebar/BookmarksTab.java \
   awesomebar/HistoryTab.java \
+  awesomebar/CnTopsitesTab.java \
   BackButton.java \
   BrowserApp.java \
   BrowserToolbar.java \
@@ -135,6 +137,8 @@ FENNEC_JAVA_FILES = \
   NotificationService.java \
   NSSBridge.java \
   OrderedBroadcastHelper.java \
+  PrefUtils.java \
+  CnLocalUtils.java \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
@@ -374,7 +378,7 @@ GARBAGE += \
   jni-stubs.inc \
   $(NULL)
 
-GARBAGE_DIRS += classes db jars res sync services
+GARBAGE_DIRS += classes db jars res sync services assets
 
 MOZ_ANDROID_SHARED_ID = "$(ANDROID_PACKAGE_NAME).sharedID"
 MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_sync"
@@ -430,6 +434,14 @@ RES_LAYOUT = \
   res/layout/awesomebar_suggestion_prompt.xml \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
+  res/layout/awesomebar_cntopsites_list.xml \
+  res/layout/cntopsites_list.xml \
+  res/layout/cn_topsites_hot_row.xml \
+  res/layout/cn_topsites_list_row.xml \
+  res/layout/cn_topsites_title_row.xml \
+  res/layout/cn_topsites_fake_title_row.xml \
+  res/layout/cn_topsites_hot_item.xml \
+  res/layout/cn_topsites_list_item.xml \
   res/layout/bookmark_edit.xml \
   res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
@@ -667,6 +679,29 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/validation_bg.9.png \
   res/drawable-mdpi/bookmarkdefaults_favicon_support.png \
   res/drawable-mdpi/bookmarkdefaults_favicon_addons.png \
+  res/drawable/bookmarkdefaults_favicon_z1.png \
+  res/drawable/bookmarkdefaults_favicon_z2.png \
+  res/drawable/bookmarkdefaults_favicon_z3.png \
+  res/drawable/bookmarkdefaults_favicon_z4.png \
+  res/drawable/bookmarkdefaults_favicon_z5.png \
+  res/drawable/bookmarkdefaults_favicon_z6.png \
+  res/drawable/bookmarkdefaults_favicon_z7.png \
+  res/drawable/bookmarkdefaults_favicon_z8.png \
+  res/drawable/cntop_fav1.png \
+  res/drawable/cntop_fav2.png \
+  res/drawable/cntop_fav3.png \
+  res/drawable/cntop_fav4.png \
+  res/drawable/cntop_fav5.png \
+  res/drawable/cntop_fav6.png \
+  res/drawable/cntop_fav7.png \
+  res/drawable/cntop_fav8.png \
+  res/drawable/cntop_fav9.png \
+  res/drawable/cntop_fav10.png \
+  res/drawable/cntop_fav11.png \
+  res/drawable/cntop_fav12.png \
+  res/drawable/cntop_fav13.png \
+  res/drawable/cntop_fav14.png \
+  res/drawable/cntop_fav15.png \
   res/drawable-mdpi/handle_end.png \
   res/drawable-mdpi/handle_middle.png \
   res/drawable-mdpi/handle_start.png \
@@ -872,6 +907,7 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-mdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-mdpi-v11/ic_menu_desktop_mode_on.png \
+  res/drawable-mdpi-v11/ic_menu_no_image_mode.png \
   res/drawable-mdpi-v11/ic_menu_downloads.png \
   res/drawable-mdpi-v11/ic_menu_find_in_page.png \
   res/drawable-mdpi-v11/ic_menu_forward.png \
@@ -898,6 +934,7 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-hdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-hdpi-v11/ic_menu_desktop_mode_on.png \
+  res/drawable-hdpi-v11/ic_menu_no_image_mode.png \
   res/drawable-hdpi-v11/ic_menu_downloads.png \
   res/drawable-hdpi-v11/ic_menu_find_in_page.png \
   res/drawable-hdpi-v11/ic_menu_forward.png \
@@ -924,6 +961,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_bookmark_remove.png \
   res/drawable-xhdpi-v11/ic_menu_desktop_mode_off.png \
   res/drawable-xhdpi-v11/ic_menu_desktop_mode_on.png \
+  res/drawable-xhdpi-v11/ic_menu_no_image_mode.png \
   res/drawable-xhdpi-v11/ic_menu_downloads.png \
   res/drawable-xhdpi-v11/ic_menu_find_in_page.png \
   res/drawable-xhdpi-v11/ic_menu_forward.png \
@@ -942,7 +980,7 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
-  res/drawable-large-mdpi-v11/menu.png \
+  res/drawable-large-mdpi-v11/menu.png \png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
@@ -1046,15 +1084,21 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/ic_menu_back.xml                       \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_off.xml           \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_on.xml            \
+  mobile/android/base/resources/drawable/ic_menu_no_image_mode.xml           \
   mobile/android/base/resources/drawable/ic_menu_quit.xml                       \
   mobile/android/base/resources/drawable/menu_item_state.xml                    \
   mobile/android/base/resources/drawable/menu_level.xml                         \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/remote_tabs_child_divider.xml          \
-  mobile/android/base/resources/drawable/shaped_button.xml                      \
+  mobile/android/base/resources/drawable/shaped_button.xml          \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/spinner.xml                            \
+  mobile/android/base/resources/drawable/dash.xml                            \
+  mobile/android/base/resources/drawable/vdash.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
+  mobile/android/base/resources/drawable/cntopsites_item.xml                \
+  mobile/android/base/resources/drawable/cntopsites_group_title.xml                \
+  mobile/android/base/resources/drawable/cntopsites_row_title.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
   mobile/android/base/resources/drawable/tab_row.xml                            \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
@@ -1065,7 +1109,7 @@ MOZ_ANDROID_DRAWABLES += \
 
 MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_LAYOUT_XLARGE_LAND_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_LAND_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \
@@ -1271,12 +1315,38 @@ $(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
 	@echo "creating $@"
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
+ASSETS_DIRS = \
+  assets      \
+  assets/images \
+  $(NULL)
 
-R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/values/strings.xml AndroidManifest.xml FORCE
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
+ASSETS = \
+  assets/default-pinned-sites.json    \
+  assets/tablet-default-pinned-sites.json  \
+  assets/default-topsites-mobile.json  \
+  assets/default-topsites-tablet.json  \
+  assets/images/z1.png    \
+  assets/images/z2.png    \
+  assets/images/z3.png    \
+  assets/images/z4.png    \
+  assets/images/z5.png    \
+  assets/images/z6.png    \
+  assets/images/z7.png    \
+  assets/images/z8.png    \
+  $(NULL)
 
-gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/values/strings.xml FORCE
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
+$(ASSETS_DIRS):
+	$(RM) -r $@
+	$(NSINSTALL) -D $@
+
+$(ASSETS): $(ASSETS_DIRS) $(subst assets/,$(srcdir)/cmhomepage-assets/,$(ASSETS))
+	$(NSINSTALL) $(subst assets/,$(srcdir)/cmhomepage-assets/,$@) $(dir $@)
+
+R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/values/strings.xml AndroidManifest.xml $(ASSETS) FORCE
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -A assets -J . --custom-package org.mozilla.gecko
+
+gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/values/strings.xml $(ASSETS) FORCE
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -A assets -F $@
 
 libs:: classes.dex package-name.txt jni-stubs.inc
 	$(INSTALL) classes.dex $(FINAL_TARGET)

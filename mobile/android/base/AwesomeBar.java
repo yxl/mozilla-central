@@ -79,6 +79,7 @@ public class AwesomeBar extends GeckoActivity
     private String mAutoCompleteResult = "";
     // The user typed part of the autocomplete result
     private String mAutoCompletePrefix = null;
+    private String defaultSearchEngine;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -418,11 +419,12 @@ public class AwesomeBar extends GeckoActivity
         final int index = url.indexOf(' ');
 
         // Check for a keyword if the URL looks like a search query
-        if (!StringUtils.isSearchQuery(url, true)) {
+		if (!StringUtils.isSearchQuery(url, true)) {
             openUrlAndFinish(url, "", true);
             return;
-        }
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+        }        
+
+		ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 final String keyword;
@@ -442,10 +444,42 @@ public class AwesomeBar extends GeckoActivity
                                        : url;
                 if (keywordUrl != null) {
                     recordSearch(null, "barkeyword");
+					openUrlAndFinish(searchUrl, "", true);
+					return;
                 }
-                openUrlAndFinish(searchUrl, "", true);
+				
+				if (defaultSearchEngine == null) {
+            		PrefsHelper.getPref("browser.search.defaultenginename", new PrefsHelper.PrefHandlerBase() {
+            			@Override 
+       					public void prefValue(String pref, String value) {
+       		   				if (!TextUtils.isEmpty(value)) {
+       		   					defaultSearchEngine = value;
+       						}
+       					}
+       					@Override
+       					public void finish() { 
+       						if (defaultSearchEngine == null) {
+       							openUrlAndFinish(url, "", true);
+       						} else {
+       							openSearchAndFinish(url, defaultSearchEngine);
+       							CnLocalUtils.addBaiduCount("location");
+       						}
+       					}
+       				});
+            	} else {
+            		openSearchAndFinish(url, defaultSearchEngine);
+            		CnLocalUtils.addBaiduCount("location");
+            	}
             }
         });
+    }
+
+	private void openSearchAndFinish(String url, String engine) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(URL_KEY, url);
+        resultIntent.putExtra(TARGET_KEY, mTarget);
+        resultIntent.putExtra(SEARCH_KEY, engine);
+        finishWithResult(resultIntent);
     }
 
     @Override

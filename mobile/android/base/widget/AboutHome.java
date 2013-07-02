@@ -8,6 +8,7 @@ package org.mozilla.gecko.widget;
 import java.util.EnumSet;
 
 import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.CnLocalUtils;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
@@ -39,7 +40,7 @@ public class AboutHome extends Fragment {
     private ContentObserver mTabsContentObserver;
     private int mTopPadding;
     private AboutHomeView mAboutHomeView;
-    private AddonsSection mAddonsSection;
+    //private AddonsSection mAddonsSection;
     private LastTabsSection mLastTabsSection;
     private RemoteTabsSection mRemoteTabsSection;
     private TopSitesView mTopSitesView;
@@ -95,7 +96,7 @@ public class AboutHome extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
 
         mAboutHomeView = (AboutHomeView) inflater.inflate(R.layout.abouthome_content, container, false);
-        mAddonsSection = (AddonsSection) mAboutHomeView.findViewById(R.id.recommended_addons);
+        //mAddonsSection = (AddonsSection) mAboutHomeView.findViewById(R.id.recommended_addons);
         mLastTabsSection = (LastTabsSection) mAboutHomeView.findViewById(R.id.last_tabs);
         mRemoteTabsSection = (RemoteTabsSection) mAboutHomeView.findViewById(R.id.remote_tabs);
         mTopSitesView = (TopSitesView) mAboutHomeView.findViewById(R.id.top_sites_grid);
@@ -116,7 +117,7 @@ public class AboutHome extends Fragment {
 
         mTopSitesView.setLoadCompleteListener(mLoadCompleteListener);
         mTopSitesView.setUriLoadListener(mUriLoadListener);
-        mAddonsSection.setUriLoadListener(mUriLoadListener);
+        //mAddonsSection.setUriLoadListener(mUriLoadListener);
 
         // Reload the mobile homepage on inbound tab syncs
         // Because the tabs URI is coarse grained, this updates the
@@ -138,7 +139,7 @@ public class AboutHome extends Fragment {
         mTopSitesView.onDestroy();
 
         mAboutHomeView = null;
-        mAddonsSection = null;
+        //mAddonsSection = null;
         mLastTabsSection = null;
         mRemoteTabsSection = null;
         mTopSitesView = null;
@@ -212,9 +213,9 @@ public class AboutHome extends Fragment {
             mLastTabsSection.readLastTabs();
         }
 
-        if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS)) {
+        /*if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS)) {
             mAddonsSection.readRecommendedAddons();
-        }
+        }*/
 
         if (flags.contains(UpdateFlags.REMOTE_TABS)) {
             mRemoteTabsSection.loadRemoteTabs();

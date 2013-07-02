@@ -567,6 +567,10 @@ public class Tab {
 
     void handleLocationChange(JSONObject message) throws JSONException {
         final String uri = message.getString("uri");
+        if (CnLocalUtils.isBaiduUrl(uri)) {
+        	CnLocalUtils.addBaiduCount("all");
+        }
+        CnLocalUtils.checkDailyTrack();
         mEnteringReaderMode = ReaderModeUtils.isEnteringReaderMode(mUrl, uri);
         updateURL(uri);
         updateUserSearch(message.getString("userSearch"));

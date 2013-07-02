@@ -23,6 +23,8 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
+  <string name="awesomebar_cntopsites_title">&awesomebar_cntopsites_title;</string>
+  <string name="awesomebar_baidu_title">&awesomebar_baidu_title;</string>
   <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
   <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
   <string name="awesomebar_history_title">&awesomebar_history_title;</string>
@@ -69,6 +71,7 @@
   <string name="save_as_pdf">&save_as_pdf;</string>
   <string name="find_in_page">&find_in_page;</string>
   <string name="desktop_mode">&desktop_mode;</string>
+  <string name="no_image_mode">&no_image_mode;</string>
   <string name="tools">&tools;</string>
 
   <string name="find_text">&find_text;</string>
@@ -253,6 +256,38 @@
 
   <string name="bookmarkdefaults_title_abouthome">@bookmarks_aboutHome@</string>
   <string name="bookmarkdefaults_url_abouthome">about:home</string>
+  
+  <string name="bookmarkdefaults_title_z1">火狐网址大全</string>
+  <string name="bookmarkdefaults_url_z1">http://m.huohu123.com/</string>
+  <string name="bookmarkdefaults_tablet_url_z1">http://www.huohu123.com/</string>
+  
+  <string name="bookmarkdefaults_title_z2">百度</string>
+  <string name="bookmarkdefaults_url_z2">http://m.baidu.com/?from=1000969a</string>
+  <string name="bookmarkdefaults_tablet_url_z2">http://www.baidu.com/index.php?tn=monline_4_dg</string>
+  
+  <string name="bookmarkdefaults_title_z3">新浪微博</string>
+  <string name="bookmarkdefaults_url_z3">http://m.weibo.cn/?wm=5455_0001</string>
+  <string name="bookmarkdefaults_tablet_url_z3">http://weibo.com/?c=spr_web_sq_firefox_weibo_t001</string>
+  
+  <string name="bookmarkdefaults_title_z4">新浪</string>
+  <string name="bookmarkdefaults_url_z4">http://sina.cn/</string>
+  <string name="bookmarkdefaults_tablet_url_z4">http://www.sina.com.cn/</string>
+  
+  <string name="bookmarkdefaults_title_z5">淘宝特卖</string>
+  <string name="bookmarkdefaults_url_z5">http://r.m.taobao.com/m3?p=mm_40320141_3490096_11397895&amp;c=1002</string>
+  <string name="bookmarkdefaults_tablet_url_z5">http://redirect.simba.taobao.com/rd?c=un&amp;w=channel&amp;f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313996%26unid%3D&amp;k=e02915d8b8ad9603&amp;p=mm_28347190_2425761_9313996</string>
+  
+  <string name="bookmarkdefaults_title_z6">天猫</string>
+  <string name="bookmarkdefaults_url_z6">http://r.m.taobao.com/m3?p=mm_40320141_3492632_11409768&amp;c=1001</string>
+  <string name="bookmarkdefaults_tablet_url_z6">http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313996&amp;eventid=101334</string>
+  
+  <string name="bookmarkdefaults_title_z7">亚马逊</string>
+  <string name="bookmarkdefaults_url_z7">http://www.amazon.cn/gp/aw?tag=mozillafire03-23</string>
+  <string name="bookmarkdefaults_tablet_url_z7">http://www.amazon.cn/?source=Mozilla</string>
+  
+  <string name="bookmarkdefaults_title_z8">豌豆荚</string>
+  <string name="bookmarkdefaults_url_z8">http://m.wandoujia.com/?utm_source=firefox</string>
+  <string name="bookmarkdefaults_tablet_url_z8">http://www.wandoujia.com/apps/?utm_source=firefox</string>
 
   <!-- Site identity popup -->
   <string name="identity_connected_to">&identity_connected_to;</string>
