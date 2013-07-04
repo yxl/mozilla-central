@@ -125,6 +125,49 @@ public class TopSitesView extends GridView {
     	}
     }
 
+    private void trackGrid(int position, String spec) {
+    	String pos = Integer.toString(position + 1);
+    	String fullurl = "http://m.g-fox.cn/cfhome.gif?t=quickdial&a=click&d=" + pos + "&u=";
+        if (mDefaultPinnedBoomarks.checkDefaultBookmarks(spec)) {
+       		fullurl += DigestUtils.md5Hex(spec);
+        }
+        fullurl += "&cid=" + mChannelid + "&r=" + Math.random(); 
+    	Log.d("turl", fullurl);
+    	final String turl = fullurl;
+    	
+    	(new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
+            @Override
+            public Void doInBackground(Void... params) {
+            	sendGridTrack(turl);
+                return null;
+            }
+            
+            @Override
+            public void onPostExecute(Void v) {
+            }
+
+        }).execute();
+        
+    }
+    
+    private void doTrackGrid(int position, String spec) {
+        final int aPosition = position;
+        final String aSpec = spec;
+        PrefsHelper.getPref("extensions.cmmanager.channelid", new PrefsHelper.PrefHandlerBase() {
+            @Override 
+            public void prefValue(String pref, String value) {
+                if (!TextUtils.isEmpty(value)) {
+                    mChannelid = value;
+                }
+            }
+            @Override
+            public void finish() { 
+                trackGrid(aPosition, aSpec);
+            }
+        });
+
+    }
+    
     private void init() {
         mThumbnailBackground = mContext.getResources().getColor(R.color.abouthome_thumbnail_bg);
         setOnItemClickListener(new AdapterView.OnItemClickListener() {

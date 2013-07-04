@@ -980,7 +980,7 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
-  res/drawable-large-mdpi-v11/menu.png \png \
+  res/drawable-large-mdpi-v11/menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
