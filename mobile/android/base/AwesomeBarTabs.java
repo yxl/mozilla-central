@@ -142,7 +142,7 @@ public class AwesomeBarTabs extends TabHost
         };
 
         mTabs = new AwesomeBarTab[] {
-            new BaiduTab(mContext),
+            new AllPagesTab(mContext),
             new CnTopsitesTab(mContext),
             new BookmarksTab(mContext),
             new HistoryTab(mContext)
@@ -298,8 +298,8 @@ public class AwesomeBarTabs extends TabHost
     	return (CnTopsitesTab)getAwesomeBarTabForTag("cntopsites");
     }
     
-    public BaiduTab getBaiduTab() {
-        return (BaiduTab)getAwesomeBarTabForTag("baidu");
+    public AllPagesTab getAllPagesTab() {
+        return (AllPagesTab)getAwesomeBarTabForTag("allPages");
     }
 
     public BookmarksTab getBookmarksTab() {
@@ -318,13 +318,13 @@ public class AwesomeBarTabs extends TabHost
         // reset the pager adapter to force repopulating the cache
         mViewPager.setAdapter(mPagerAdapter);
 
-        // Ensure the 'Baidu' tab is selected
-        BaiduTab baidu = getBaiduTab();
-        getTabWidget().setCurrentTab(getTabIdByTag(baidu.getTag()));
+        // Ensure the 'AllPages' tab is selected
+        AllPagesTab allpages = getAllPagesTab();
+        getTabWidget().setCurrentTab(getTabIdByTag(allpages.getTag()));
         styleSelectedTab();
 
         // Perform the actual search
-        baidu.filter(searchTerm, handler);
+        allpages.filter(searchTerm, handler);
 
         // If searching, hide the tabs bar
         findViewById(R.id.tab_widget_container).setVisibility(mSearching ? View.GONE : View.VISIBLE);

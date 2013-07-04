@@ -61,7 +61,6 @@ FENNEC_JAVA_FILES = \
   animation/Rotate3DAnimation.java \
   animation/ViewHelper.java \
   awesomebar/AwesomeBarTab.java \
-  awesomebar/BaiduTab.java \
   awesomebar/AllPagesTab.java \
   awesomebar/BookmarksTab.java \
   awesomebar/HistoryTab.java \
