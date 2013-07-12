@@ -39,6 +39,7 @@ import android.content.res.AssetManager;
 import android.content.SharedPreferences; 
 import android.preference.PreferenceManager; 
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 
 import java.io.BufferedReader;
@@ -158,7 +159,9 @@ public class CnTopsitesTab extends AwesomeBarTab {
             list.setAdapter(adapter);
             
             Display newDisplay = ((Activity)mContext).getWindowManager().getDefaultDisplay();
-            int width = newDisplay.getWidth();
+            Point size = new Point();
+            newDisplay.getSize(size);
+            int width = size.x;
             list.setIndicatorBounds(width-60, width-30);
             
             ViewTreeObserver vto = list.getViewTreeObserver();
@@ -168,7 +171,9 @@ public class CnTopsitesTab extends AwesomeBarTab {
                 public void onGlobalLayout() {
                 	ExpandableListView list = getListView();
                 	Display newDisplay = ((Activity)mContext).getWindowManager().getDefaultDisplay();
-                    int width = newDisplay.getWidth();
+                	Point size = new Point();
+                    newDisplay.getSize(size);
+                    int width = size.x;
                 	list.setIndicatorBounds(width-60, width-30);
                 }
             });
