@@ -562,9 +562,11 @@ RES_XML = \
   res/xml/preference_headers.xml \
   res/xml/preferences_main.xml \
   res/xml/preferences_general.xml \
+  res/xml/preferences_advanced.xml \
   res/xml/preferences_content.xml \
   res/xml/preferences_privacy.xml \
   res/xml/preferences_datareporting.xml \
+  res/xml/preferences_proxy.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 

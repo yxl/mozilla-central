@@ -70,6 +70,7 @@ public class GeckoPreferences
     private static String PREFS_TELEMETRY_ENABLED = "datareporting.telemetry.enabled";
     private static String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
     private static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
+    private static String PREFS_PROXY_TYPE = "network.proxy.type";
     private static String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
     private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
@@ -442,7 +443,7 @@ public class GeckoPreferences
             broadcastHealthReportUploadPref(GeckoAppShell.getContext(), ((Boolean) newValue).booleanValue());
             return true;
         }
-
+        
         if (!TextUtils.isEmpty(prefName)) {
             PrefsHelper.setPref(prefName, newValue);
         }
@@ -451,6 +452,8 @@ public class GeckoPreferences
             int newIndex = ((ListPreference) preference).findIndexOfValue((String) newValue);
             CharSequence newEntry = ((ListPreference) preference).getEntries()[newIndex];
             ((ListPreference) preference).setSummary(newEntry);
+        } else if (preference instanceof EditTextPreference) {
+            ((EditTextPreference) preference).setSummary(newValue.toString());
         } else if (preference instanceof LinkPreference) {
             setResult(RESULT_CODE_EXIT_SETTINGS);
             finish();
@@ -664,6 +667,19 @@ public class GeckoPreferences
             }
 
             @Override
+            public void prefValue(String prefName, final int value) {
+                final Preference pref = getField(prefName);
+                if (pref instanceof EditTextPreference) {
+                    ThreadUtils.postToUiThread(new Runnable() {
+                    	@Override
+                        public void run() {
+                            ((EditTextPreference) pref).setText(String.valueOf(value));
+                        }
+                    });
+                }
+            }
+            
+            @Override
             public void prefValue(String prefName, final String value) {
                 final Preference pref = getField(prefName);
                 if (pref instanceof EditTextPreference) {
@@ -671,6 +687,7 @@ public class GeckoPreferences
                         @Override
                         public void run() {
                             ((EditTextPreference) pref).setText(value);
+                            ((EditTextPreference) pref).setSummary(value);
                         }
                     });
                 } else if (pref instanceof ListPreference) {
@@ -707,7 +724,7 @@ public class GeckoPreferences
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        screen.setEnabled(true);
+                    	screen.setEnabled(true);
                     }
                 });
             }

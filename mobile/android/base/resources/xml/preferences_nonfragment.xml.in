@@ -35,7 +35,7 @@
            android:persistent="false" />
 
     </PreferenceCategory>
-
+    
     <PreferenceCategory android:title="@string/pref_category_content">
 
         <ListPreference android:key="browser.menu.showCharacterEncoding"
@@ -129,6 +129,23 @@
 
         </PreferenceScreen>
 
+    </PreferenceCategory>
+    
+    <PreferenceCategory android:title="@string/pref_category_advanced">
+    
+        <PreferenceScreen android:title="@string/pref_proxy_menu"
+                          android:key="android.not_a_preference.proxy.preferences">
+                          
+            <intent android:action="android.intent.action.VIEW"
+                    android:targetPackage="@ANDROID_PACKAGE_NAME@"
+                    android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+            <extra 
+                   android:name="resource"
+                   android:value="preferences_proxy" />
+                   
+            </intent>
+                   
+        </PreferenceScreen>
     </PreferenceCategory>
 
 

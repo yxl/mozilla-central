@@ -69,6 +69,7 @@
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
 <!ENTITY pref_category_general "General">
+<!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_privacy "Privacy &amp; Security">
 <!ENTITY pref_category_content "Content">
 <!-- Localization note (datareporting_title) : This string matches
@@ -80,9 +81,19 @@
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
 <!ENTITY pref_header_general "General">
+<!ENTITY pref_header_advanced "Advanced">
 <!ENTITY pref_header_privacy "Privacy &amp; Security">
 <!ENTITY pref_header_content "Content">
-
+<!ENTITY pref_proxy_menu "Proxy">
+<!ENTITY pref_proxy_none "No proxy">
+<!ENTITY pref_proxy_system "Use system proxy">
+<!ENTITY pref_proxy_manual "Manual proxy">
+<!ENTITY pref_proxy_http_proxy "HTTP Proxy">
+<!ENTITY pref_proxy_http_port "HTTP Port">
+<!ENTITY pref_proxy_ftp_proxy "FTP Proxy">
+<!ENTITY pref_proxy_ftp_port "FTP Port">
+<!ENTITY pref_proxy_ssl_proxy "SSL Proxy">
+<!ENTITY pref_proxy_ssl_port "SSL Port">
 <!ENTITY pref_cookies_menu "Cookies">
 <!ENTITY pref_cookies_accept_all "Enabled">
 <!ENTITY pref_cookies_not_accept_foreign "Enabled, excluding 3rd party">

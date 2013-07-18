@@ -1060,6 +1060,7 @@ var BrowserApp = {
         case "browser.chrome.titlebarMode":
         case "network.cookie.cookieBehavior":
         case "font.size.inflation.minTwips":
+        case "network.proxy.type":
           pref.type = "string";
           pref.value = pref.value.toString();
           break;
@@ -1150,6 +1151,7 @@ var BrowserApp = {
       // to their actual types so we can store them.
       case "browser.chrome.titlebarMode":
       case "network.cookie.cookieBehavior":
+      case "network.proxy.type":
       case "font.size.inflation.minTwips":
         json.type = "int";
         json.value = parseInt(json.value);
