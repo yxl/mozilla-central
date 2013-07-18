@@ -38,8 +38,8 @@
     <item android:id="@+id/desktop_mode"
           android:icon="@drawable/ic_menu_desktop_mode_off"
           android:title="@string/desktop_mode"
-		  android:checkable="true" />
-
+          android:checkable="true" />
+    
     <item android:id="@+id/qr_code"
           android:icon="@drawable/ic_menu_qr_code"
           android:title="@string/qr_code" />
@@ -69,6 +69,7 @@
             <item android:id="@+id/apps"
                   android:icon="@drawable/ic_menu_apps"
                   android:title="@string/apps"/>
+
         </menu>
 
     </item>
