@@ -185,6 +185,7 @@ size. -->
 <!ENTITY find_in_page "Find in Page">
 <!ENTITY desktop_mode "Request Desktop Site">
 <!ENTITY no_image_mode "No Image Mode">
+<!ENTITY qr_code "QR Scanner">
 <!ENTITY tools "Tools">
 <!ENTITY new_tab "New Tab">
 <!ENTITY new_private_tab "New Private Tab">
