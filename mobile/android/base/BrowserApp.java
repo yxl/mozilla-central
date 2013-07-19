@@ -20,6 +20,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.AboutHome;
+import org.mozilla.gecko.zxing.client.android.CaptureActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -88,9 +89,6 @@ abstract public class BrowserApp extends GeckoApp
     public static BrowserToolbar mBrowserToolbar;
     private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
-	
-	// Li Xiaotian
-    //private Boolean mQRCode = false;
 
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
@@ -1378,27 +1376,6 @@ abstract public class BrowserApp extends GeckoApp
             }
         });
     }
-    
-	/*
-	// Li Xiaotian
-    public void initQRCode(MenuItem item) {
-        final MenuItem qrCode = item;
-        PrefsHelper.getPref("permissions.default.image", new PrefsHelper.PrefHandlerBase() {
-        @Override
-        public void prefValue(String pref, int value) {
-            if (value == 1 || value == 3) {
-                mQRCode = false;
-            }
-            if (value == 2) {
-                mQRCode = true;
-            }
-        }
-        @Override
-        public void finish() {  
-            //qrCode.setChecked(mQRCode);
-        }
-    });
-    }*/
 
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu) {
@@ -1416,7 +1393,6 @@ abstract public class BrowserApp extends GeckoApp
         MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
         MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
         MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
-		// Li Xiaotian
 		MenuItem qrCode = aMenu.findItem(R.id.qr_code);
 
         // Only show the "Quit" menu item on pre-ICS or television devices.
@@ -1429,7 +1405,6 @@ abstract public class BrowserApp extends GeckoApp
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
             findInPage.setEnabled(false);
-			// Li Xiaotian
 			qrCode.setEnabled(false);
             return true;
         }
@@ -1442,10 +1417,7 @@ abstract public class BrowserApp extends GeckoApp
         forward.setEnabled(tab.canDoForward());
         desktopMode.setChecked(tab.getDesktopMode());
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
-        
-		// Li Xiaotian
-		//qrCode.setChecked(false);
-		//initQRCode(qrCode);
+
 		qrCode.setEnabled(true);
 
         String url = tab.getURL();
@@ -1472,7 +1444,6 @@ abstract public class BrowserApp extends GeckoApp
         return true;
     }
 
-	// Li Xiaotian
 	private void toggleQRCode() {
 		return;
 	}
@@ -1550,7 +1521,6 @@ abstract public class BrowserApp extends GeckoApp
             case R.id.new_private_tab:
                 addPrivateTab();
                 return true;
-			// Li Xiaotian
 			case R.id.qr_code:
 				toggleQRCode();
 				return true;
