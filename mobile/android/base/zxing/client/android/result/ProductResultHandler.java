@@ -32,9 +32,7 @@ import android.view.View;
  */
 public final class ProductResultHandler extends ResultHandler {
   private static final int[] buttons = {
-      R.string.button_product_search,
       R.string.button_web_search,
-      R.string.button_custom_product_search
   };
 
   public ProductResultHandler(Activity activity, ParsedResult result, Result rawResult) {
@@ -50,7 +48,7 @@ public final class ProductResultHandler extends ResultHandler {
 
   @Override
   public int getButtonCount() {
-    return hasCustomProductSearch() ? buttons.length : buttons.length - 1;
+    return buttons.length;
   }
 
   @Override
@@ -69,17 +67,7 @@ public final class ProductResultHandler extends ResultHandler {
     } else {
       throw new IllegalArgumentException(rawResult.getClass().toString());
     }
-    switch (index) {
-      case 0:
-        openProductSearch(productID);
-        break;
-      case 1:
-        webSearch(productID);
-        break;
-      case 2:
-        openURL(fillInCustomSearchURL(productID));
-        break;
-    }
+    webSearch(productID);
   }
 
   @Override
