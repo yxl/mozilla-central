@@ -51,65 +51,22 @@ public final class AddressBookResultHandler extends ResultHandler {
     }
   }
 
-  private static final int[] BUTTON_TEXTS = {
+  private static final int[] buttons = {
     R.string.button_add_contact,
-    R.string.button_show_map,
-    R.string.button_dial,
-    R.string.button_email,
   };
-
-  private final boolean[] fields;
-  private int buttonCount;
-
-  // This takes all the work out of figuring out which buttons/actions should be in which
-  // positions, based on which fields are present in this barcode.
-  private int mapIndexToAction(int index) {
-    if (index < buttonCount) {
-      int count = -1;
-      for (int x = 0; x < MAX_BUTTON_COUNT; x++) {
-        if (fields[x]) {
-          count++;
-        }
-        if (count == index) {
-          return x;
-        }
-      }
-    }
-    return -1;
-  }
 
   public AddressBookResultHandler(Activity activity, ParsedResult result) {
     super(activity, result);
-    AddressBookParsedResult addressResult = (AddressBookParsedResult) result;
-    String[] addresses = addressResult.getAddresses();
-    boolean hasAddress = addresses != null && addresses.length > 0 && addresses[0] != null && addresses[0].length() > 0;
-    String[] phoneNumbers = addressResult.getPhoneNumbers();
-    boolean hasPhoneNumber = phoneNumbers != null && phoneNumbers.length > 0;
-    String[] emails = addressResult.getEmails();
-    boolean hasEmailAddress = emails != null && emails.length > 0;
-
-    fields = new boolean[MAX_BUTTON_COUNT];
-    fields[0] = true; // Add contact is always available
-    fields[1] = hasAddress;
-    fields[2] = hasPhoneNumber;
-    fields[3] = hasEmailAddress;
-
-    buttonCount = 0;
-    for (int x = 0; x < MAX_BUTTON_COUNT; x++) {
-      if (fields[x]) {
-        buttonCount++;
-      }
-    }
   }
 
   @Override
   public int getButtonCount() {
-    return buttonCount;
+	return buttons.length;
   }
 
   @Override
   public int getButtonText(int index) {
-    return BUTTON_TEXTS[mapIndexToAction(index)];
+    return buttons[index];
   }
 
   @Override
@@ -119,40 +76,22 @@ public final class AddressBookResultHandler extends ResultHandler {
     String address1 = addresses == null || addresses.length < 1 ? null : addresses[0];
     String[] addressTypes = addressResult.getAddressTypes();
     String address1Type = addressTypes == null || addressTypes.length < 1 ? null : addressTypes[0];
-    int action = mapIndexToAction(index);
-    switch (action) {
-      case 0:
-        addContact(addressResult.getNames(),
-                   addressResult.getNicknames(),
-                   addressResult.getPronunciation(),
-                   addressResult.getPhoneNumbers(),
-                   addressResult.getPhoneTypes(),
-                   addressResult.getEmails(),
-                   addressResult.getEmailTypes(),
-                   addressResult.getNote(),
-                   addressResult.getInstantMessenger(),
-                   address1,
-                   address1Type,
-                   addressResult.getOrg(),
-                   addressResult.getTitle(),
-                   addressResult.getURLs(),
-                   addressResult.getBirthday(),
-                   addressResult.getGeo());
-        break;
-      case 1:
-        String[] names = addressResult.getNames();
-        String title = names != null ? names[0] : null;
-        searchMap(address1, title);
-        break;
-      case 2:
-        dialPhone(addressResult.getPhoneNumbers()[0]);
-        break;
-      case 3:
-        sendEmail(addressResult.getEmails()[0], null, null);
-        break;
-      default:
-        break;
-    }
+    addContact(addressResult.getNames(),
+               addressResult.getNicknames(),
+               addressResult.getPronunciation(),
+               addressResult.getPhoneNumbers(),
+               addressResult.getPhoneTypes(),
+               addressResult.getEmails(),
+               addressResult.getEmailTypes(),
+               addressResult.getNote(),
+               addressResult.getInstantMessenger(),
+               address1,
+               address1Type,
+               addressResult.getOrg(),
+               addressResult.getTitle(),
+               addressResult.getURLs(),
+               addressResult.getBirthday(),
+               addressResult.getGeo());
   }
 
   private static Date parseDate(String s) {

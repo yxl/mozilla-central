@@ -315,7 +315,8 @@
   <string name="wallpaper_success">&wallpaper_success;</string>
   <string name="wallpaper_progress">&wallpaper_progress;</string>
   <string name="wallpaper_fail">&wallpaper_fail;</string>
-
+  
+  <string name="scan_result">&scan_result;</string>
   <string name="bookmark_picker_name">&bookmark_picker_name;</string>
   <string name="button_add_calendar">&button_add_calendar;</string>
   <string name="button_add_contact">&button_add_contact;</string>

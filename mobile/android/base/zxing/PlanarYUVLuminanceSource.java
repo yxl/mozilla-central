@@ -121,6 +121,33 @@ public final class PlanarYUVLuminanceSource extends LuminanceSource {
                                         height,
                                         false);
   }
+  
+  // Modified by Li Xiaotian(2013.7.12)
+  @Override
+  public boolean isRotateSupported() {
+	  return true;
+  }
+  
+  // Modified by Li Xiaotian(2013.7.12)
+  @Override
+  public LuminanceSource rotateCounterClockwise() {
+	  byte[] rotateYuvData = new byte[yuvData.length];
+	  
+	  for(int i = 0; i != dataHeight; i++) {
+		  for(int j = 0; j != dataWidth; j++) {
+			  rotateYuvData[j*dataHeight+(dataHeight-1-i)] = yuvData[i*dataWidth+j];
+		  }
+	  }
+	  
+	  return new PlanarYUVLuminanceSource(rotateYuvData, 
+			                              dataHeight, 
+			                              dataWidth, 
+			                              top, 
+			                              left,
+			                              super.getHeight(),
+			                              super.getWidth(),
+			                              false);
+  }
 
   public int[] renderThumbnail() {
     int width = getWidth() / THUMBNAIL_SCALE_FACTOR;

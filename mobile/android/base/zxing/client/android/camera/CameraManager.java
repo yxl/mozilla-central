@@ -41,8 +41,12 @@ public final class CameraManager {
 
   private static final int MIN_FRAME_WIDTH = 240;
   private static final int MIN_FRAME_HEIGHT = 240;
-  private static final int MAX_FRAME_WIDTH = 960; // = 1920/2
-  private static final int MAX_FRAME_HEIGHT = 540; // = 1080/2
+  //private static final int MAX_FRAME_WIDTH = 960; // = 1920/2
+  //private static final int MAX_FRAME_HEIGHT = 540; // = 1080/2
+  
+  // Modified by Li Xiaotian(2013.7.12)
+  private static final int MAX_FRAME_WIDTH = 400; // = 1080/2
+  private static final int MAX_FRAME_HEIGHT = 960; // = 1920/2
 
   private final Context context;
   private final CameraConfigurationManager configManager;
@@ -81,6 +85,10 @@ public final class CameraManager {
       }
       camera = theCamera;
     }
+    
+    // Modified by Li Xiaotian(2013.7.12)
+    camera.setDisplayOrientation(90);
+    
     theCamera.setPreviewDisplay(holder);
 
     if (!initialized) {
@@ -215,7 +223,15 @@ public final class CameraManager {
 
       int width = findDesiredDimensionInRange(screenResolution.x, MIN_FRAME_WIDTH, MAX_FRAME_WIDTH);
       int height = findDesiredDimensionInRange(screenResolution.y, MIN_FRAME_HEIGHT, MAX_FRAME_HEIGHT);
-
+      
+      // Modified by Li Xiaotian(2013.7.12)
+      if(height > width) {
+    	  height = width;
+      }
+      else { 
+    	  width = height;
+      }
+      
       int leftOffset = (screenResolution.x - width) / 2;
       int topOffset = (screenResolution.y - height) / 2;
       framingRect = new Rect(leftOffset, topOffset, leftOffset + width, topOffset + height);
@@ -225,7 +241,10 @@ public final class CameraManager {
   }
   
   private static int findDesiredDimensionInRange(int resolution, int hardMin, int hardMax) {
-    int dim = resolution / 2; // Target 50% of each dimension
+    // Modified by Li Xiaotian(2013.7.12)
+	int dim = (int)(resolution * 0.75);
+	  
+	//int dim = resolution / 2; // Target 50% of each dimension
     if (dim < hardMin) {
       return hardMin;
     }
@@ -252,10 +271,10 @@ public final class CameraManager {
         // Called early, before init even finished
         return null;
       }
-      rect.left = rect.left * cameraResolution.x / screenResolution.x;
-      rect.right = rect.right * cameraResolution.x / screenResolution.x;
-      rect.top = rect.top * cameraResolution.y / screenResolution.y;
-      rect.bottom = rect.bottom * cameraResolution.y / screenResolution.y;
+      rect.left = rect.left * cameraResolution.y / screenResolution.x;
+      rect.right = rect.right * cameraResolution.y / screenResolution.x;
+      rect.top = rect.top * cameraResolution.x / screenResolution.y;
+      rect.bottom = rect.bottom * cameraResolution.x / screenResolution.y;
       framingRectInPreview = rect;
     }
     return framingRectInPreview;
@@ -303,8 +322,8 @@ public final class CameraManager {
       return null;
     }
     // Go ahead and assume it's YUV rather than die.
-    return new PlanarYUVLuminanceSource(data, width, height, rect.left, rect.top,
-                                        rect.width(), rect.height(), false);
+    return new PlanarYUVLuminanceSource(data, width, height, rect.top, rect.left,
+                                        rect.height(), rect.width(), false);
   }
 
 }
