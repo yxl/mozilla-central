@@ -258,30 +258,36 @@ HTMLVideoElement::NotifyOwnerDocumentActivityChanged()
   WakeLockUpdate();
 }
 
-already_AddRefed<dom::VideoPlaybackQuality>
-HTMLVideoElement::VideoPlaybackQuality()
+already_AddRefed<VideoPlaybackQuality>
+HTMLVideoElement::GetVideoPlaybackQuality()
 {
-  nsPIDOMWindow* window = OwnerDoc()->GetInnerWindow();
-  NS_ENSURE_TRUE(window, nullptr);
-  nsPerformance* perf = window->GetPerformance();
-  NS_ENSURE_TRUE(perf, nullptr);
-  DOMHighResTimeStamp creationTime = perf->GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
-
+  DOMHighResTimeStamp creationTime = 0;
   uint64_t totalFrames = 0;
   uint64_t droppedFrames = 0;
   uint64_t corruptedFrames = 0;
   double playbackJitter = 0.0;
-  if (mDecoder && sVideoStatsEnabled) {
-    MediaDecoder::FrameStatistics& stats = mDecoder->GetFrameStatistics();
-    totalFrames = stats.GetParsedFrames();
-    droppedFrames = totalFrames - stats.GetPresentedFrames();
-    corruptedFrames = totalFrames - stats.GetDecodedFrames();
-    playbackJitter = stats.GetPlaybackJitter();
+
+  if (sVideoStatsEnabled) {
+    nsPIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+    if (window) {
+      nsPerformance* perf = window->GetPerformance();
+      if (perf) {
+        creationTime = perf->GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
+      }
+    }
+
+    if (mDecoder) {
+      MediaDecoder::FrameStatistics& stats = mDecoder->GetFrameStatistics();
+      totalFrames = stats.GetParsedFrames();
+      droppedFrames = totalFrames - stats.GetPresentedFrames();
+      corruptedFrames = totalFrames - stats.GetDecodedFrames();
+      playbackJitter = stats.GetPlaybackJitter();
+    }
   }
 
-  nsRefPtr<dom::VideoPlaybackQuality> playbackQuality =
-    new dom::VideoPlaybackQuality(this, creationTime, totalFrames, droppedFrames,
-                                  corruptedFrames, playbackJitter);
+  nsRefPtr<VideoPlaybackQuality> playbackQuality =
+    new VideoPlaybackQuality(this, creationTime, totalFrames, droppedFrames,
+                             corruptedFrames, playbackJitter);
   return playbackQuality.forget();
 }
 

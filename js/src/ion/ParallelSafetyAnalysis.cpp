@@ -13,8 +13,9 @@
 #include "ion/IonSpewer.h"
 #include "ion/UnreachableCodeElimination.h"
 #include "ion/IonAnalysis.h"
-
 #include "vm/Stack.h"
+
+#include "jsinferinlines.h"
 
 using namespace js;
 using namespace ion;
@@ -169,6 +170,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(ToDouble)
     SAFE_OP(ToInt32)
     SAFE_OP(TruncateToInt32)
+    SAFE_OP(MaybeToDoubleElement)
     CUSTOM_OP(ToString)
     SAFE_OP(NewSlots)
     CUSTOM_OP(NewArray)
@@ -195,7 +197,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(GetPropertyCache)
     SAFE_OP(GetPropertyPolymorphic)
     UNSAFE_OP(SetPropertyPolymorphic)
-    UNSAFE_OP(GetElementCache)
+    SAFE_OP(GetElementCache)
     UNSAFE_OP(SetElementCache)
     UNSAFE_OP(BindNameCache)
     SAFE_OP(GuardShape)
@@ -429,7 +431,7 @@ void
 ParallelSafetyAnalysis::replaceOperandsOnResumePoint(MResumePoint *resumePoint,
                                                      MDefinition *withDef)
 {
-    for (size_t i = 0; i < resumePoint->numOperands(); i++)
+    for (size_t i = 0, e = resumePoint->numOperands(); i < e; i++)
         resumePoint->replaceOperand(i, withDef);
 }
 
@@ -692,9 +694,9 @@ ParallelSafetyVisitor::visitCall(MCall *ins)
 
     JSFunction *target = ins->getSingleTarget();
     if (target) {
-        // Native? Scary.
-        if (target->isNative()) {
-            SpewMIR(ins, "call to native function");
+        // Non-parallel native? Scary
+        if (target->isNative() && !target->hasParallelNative()) {
+            SpewMIR(ins, "call to non-parallel native function");
             return markUnsafe();
         }
         return true;
@@ -797,9 +799,14 @@ ion::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
 
             RootedFunction target(cx, callIns->getSingleTarget());
             if (target) {
-                RootedScript script(cx, target->nonLazyScript());
-                if (!AddCallTarget(script, targets))
-                    return false;
+                JS_ASSERT_IF(!target->isInterpreted(), target->hasParallelNative());
+
+                if (target->isInterpreted()) {
+                    RootedScript script(cx, target->nonLazyScript());
+                    if (!AddCallTarget(script, targets))
+                        return false;
+                }
+
                 continue;
             }
 

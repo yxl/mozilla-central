@@ -23,6 +23,7 @@
 #include "gfxD2DSurface.h"
 #elif defined(XP_MACOSX)
 #include "gfxPlatformMac.h"
+#include "gfxQuartzSurface.h"
 #elif defined(MOZ_WIDGET_GTK)
 #include "gfxPlatformGtk.h"
 #elif defined(MOZ_WIDGET_QT)
@@ -101,6 +102,7 @@ static void ShutdownCMS();
 static void MigratePrefs();
 
 static bool sDrawLayerBorders = false;
+static bool sDrawFrameCounter = false;
 
 #include "mozilla/gfx/2D.h"
 using namespace mozilla::gfx;
@@ -407,6 +409,10 @@ gfxPlatform::Init()
                                           "layers.draw-borders",
                                           false);
 
+    mozilla::Preferences::AddBoolVarCache(&sDrawFrameCounter,
+                                          "layers.frame-counter",
+                                          false);
+
     CreateCMSOutputProfile();
 }
 
@@ -540,6 +546,24 @@ gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aS
   aSurface->SetData(&kDrawTarget, drawTarget, NULL);
   return drawTarget;
 }
+
+// This is a temporary function used by ContentClient to build a DrawTarget
+// around the gfxASurface. This should eventually be replaced by plumbing
+// the DrawTarget through directly
+RefPtr<DrawTarget>
+gfxPlatform::CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const IntSize& aSize)
+{
+#ifdef XP_MACOSX
+  // this is a bit of a hack that assumes that the buffer associated with the CGContext
+  // will live around long enough that nothing bad will happen.
+  if (aSurface->GetType() == gfxASurface::SurfaceTypeQuartz) {
+    return Factory::CreateDrawTargetForCairoCGContext(static_cast<gfxQuartzSurface*>(aSurface)->GetCGContext(), aSize);
+  }
+#endif
+  MOZ_CRASH();
+  return nullptr;
+}
+
 
 cairo_user_data_key_t kSourceSurface;
 
@@ -1136,6 +1160,11 @@ gfxPlatform::DrawLayerBorders()
     return sDrawLayerBorders;
 }
 
+bool
+gfxPlatform::DrawFrameCounter()
+{
+    return sDrawFrameCounter;
+}
 
 void
 gfxPlatform::GetLangPrefs(eFontPrefLang aPrefLangs[], uint32_t &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang)
@@ -1807,6 +1836,7 @@ static bool sPrefLayersAccelerationForceEnabled = false;
 static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
+static int  sPrefLayoutFrameRate = -1;
 
 void InitLayersAccelerationPrefs()
 {
@@ -1820,6 +1850,7 @@ void InitLayersAccelerationPrefs()
     sPrefLayersAccelerationDisabled = Preferences::GetBool("layers.acceleration.disabled", false);
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
+    sPrefLayoutFrameRate = Preferences::GetInt("layout.frame_rate", -1);
 
     sLayersAccelerationPrefsInitialized = true;
   }
@@ -1862,4 +1893,10 @@ bool gfxPlatform::GetPrefLayersPreferD3D9()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersPreferD3D9;
+}
+
+int gfxPlatform::GetPrefLayoutFrameRate()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefLayoutFrameRate;
 }

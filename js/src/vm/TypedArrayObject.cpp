@@ -1728,7 +1728,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!obj)
             return NULL;
 
-        types::TypeObject *type = proto->getNewType(cx, obj->getClass());
+        types::TypeObject *type = cx->getNewType(obj->getClass(), proto.get());
         if (!type)
             return NULL;
         obj->setType(type);
@@ -2778,7 +2778,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
         return NULL;
 
     if (proto) {
-        types::TypeObject *type = proto->getNewType(cx, &class_);
+        types::TypeObject *type = cx->getNewType(&class_, TaggedProto(proto));
         if (!type)
             return NULL;
         obj->setType(type);
@@ -3396,6 +3396,45 @@ DataViewObject::fun_setFloat64(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<is, setFloat64Impl>(cx, args);
+}
+
+void
+TypedArrayObject::copyTypedArrayElement(uint32_t index, MutableHandleValue vp)
+{
+    JS_ASSERT(index < length());
+
+    switch (type()) {
+      case TYPE_INT8:
+        TypedArrayObjectTemplate<int8_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT8:
+        TypedArrayObjectTemplate<uint8_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT8_CLAMPED:
+        TypedArrayObjectTemplate<uint8_clamped>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_INT16:
+        TypedArrayObjectTemplate<int16_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT16:
+        TypedArrayObjectTemplate<uint16_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_INT32:
+        TypedArrayObjectTemplate<int32_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_UINT32:
+        TypedArrayObjectTemplate<uint32_t>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_FLOAT32:
+        TypedArrayObjectTemplate<float>::copyIndexToValue(this, index, vp);
+        break;
+      case TYPE_FLOAT64:
+        TypedArrayObjectTemplate<double>::copyIndexToValue(this, index, vp);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unknown TypedArray type");
+        break;
+    }
 }
 
 /***
