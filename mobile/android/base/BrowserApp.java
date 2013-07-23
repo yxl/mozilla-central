@@ -83,6 +83,8 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
 
+    private static final int ZXING_REQUEST_CODE = 1997;
+
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
 
@@ -714,24 +716,33 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         String url = null;
+        switch(requestCode) {
+            case ZXING_REQUEST_CODE:
+                if(resultCode == Activity.RESULT_OK && data != null) {
+                    Bundle bundle = data.getExtras();
+                    url = bundle.getString("ZXING_URL");
+                    Tabs.getInstance().loadUrlInTab(url);
+                }
+                break;
+            default: 
+                // Don't update the url in the toolbar if the activity was cancelled.
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    // Don't update the url if the activity was launched to pick a site.
+                    String targetKey = data.getStringExtra(AwesomeBar.TARGET_KEY);
+                    if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
+                        // Update the toolbar with the url that was just entered.
+                        url = data.getStringExtra(AwesomeBar.URL_KEY);
+                    }
+                }
 
-        // Don't update the url in the toolbar if the activity was cancelled.
-        if (resultCode == Activity.RESULT_OK && data != null) {
-            // Don't update the url if the activity was launched to pick a site.
-            String targetKey = data.getStringExtra(AwesomeBar.TARGET_KEY);
-            if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
-                // Update the toolbar with the url that was just entered.
-                url = data.getStringExtra(AwesomeBar.URL_KEY);
-            }
+                // We always need to call fromAwesomeBarSearch to perform the toolbar animation.
+                mBrowserToolbar.fromAwesomeBarSearch(url);
+
+                // Trigger any tab-related events after we start restoring
+                // the toolbar state above to make ensure animations happen
+                // on the correct order.
+                super.onActivityResult(requestCode, resultCode, data);
         }
-
-        // We always need to call fromAwesomeBarSearch to perform the toolbar animation.
-        mBrowserToolbar.fromAwesomeBarSearch(url);
-
-        // Trigger any tab-related events after we start restoring
-        // the toolbar state above to make ensure animations happen
-        // on the correct order.
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -1444,9 +1455,11 @@ abstract public class BrowserApp extends GeckoApp
         return true;
     }
 
-	private void toggleQRCode() {
-		return;
-	}
+    private void toggleQRCode() {
+        Intent intent = new Intent(this, CaptureActivity.class);
+        startActivityForResult(intent, ZXING_REQUEST_CODE);
+        return;
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

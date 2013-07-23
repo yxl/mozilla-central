@@ -16,6 +16,7 @@
 
 package org.mozilla.gecko.zxing.client.android.result;
 
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.zxing.Result;
 import org.mozilla.gecko.zxing.client.android.Contents;
 import org.mozilla.gecko.zxing.client.android.Intents;
@@ -33,6 +34,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.util.Log;
@@ -87,7 +89,10 @@ public abstract class ResultHandler {
   };
   private static final int NO_TYPE = -1;
 
-  public static final int MAX_BUTTON_COUNT = 4;
+  public static final int MAX_BUTTON_COUNT = 1;
+  
+  // Result code of ZXing.
+  public static final int RESULT_ZXING = 1997;
 
   private final ParsedResult result;
   private final Activity activity;
@@ -437,18 +442,33 @@ public abstract class ResultHandler {
     } else if (url.startsWith("HTTPS://")) {
       url = "https" + url.substring(5);
     }
+
+    Intent intent = new Intent();
+    Bundle bundle = new Bundle();
+    bundle.putString("ZXING_URL", url);
+    intent.putExtras(bundle);
+    activity.setResult(Activity.RESULT_OK, intent);
+    activity.finish();
+    
+    /*
     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
     try {
       launchIntent(intent);
     } catch (ActivityNotFoundException ignored) {
       Log.w(TAG, "Nothing available to handle " + intent);
-    }
+    }*/
   }
 
   final void webSearch(String query) {
-    Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
-    intent.putExtra("query", query);
-    launchIntent(intent);
+	Intent intent = new Intent();
+	Bundle bundle = new Bundle();
+	bundle.putString("ZXING_URL", "www.baidu.com/s?wd=" + query);
+	intent.putExtras(bundle);
+	activity.setResult(Activity.RESULT_OK, intent);
+	activity.finish();
+    //Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+    //intent.putExtra("query", query);
+    //launchIntent(intent);
   }
 
   final void openGoogleShopper(String query) {

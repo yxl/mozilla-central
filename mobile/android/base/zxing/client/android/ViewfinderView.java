@@ -52,6 +52,7 @@ public final class ViewfinderView extends View {
   private final int maskColor;
   private final int resultColor;
   private final int laserColor;
+  private final int frameColor;
   private final int resultPointColor;
   private int scannerAlpha;
   private List<ResultPoint> possibleResultPoints;
@@ -67,6 +68,7 @@ public final class ViewfinderView extends View {
     maskColor = resources.getColor(R.color.viewfinder_mask);
     resultColor = resources.getColor(R.color.result_view);
     laserColor = resources.getColor(R.color.viewfinder_laser);
+    frameColor = resources.getColor(R.color.viewfinder_frame);
     resultPointColor = resources.getColor(R.color.possible_result_points);
     scannerAlpha = 0;
     possibleResultPoints = new ArrayList<ResultPoint>(5);
@@ -95,6 +97,14 @@ public final class ViewfinderView extends View {
     canvas.drawRect(0, frame.top, frame.left, frame.bottom + 1, paint);
     canvas.drawRect(frame.right + 1, frame.top, width, frame.bottom + 1, paint);
     canvas.drawRect(0, frame.bottom + 1, width, height, paint);
+    
+    // Draw the frame
+    paint.setColor(frameColor);
+    paint.setStrokeWidth(2);
+    canvas.drawLine(frame.left, frame.top, width - frame.left, frame.top, paint);
+    canvas.drawLine(frame.left, height - frame.top, frame.left, frame.top, paint);
+    canvas.drawLine(width - frame.left, height - frame.top, frame.left, height - frame.top, paint);
+    canvas.drawLine(width - frame.left, frame.top, width - frame.left, height - frame.top, paint);
 
     if (resultBitmap != null) {
       // Draw the opaque result bitmap over the scanning rectangle
@@ -107,7 +117,7 @@ public final class ViewfinderView extends View {
       paint.setAlpha(SCANNER_ALPHA[scannerAlpha]);
       scannerAlpha = (scannerAlpha + 1) % SCANNER_ALPHA.length;
       int middle = frame.height() / 2 + frame.top;
-      canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
+      //canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
       
       Rect previewFrame = cameraManager.getFramingRectInPreview();
       float scaleX = frame.width() / (float) previewFrame.width();

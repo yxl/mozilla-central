@@ -35,6 +35,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
@@ -153,7 +154,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
     viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
     viewfinderView.setCameraManager(cameraManager);
-
+    
     resultView = findViewById(R.id.result_view);
     statusView = (TextView) findViewById(R.id.status_view);
 
@@ -425,7 +426,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
    * @param rawResult The decoded results which contains the points to draw.
    */
   private void drawResultPoints(Bitmap barcode, float scaleFactor, Result rawResult) {
-    ResultPoint[] points = rawResult.getResultPoints();
+    /*ResultPoint[] points = rawResult.getResultPoints();
+    
     if (points != null && points.length > 0) {
       Canvas canvas = new Canvas(barcode);
       Paint paint = new Paint();
@@ -445,7 +447,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
           canvas.drawPoint(scaleFactor * point.getX(), scaleFactor * point.getY(), paint);
         }
       }
-    }
+    }*/
   }
 
   private static void drawLine(Canvas canvas, Paint paint, ResultPoint a, ResultPoint b, float scaleFactor) {
@@ -460,8 +462,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   // Put up our own UI for how to handle the decoded contents.
   private void handleDecodeInternally(Result rawResult, ResultHandler resultHandler, Bitmap barcode) {
-    statusView.setVisibility(View.GONE);
-    viewfinderView.setVisibility(View.GONE);
+	statusView.setVisibility(View.GONE);
+	viewfinderView.setVisibility(View.GONE);
     resultView.setVisibility(View.VISIBLE);
 
     ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
@@ -469,9 +471,25 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
       //barcodeImageView.setImageBitmap(BitmapFactory.decodeResource(getResources(),
           //R.drawable.launcher_icon));
     } else {
-      barcodeImageView.setImageBitmap(barcode);
+      // Modified by Li Xiaotian(2013.7.12)
+      Matrix matrix = new Matrix();
+      int width = barcode.getWidth();
+      int height = barcode.getHeight();
+      int length = 0;
+      if(width > height) {
+    	  length = width;
+      }
+      else {
+    	  length = height;
+      }
+      matrix.setRotate(90);
+      Bitmap rotatedBarcode = Bitmap.createBitmap(barcode, 0, 0, barcode.getWidth(), barcode.getHeight(), matrix, false);
+      Bitmap scaledBarcode = Bitmap.createScaledBitmap(rotatedBarcode, length, length, true);
+      
+      barcodeImageView.setImageBitmap(scaledBarcode);
     }
-
+    
+    /*
     TextView formatTextView = (TextView) findViewById(R.id.format_text_view);
     formatTextView.setText(rawResult.getBarcodeFormat().toString());
 
@@ -502,7 +520,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         metaTextView.setVisibility(View.VISIBLE);
         metaTextViewLabel.setVisibility(View.VISIBLE);
       }
-    }
+    }*/
 
     TextView contentsTextView = (TextView) findViewById(R.id.contents_text_view);
     CharSequence displayContents = resultHandler.getDisplayContents();
