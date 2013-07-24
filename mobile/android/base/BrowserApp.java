@@ -1404,7 +1404,7 @@ abstract public class BrowserApp extends GeckoApp
         MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
         MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
         MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
-		MenuItem qrCode = aMenu.findItem(R.id.qr_code);
+        MenuItem qrCode = aMenu.findItem(R.id.qr_code);
 
         // Only show the "Quit" menu item on pre-ICS or television devices.
         // In ICS+, it's easy to kill an app through the task switcher.
@@ -1416,7 +1416,7 @@ abstract public class BrowserApp extends GeckoApp
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
             findInPage.setEnabled(false);
-			qrCode.setEnabled(false);
+            qrCode.setEnabled(false);
             return true;
         }
 
@@ -1429,7 +1429,7 @@ abstract public class BrowserApp extends GeckoApp
         desktopMode.setChecked(tab.getDesktopMode());
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
 
-		qrCode.setEnabled(true);
+        qrCode.setEnabled(true);
 
         String url = tab.getURL();
         if (ReaderModeUtils.isAboutReader(url)) {
@@ -1534,9 +1534,9 @@ abstract public class BrowserApp extends GeckoApp
             case R.id.new_private_tab:
                 addPrivateTab();
                 return true;
-			case R.id.qr_code:
-				toggleQRCode();
-				return true;
+            case R.id.qr_code:
+                toggleQRCode();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
