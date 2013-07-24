@@ -556,7 +556,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         super.onDestroy();
-	}
+    }
 
     @Override
     protected void finishProfileMigration() {
@@ -1444,7 +1444,7 @@ abstract public class BrowserApp extends GeckoApp
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
             findInPage.setEnabled(false);
-			qrCode.setEnabled(false);
+            qrCode.setEnabled(false);
             return true;
         }
 
@@ -1457,7 +1457,7 @@ abstract public class BrowserApp extends GeckoApp
         desktopMode.setChecked(tab.getDesktopMode());
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
 
-		qrCode.setEnabled(true);
+        qrCode.setEnabled(true);
 
         noImageMode.setChecked(false);
         initNoImageMode(noImageMode);
@@ -1590,9 +1590,9 @@ abstract public class BrowserApp extends GeckoApp
             case R.id.new_private_tab:
                 addPrivateTab();
                 return true;
-			case R.id.qr_code:
-				toggleQRCode();
-				return true;
+            case R.id.qr_code:
+                toggleQRCode();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
