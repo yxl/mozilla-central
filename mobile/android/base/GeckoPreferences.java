@@ -71,6 +71,12 @@ public class GeckoPreferences
     private static String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
     private static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static String PREFS_PROXY_TYPE = "network.proxy.type";
+    private static String PREFS_HTTP_PROXY = "network.proxy.http";
+    private static String PREFS_HTTP_PORT = "network.proxy.http_port";
+    private static String PREFS_FTP_PROXY = "network.proxy.ftp";
+    private static String PREFS_FTP_PORT = "network.proxy.ftp_port";
+    private static String PREFS_SSL_PROXY = "network.proxy.ssl";
+    private static String PREFS_SSL_PORT = "network.proxy.ssl_port";
     private static String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
     private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
@@ -420,7 +426,7 @@ public class GeckoPreferences
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean(name, def);
     }
-
+    
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
@@ -445,7 +451,12 @@ public class GeckoPreferences
         }
         
         if (!TextUtils.isEmpty(prefName)) {
-            PrefsHelper.setPref(prefName, newValue);
+        	if (PREFS_HTTP_PORT.equals(prefName) || PREFS_FTP_PORT.equals(prefName) 
+            		|| PREFS_SSL_PORT.equals(prefName)) {
+                PrefsHelper.setPref(prefName, Integer.parseInt(newValue.toString()));
+        	} else {
+        		PrefsHelper.setPref(prefName, newValue);
+        	}
         }
         if (preference instanceof ListPreference) {
             // We need to find the entry for the new value
@@ -674,6 +685,7 @@ public class GeckoPreferences
                     	@Override
                         public void run() {
                             ((EditTextPreference) pref).setText(String.valueOf(value));
+                            ((EditTextPreference) pref).setSummary(String.valueOf(value));
                         }
                     });
                 }
@@ -717,6 +729,28 @@ public class GeckoPreferences
             public boolean isObserver() {
                 return true;
             }
+            
+            private void setProxySettingsEnabled(boolean enabled) {
+            	screen.findPreference(PREFS_HTTP_PROXY).setEnabled(enabled);
+            	screen.findPreference(PREFS_HTTP_PORT).setEnabled(enabled);
+            	screen.findPreference(PREFS_FTP_PROXY).setEnabled(enabled);
+            	screen.findPreference(PREFS_FTP_PORT).setEnabled(enabled);
+            	screen.findPreference(PREFS_SSL_PROXY).setEnabled(enabled);
+            	screen.findPreference(PREFS_SSL_PORT).setEnabled(enabled);
+            }
+            
+            private void checkProxySettingsEnabled() {
+            	try {
+            		ListPreference pref = (ListPreference) screen.findPreference(PREFS_PROXY_TYPE);
+            		String type = pref.getValue();
+	            	// manual proxy
+	            	if (!type.equals("1")) {
+	            		setProxySettingsEnabled(false);
+	            	}
+            	} catch (Exception e) {
+            		Log.d("pref_menu_error", e.toString());
+            	}
+            }
 
             @Override
             public void finish() {
@@ -724,7 +758,8 @@ public class GeckoPreferences
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                    	screen.setEnabled(true);
+                		screen.setEnabled(true);
+                		checkProxySettingsEnabled();
                     }
                 });
             }
