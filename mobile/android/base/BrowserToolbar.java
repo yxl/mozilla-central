@@ -820,7 +820,11 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         	}
         }
         //mReader.setVisibility(!isLoading && (mShowReader || exitableReaderMode) ? View.VISIBLE : View.GONE);
-        mReader.setVisibility(View.VISIBLE);
+        if (isLoading) {
+        	mReader.setVisibility(View.GONE);
+        } else {
+        	mReader.setVisibility(View.VISIBLE);
+        }
         // We want title to fill the whole space available for it when there are icons
         // being shown on the right side of the toolbar as the icons already have some
         // padding in them. This is just to avoid wasting space when icons are shown.
