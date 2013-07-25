@@ -699,7 +699,7 @@ Readability.prototype = {
         } else if (this._flagIsActive(this.FLAG_CLEAN_CONDITIONALLY)) {
           this._removeFlag(this.FLAG_CLEAN_CONDITIONALLY);
         } else {
-          return articleContent;
+          return null;
         }
       } else {
         if (lastTopCandidate !== null) {
@@ -710,7 +710,7 @@ Readability.prototype = {
           // actual articles, there will likely be many candidates with similar score (i.e. higher contrast ratio).
           let contrastRatio = lastTopCandidate.readability.contentScore / topCandidate.readability.contentScore;
           if (contrastRatio > 0.45)
-            return articleContent;
+            return null;
         }
 
         return articleContent;
