@@ -125,7 +125,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
     @Override
     public int getTitleStringId() {
-        return R.string.awesomebar_all_pages_title;
+        return R.string.awesomebar_baidu_title;
     }
 
     @Override
