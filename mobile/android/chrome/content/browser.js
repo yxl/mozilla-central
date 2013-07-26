@@ -240,6 +240,9 @@ var BrowserApp = {
   get isOnLowMemoryPlatform() {
     let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
     delete this.isOnLowMemoryPlatform;
+    if (!memory.isLowMemoryPlatform()) {
+    	sendMessageToJava({ type: "Platform:NotLowMemory" });
+    }
     return this.isOnLowMemoryPlatform = memory.isLowMemoryPlatform();
   },
 

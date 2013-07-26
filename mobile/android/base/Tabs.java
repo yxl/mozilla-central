@@ -67,6 +67,8 @@ public class Tabs implements GeckoEventListener {
     private GeckoApp mActivity;
     private ContentObserver mContentObserver;
 
+    private boolean mIsLowMemoryPlatform = true;
+    
     private Tabs() {
         registerEventListener("Session:RestoreEnd");
         registerEventListener("SessionHistory:New");
@@ -88,6 +90,7 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Link:Favicon");
         registerEventListener("Link:Feed");
         registerEventListener("DesktopMode:Changed");
+        registerEventListener("Platform:NotLowMemory");
     }
 
     public synchronized void attachToActivity(GeckoApp activity) {
@@ -366,6 +369,10 @@ public class Tabs implements GeckoEventListener {
        return Tabs.TabsInstanceHolder.INSTANCE;
     }
 
+    public boolean isLowMemoryPlatform() {
+    	return mIsLowMemoryPlatform;
+    }
+    
     // GeckoEventListener implementation
 
     @Override
@@ -374,6 +381,11 @@ public class Tabs implements GeckoEventListener {
             if (event.equals("Session:RestoreEnd")) {
                 notifyListeners(null, TabEvents.RESTORED);
                 return;
+            }
+            
+            if (event.equals("Platform:NotLowMemory")) {
+            	mIsLowMemoryPlatform = false;
+            	return;
             }
 
             // All other events handled below should contain a tabID property

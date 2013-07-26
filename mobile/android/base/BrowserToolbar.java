@@ -171,7 +171,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
         mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
         mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
-
+        
     }
 
     public void from(RelativeLayout layout) {
@@ -820,7 +820,7 @@ public class BrowserToolbar implements Tabs.OnTabsChangedListener,
         	}
         }
         //mReader.setVisibility(!isLoading && (mShowReader || exitableReaderMode) ? View.VISIBLE : View.GONE);
-        if (isLoading) {
+        if (isLoading || Tabs.getInstance().isLowMemoryPlatform()) {
         	mReader.setVisibility(View.GONE);
         } else {
         	mReader.setVisibility(View.VISIBLE);
