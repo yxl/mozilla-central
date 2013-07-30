@@ -52,8 +52,8 @@
     </style>
 
     <style name="Widget.ExpandableListView" parent="Widget.ListView">
-        <item name="android:groupIndicator">@android:color/transparent</item>
 
+        <item name="android:groupIndicator">@android:color/transparent</item>
         <!-- Using a color for the childDivider is broken for Froyo and GB
              phones (see bug 862761), so we use a drawable instead. -->
         <item name="android:childDivider">@drawable/awesomebar_listview_divider</item>
@@ -232,7 +232,7 @@
     </style>
 
     <!-- Lists in CnTopsites -->
-    <style name="CnTopsitesList" parent="android:style/Widget.ListView.White">
+    <style name="CnTopsitesList" parent="android:style/Widget.ExpandableListView">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">fill_parent</item>
         <item name="android:divider">@drawable/dash</item>

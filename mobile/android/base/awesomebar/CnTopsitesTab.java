@@ -160,7 +160,7 @@ public class CnTopsitesTab extends AwesomeBarTab {
             
             Display newDisplay = ((Activity)mContext).getWindowManager().getDefaultDisplay();
             int width = newDisplay.getWidth();
-            list.setIndicatorBounds(width-60, width-30);
+            list.setIndicatorBounds(width-120, width);
             
             ViewTreeObserver vto = list.getViewTreeObserver();
 
@@ -170,7 +170,7 @@ public class CnTopsitesTab extends AwesomeBarTab {
                 	ExpandableListView list = getListView();
                 	Display newDisplay = ((Activity)mContext).getWindowManager().getDefaultDisplay();
                 	int width = newDisplay.getWidth();
-                	list.setIndicatorBounds(width-60, width-30);
+                	list.setIndicatorBounds(width-120, width);
                 }
             });
             
