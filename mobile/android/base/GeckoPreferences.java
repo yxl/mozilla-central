@@ -453,7 +453,12 @@ public class GeckoPreferences
         if (!TextUtils.isEmpty(prefName)) {
         	if (PREFS_HTTP_PORT.equals(prefName) || PREFS_FTP_PORT.equals(prefName) 
             		|| PREFS_SSL_PORT.equals(prefName)) {
-                PrefsHelper.setPref(prefName, Integer.parseInt(newValue.toString()));
+        		try {
+        			PrefsHelper.setPref(prefName, Integer.parseInt(newValue.toString()));
+        		} catch (Exception e) {   
+        			PrefsHelper.setPref(prefName, 0);
+        			newValue = "0";
+        		}
         	} else {
         		PrefsHelper.setPref(prefName, newValue);
         	}
