@@ -173,9 +173,14 @@ public final class WifiConfigManager extends AsyncTask<WifiParsedResult,Object,O
   private static Integer findNetworkInExistingConfig(WifiManager wifiManager, String ssid) {
     List<WifiConfiguration> existingConfigs = wifiManager.getConfiguredNetworks();
     for (WifiConfiguration existingConfig : existingConfigs) {
+      if(existingConfig.SSID != null) {
+    	if(existingConfig.SSID.equals(ssid))
+    		return existingConfig.networkId;
+      }
+      /*
       if (existingConfig.SSID.equals(ssid)) {
         return existingConfig.networkId;
-      }
+      }*/
     }
     return null;
   }
