@@ -412,7 +412,9 @@ public class HistoryTab extends AwesomeBarTab {
         String url = (String) historyItem.get(URLColumns.URL);
         String title = (String) historyItem.get(URLColumns.TITLE);
         sendToListener(url, title);
-		CnLocalUtils.addBaiduCount("history");
+        if (CnLocalUtils.isBaiduUrl(url)) {
+        	CnLocalUtils.addBaiduCount("history");
+        }
         return true;
     }
 

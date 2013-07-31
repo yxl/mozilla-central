@@ -211,7 +211,9 @@ public class BookmarksTab extends AwesomeBarTab {
             url = ReaderModeUtils.getAboutReaderForUrl(url, true);
         }
         sendToListener(url, title);
-		CnLocalUtils.addBaiduCount("bookmark");
+        if (CnLocalUtils.isBaiduUrl(url)) {
+        	CnLocalUtils.addBaiduCount("bookmark");
+        }
     }
 
     private class BookmarksListAdapter extends SimpleCursorAdapter {

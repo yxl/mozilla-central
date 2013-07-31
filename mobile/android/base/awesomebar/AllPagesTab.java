@@ -471,7 +471,9 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
             String title = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.TITLE));
             sendToListener(url, title);
-			CnLocalUtils.addBaiduCount("baiduTab");
+            if (CnLocalUtils.isBaiduUrl(url)) {
+            	CnLocalUtils.addBaiduCount("baiduTab");
+            }
         }
 
         @Override
