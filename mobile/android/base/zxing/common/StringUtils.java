@@ -32,7 +32,6 @@ public final class StringUtils {
       System.getProperty("file.encoding");
   public static final String SHIFT_JIS = "SJIS";
   public static final String GB2312 = "GB2312";
-  public static final String GBK = "GBK";
   private static final String EUC_JP = "EUC_JP";
   private static final String UTF8 = "UTF8";
   private static final String ISO88591 = "ISO8859_1";
@@ -53,7 +52,6 @@ public final class StringUtils {
 	if (hints != null) {
       String characterSet = (String) hints.get(DecodeHintType.CHARACTER_SET);
       if (characterSet != null) {
-        //return characterSet;
         return characterSet;
       }
     }
@@ -63,9 +61,11 @@ public final class StringUtils {
     boolean canBeISO88591 = true;
     boolean canBeShiftJIS = true;
     boolean canBeUTF8 = true;
-    boolean canBeGBK = true;
-    int gbkLeft_1 = 0;
-    int gbkLeft_2 = 0;
+    // Modified by Li Xiaotian
+    // Support GB2312 encoding
+    boolean canBeGB2312 = true;
+    int gb2312a = 0;
+    int gb2312b = 0;
     int utf8BytesLeft = 0;
     //int utf8LowChars = 0;
     int utf2BytesChars = 0;
@@ -89,36 +89,37 @@ public final class StringUtils {
         bytes[2] == (byte) 0xBF;
 
     for (int i = 0;
-         i < length && (canBeISO88591 || canBeShiftJIS || canBeUTF8 || canBeGBK);
+         i < length && (canBeISO88591 || canBeShiftJIS || canBeUTF8 || canBeGB2312);
          i++) {
 
       int value = bytes[i] & 0xFF;
       
-      //GBK stuff
-      if (canBeGBK) {
-    	  if(gbkLeft_1 == 0 && gbkLeft_2 == 0) {
-    		  if(value >= 0xA1 && value <= 0xA9) {
-    			  gbkLeft_1 = 1;  
-    		  }
-    		  if(value >= 0xB0 && value <= 0xF7) {
-    			  gbkLeft_2 = 1;
-    		  }
+      // Modified by Li Xiaotian
+      // GB2312 stuff
+      if (canBeGB2312) {
+    	if (gb2312a == 0 && gb2312b == 0) {
+    	  if (value >= 0xA1 && value <= 0xA9) {
+    	    gb2312a = 1;  
     	  }
-    	  else {
-	    	  if(gbkLeft_2 == 1 && !(value >= 0xA1 && value <= 0xFE)) {
-	    		  canBeGBK = false;
-              }
-	    	  else {
-	    		  gbkLeft_2 = 0;
-	    	  }
+    	  if (value >= 0xB0 && value <= 0xF7) {
+    		gb2312b = 1;
+    	  }
+    	}
+    	else {
+	      if (gb2312b == 1 && !(value >= 0xA1 && value <= 0xFE)) {
+	    	canBeGB2312 = false;
+          }
+	      else {
+	        gb2312b = 0;
+	      }
 	    	  
-	    	  if(gbkLeft_1 == 1 && !(value >= 0xA1 && value <= 0xFE)) {
-	    		  canBeGBK = false;  
-	    	  }
-	    	  else {
-	    		  gbkLeft_1 = 0;
-	    	  }
-    	  }
+	      if (gb2312a == 1 && !(value >= 0xA1 && value <= 0xFE)) {
+	        canBeGB2312 = false;  
+	      }
+	      else {
+	        gb2312a = 0;
+	      }
+    	}
       }
 
       // UTF-8 stuff
@@ -209,9 +210,11 @@ public final class StringUtils {
     if (canBeShiftJIS && sjisBytesLeft > 0) {
       canBeShiftJIS = false;
     }
-   
-    if(canBeGBK) {
-    	return GBK;
+    
+    // Modified by Li Xiaotian 
+    // GB2312 stuff
+    if(canBeGB2312) {
+    	return GB2312;
     }
     
     // Easy -- if there is BOM or at least 1 valid not-single byte character (and no evidence it can't be UTF-8), done

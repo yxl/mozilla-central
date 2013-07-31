@@ -46,15 +46,15 @@ final class AmbientLightManager implements SensorEventListener {
 
   void start(CameraManager cameraManager) {
     this.cameraManager = cameraManager;
-    /*
-    if (true) {
+    // Modified by Li Xiaotian
+    // Turn off the front light
+    if (false) {
       SensorManager sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
       lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
       if (lightSensor != null) {
         sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
       }
     }
-    */
   }
 
   void stop() {
