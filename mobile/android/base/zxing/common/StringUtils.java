@@ -97,28 +97,28 @@ public final class StringUtils {
       // Modified by Li Xiaotian
       // GB2312 stuff
       if (canBeGB2312) {
-    	if (gb2312a == 0 && gb2312b == 0) {
-    	  if (value >= 0xA1 && value <= 0xA9) {
-    	    gb2312a = 1;  
-    	  }
-    	  if (value >= 0xB0 && value <= 0xF7) {
-    		gb2312b = 1;
-    	  }
-    	}
-    	else {
-	      if (gb2312b == 1 && !(value >= 0xA1 && value <= 0xFE)) {
-	    	canBeGB2312 = false;
+        if (gb2312a == 0 && gb2312b == 0) {
+          if (value >= 0xA1 && value <= 0xA9) {
+            gb2312a = 1;  
           }
-	      else {
-	        gb2312b = 0;
-	      }
-	    	  
-	      if (gb2312a == 1 && !(value >= 0xA1 && value <= 0xFE)) {
-	        canBeGB2312 = false;  
-	      }
-	      else {
-	        gb2312a = 0;
-	      }
+          if (value >= 0xB0 && value <= 0xF7) {
+            gb2312b = 1;
+          }
+        }
+        else {
+          if (gb2312b == 1 && !(value >= 0xA1 && value <= 0xFE)) {
+            canBeGB2312 = false;
+          }
+          else {
+            gb2312b = 0;
+          }
+	  
+          if (gb2312a == 1 && !(value >= 0xA1 && value <= 0xFE)) {
+            canBeGB2312 = false;  
+          }
+	  else {
+            gb2312a = 0;
+          }
         }
       }
 
