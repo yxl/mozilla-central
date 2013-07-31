@@ -39,6 +39,10 @@
           android:icon="@drawable/ic_menu_desktop_mode_off"
           android:title="@string/desktop_mode"
           android:checkable="true" />
+    
+    <item android:id="@+id/barcode_scanner"
+          android:icon="@drawable/ic_menu_barcode_scanner"
+          android:title="@string/barcode_scanner" />
 
     <item android:title="@string/tools"
           android:icon="@drawable/ic_menu_tools">
@@ -60,6 +64,7 @@
             <item android:id="@+id/apps"
                   android:icon="@drawable/ic_menu_apps"
                   android:title="@string/apps"/>
+
         </menu>
 
     </item>

@@ -20,6 +20,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.AboutHome;
+import org.mozilla.gecko.zxing.client.android.CaptureActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -81,6 +82,8 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_SUCCESS = 0;
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
+
+    private static final int ZXING_REQUEST_CODE = 1997;
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
@@ -713,7 +716,16 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         String url = null;
-
+        
+        if(requestCode == ZXING_REQUEST_CODE) {
+            if(resultCode == Activity.RESULT_OK && data != null) {
+                Bundle bundle = data.getExtras();
+                url = bundle.getString("ZXING_URL");
+                Tabs.getInstance().loadUrlInTab(url);
+            }
+            return;
+        }
+        
         // Don't update the url in the toolbar if the activity was cancelled.
         if (resultCode == Activity.RESULT_OK && data != null) {
             // Don't update the url if the activity was launched to pick a site.
@@ -1392,6 +1404,7 @@ abstract public class BrowserApp extends GeckoApp
         MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
         MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
         MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
+        MenuItem barcodeScanner = aMenu.findItem(R.id.barcode_scanner);
 
         // Only show the "Quit" menu item on pre-ICS or television devices.
         // In ICS+, it's easy to kill an app through the task switcher.
@@ -1403,6 +1416,7 @@ abstract public class BrowserApp extends GeckoApp
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
             findInPage.setEnabled(false);
+            barcodeScanner.setEnabled(false);
             return true;
         }
 
@@ -1414,6 +1428,8 @@ abstract public class BrowserApp extends GeckoApp
         forward.setEnabled(tab.canDoForward());
         desktopMode.setChecked(tab.getDesktopMode());
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
+
+        barcodeScanner.setEnabled(true);
 
         String url = tab.getURL();
         if (ReaderModeUtils.isAboutReader(url)) {
@@ -1437,6 +1453,12 @@ abstract public class BrowserApp extends GeckoApp
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
         return true;
+    }
+
+    private void openBarcodeScanner() {
+        Intent intent = new Intent(this, CaptureActivity.class);
+        startActivityForResult(intent, ZXING_REQUEST_CODE);
+        return;
     }
 
     @Override
@@ -1511,6 +1533,9 @@ abstract public class BrowserApp extends GeckoApp
                 return true;
             case R.id.new_private_tab:
                 addPrivateTab();
+                return true;
+            case R.id.barcode_scanner:
+                openBarcodeScanner();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
