@@ -119,7 +119,7 @@ public final class StringUtils {
 	      else {
 	        gb2312a = 0;
 	      }
-    	}
+        }
       }
 
       // UTF-8 stuff
