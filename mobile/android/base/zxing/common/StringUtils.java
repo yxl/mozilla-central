@@ -116,7 +116,7 @@ public final class StringUtils {
           if (gb2312a == 1 && !(value >= 0xA1 && value <= 0xFE)) {
             canBeGB2312 = false;  
           }
-	  else {
+          else {
             gb2312a = 0;
           }
         }
