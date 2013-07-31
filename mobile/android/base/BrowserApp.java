@@ -717,33 +717,33 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         String url = null;
-        switch(requestCode) {
-            case ZXING_REQUEST_CODE:
-                if(resultCode == Activity.RESULT_OK && data != null) {
-                    Bundle bundle = data.getExtras();
-                    url = bundle.getString("ZXING_URL");
-                    Tabs.getInstance().loadUrlInTab(url);
-                }
-                break;
-            default: 
-                // Don't update the url in the toolbar if the activity was cancelled.
-                if (resultCode == Activity.RESULT_OK && data != null) {
-                    // Don't update the url if the activity was launched to pick a site.
-                    String targetKey = data.getStringExtra(AwesomeBar.TARGET_KEY);
-                    if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
-                        // Update the toolbar with the url that was just entered.
-                        url = data.getStringExtra(AwesomeBar.URL_KEY);
-                    }
-                }
-
-                // We always need to call fromAwesomeBarSearch to perform the toolbar animation.
-                mBrowserToolbar.fromAwesomeBarSearch(url);
-
-                // Trigger any tab-related events after we start restoring
-                // the toolbar state above to make ensure animations happen
-                // on the correct order.
-                super.onActivityResult(requestCode, resultCode, data);
+        
+        if(requestCode == ZXING_REQUEST_CODE) {
+            if(resultCode == Activity.RESULT_OK && data != null) {
+                Bundle bundle = data.getExtras();
+                url = bundle.getString("ZXING_URL");
+                Tabs.getInstance().loadUrlInTab(url);
+            }
+            return;
         }
+        
+        // Don't update the url in the toolbar if the activity was cancelled.
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            // Don't update the url if the activity was launched to pick a site.
+            String targetKey = data.getStringExtra(AwesomeBar.TARGET_KEY);
+            if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
+                // Update the toolbar with the url that was just entered.
+                url = data.getStringExtra(AwesomeBar.URL_KEY);
+            }
+        }
+
+        // We always need to call fromAwesomeBarSearch to perform the toolbar animation.
+        mBrowserToolbar.fromAwesomeBarSearch(url);
+
+        // Trigger any tab-related events after we start restoring
+        // the toolbar state above to make ensure animations happen
+        // on the correct order.
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -1431,7 +1431,7 @@ abstract public class BrowserApp extends GeckoApp
         MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
         MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
         MenuItem noImageMode = aMenu.findItem(R.id.no_image_mode);
-        MenuItem qrCode = aMenu.findItem(R.id.qr_code);
+        MenuItem barcodeScanner = aMenu.findItem(R.id.barcode_scanner);
 
         // Only show the "Quit" menu item on pre-ICS or television devices.
         // In ICS+, it's easy to kill an app through the task switcher.
@@ -1444,7 +1444,7 @@ abstract public class BrowserApp extends GeckoApp
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
             findInPage.setEnabled(false);
-            qrCode.setEnabled(false);
+            barcodeScanner.setEnabled(false);
             return true;
         }
 
@@ -1457,7 +1457,7 @@ abstract public class BrowserApp extends GeckoApp
         desktopMode.setChecked(tab.getDesktopMode());
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
 
-        qrCode.setEnabled(true);
+        barcodeScanner.setEnabled(true);
 
         noImageMode.setChecked(false);
         initNoImageMode(noImageMode);
@@ -1508,7 +1508,7 @@ abstract public class BrowserApp extends GeckoApp
 		});
     }
 
-    private void toggleQRCode() {
+    private void openBarcodeScanner() {
         Intent intent = new Intent(this, CaptureActivity.class);
         startActivityForResult(intent, ZXING_REQUEST_CODE);
         return;
@@ -1590,8 +1590,8 @@ abstract public class BrowserApp extends GeckoApp
             case R.id.new_private_tab:
                 addPrivateTab();
                 return true;
-            case R.id.qr_code:
-                toggleQRCode();
+            case R.id.barcode_scanner:
+                openBarcodeScanner();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

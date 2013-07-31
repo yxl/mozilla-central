@@ -465,6 +465,8 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	statusView.setVisibility(View.GONE);
 	viewfinderView.setVisibility(View.GONE);
     resultView.setVisibility(View.VISIBLE);
+    
+    Toast.makeText(this, R.string.content_copied_to_clipboard, Toast.LENGTH_SHORT).show();
 
     ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
     if (barcode == null) {
