@@ -70,7 +70,7 @@
   <string name="save_as_pdf">&save_as_pdf;</string>
   <string name="find_in_page">&find_in_page;</string>
   <string name="desktop_mode">&desktop_mode;</string>
-  <string name="qr_code">&qr_code;</string>
+  <string name="barcode_scanner">&barcode_scanner;</string>
   <string name="tools">&tools;</string>
 
   <string name="find_text">&find_text;</string>
@@ -294,7 +294,8 @@
   <string name="wallpaper_success">&wallpaper_success;</string>
   <string name="wallpaper_progress">&wallpaper_progress;</string>
   <string name="wallpaper_fail">&wallpaper_fail;</string>
-  
+
+  <!-- ZXing barcode scanner -->  
   <string name="scan_result">&scan_result;</string>
   <string name="bookmark_picker_name">&bookmark_picker_name;</string>
   <string name="button_add_calendar">&button_add_calendar;</string>
@@ -368,5 +369,6 @@
   <string name="wifi_changing_network">&wifi_changing_network;</string>
   <string name="wifi_ssid_label">&wifi_ssid_label;</string>
   <string name="wifi_type_label">&wifi_type_label;</string>
+  <string name="content_copied_to_clipboard">&content_copied_to_clipboard;</string>
 
 </resources>
