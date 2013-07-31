@@ -41,8 +41,6 @@ public final class CameraManager {
 
   private static final int MIN_FRAME_WIDTH = 240;
   private static final int MIN_FRAME_HEIGHT = 240;
-  //private static final int MAX_FRAME_WIDTH = 960; // = 1920/2
-  //private static final int MAX_FRAME_HEIGHT = 540; // = 1080/2
   
   // Modified by Li Xiaotian(2013.7.12)
   private static final int MAX_FRAME_WIDTH = 540; // = 1080/2
@@ -224,8 +222,6 @@ public final class CameraManager {
       int width = findDesiredDimensionInRange(screenResolution.x, MIN_FRAME_WIDTH, MAX_FRAME_WIDTH);
       int height = findDesiredDimensionInRange(screenResolution.y, MIN_FRAME_HEIGHT, MAX_FRAME_HEIGHT);
       
-      Log.i("LIXT", screenResolution.toString());
-      
       // Modified by Li Xiaotian(2013.7.12)
       if(height > width) {
     	  height = width;
@@ -238,7 +234,6 @@ public final class CameraManager {
       int topOffset = (screenResolution.y - height) / 2;
       framingRect = new Rect(leftOffset, topOffset, leftOffset + width, topOffset + height);
       Log.d(TAG, "Calculated framing rect: " + framingRect);
-      Log.i("LIXT", framingRect.toString());
     }
     return framingRect;
   }
