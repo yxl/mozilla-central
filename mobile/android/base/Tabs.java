@@ -741,17 +741,17 @@ public class Tabs implements GeckoEventListener {
         
         // Get default search engine
         PrefsHelper.getPref("browser.search.defaultenginename", new PrefsHelper.PrefHandlerBase() {
-			@Override 
-			public void prefValue(String pref, String value) {
-	   			if (!TextUtils.isEmpty(value)) {
-	   				defaultSearchEngine = value;
-				}
-			}
-			@Override
-			public void finish() { 
-				loadUrl(url, defaultSearchEngine, parentId, LOADURL_NEW_TAB);
-			}
-		});
+            @Override 
+            public void prefValue(String pref, String value) {
+                if (!TextUtils.isEmpty(value)) {
+                    defaultSearchEngine = value;
+                }
+            }
+            @Override
+            public void finish() { 
+                loadUrl(url, defaultSearchEngine, parentId, LOADURL_NEW_TAB);
+            }
+        });
     }
 
     /**

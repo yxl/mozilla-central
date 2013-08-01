@@ -16,7 +16,6 @@
 
 package org.mozilla.gecko.zxing.client.android.result;
 
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.zxing.Result;
 import org.mozilla.gecko.zxing.client.android.Contents;
