@@ -722,7 +722,7 @@ abstract public class BrowserApp extends GeckoApp
             if(resultCode == Activity.RESULT_OK && data != null) {
                 Bundle bundle = data.getExtras();
                 url = bundle.getString("ZXING_URL");
-                Tabs.getInstance().loadUrlInTab(url);
+                Tabs.getInstance().searchUrlInTab(url);
             }
             return;
         }

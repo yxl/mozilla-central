@@ -32,6 +32,7 @@ public final class StringUtils {
       System.getProperty("file.encoding");
   public static final String SHIFT_JIS = "SJIS";
   public static final String GB2312 = "GB2312";
+  public static final String GBK = "GBK";
   private static final String EUC_JP = "EUC_JP";
   private static final String UTF8 = "UTF8";
   private static final String ISO88591 = "ISO8859_1";
@@ -63,9 +64,12 @@ public final class StringUtils {
     boolean canBeUTF8 = true;
     // Modified by Li Xiaotian
     // Support GB2312 encoding
-    boolean canBeGB2312 = true;
-    int gb2312a = 0;
-    int gb2312b = 0;
+    boolean canBeGBK = true;
+    int gbkLeft1 = 0;
+    int gbkLeft2 = 0;
+    int gbkLeft3 = 0;
+    int gbkLeft4 = 0;
+    int gbkLeft5 = 0;
     int utf8BytesLeft = 0;
     //int utf8LowChars = 0;
     int utf2BytesChars = 0;
@@ -89,35 +93,82 @@ public final class StringUtils {
         bytes[2] == (byte) 0xBF;
 
     for (int i = 0;
-         i < length && (canBeISO88591 || canBeShiftJIS || canBeUTF8 || canBeGB2312);
+         i < length && (canBeISO88591 || canBeShiftJIS || canBeUTF8 || canBeGBK);
          i++) {
 
       int value = bytes[i] & 0xFF;
       
       // Modified by Li Xiaotian
-      // GB2312 stuff
-      if (canBeGB2312) {
-        if (gb2312a == 0 && gb2312b == 0) {
+      // GBK stuff
+      if (canBeGBK) {
+        if (gbkLeft1 == 0 && gbkLeft2 == 0 && gbkLeft3 == 0 && gbkLeft4 == 0 && gbkLeft5 == 0) {
           if (value >= 0xA1 && value <= 0xA9) {
-            gb2312a = 1;  
+            gbkLeft1 = 1;  
           }
           if (value >= 0xB0 && value <= 0xF7) {
-            gb2312b = 1;
+            gbkLeft2 = 1;
+          }
+          if (value >= 0x81 && value <= 0xA0) {
+            gbkLeft3 = 1;
+          }
+          if (value >= 0xAA && value <= 0xFE) {
+            gbkLeft4 = 1;
+          }
+          if (value >= 0xA8 && value <= 0xA9) {
+            gbkLeft5 = 1;
           }
         }
         else {
-          if (gb2312b == 1 && !(value >= 0xA1 && value <= 0xFE)) {
-            canBeGB2312 = false;
+          // GBK/3
+          if(gbkLeft3 == 1) {
+            if(!(value >= 0x40 && value <= 0xA0 && value != 0x7F)) {
+              canBeGBK = false;
+            }
+            else {
+              gbkLeft3 = 0;
+            }
           }
-          else {
-            gb2312b = 0;
+    		  
+          // GBK/2 and GBK/4
+          if (gbkLeft2 == 1) {
+            if (!(value >= 0xA1 && value <= 0xFE) && !(value >= 0x40 && value <= 0xA0 && value != 0x7F)) {
+              canBeGBK = false;
+            }
+            else {
+              gbkLeft2 = 0;
+              gbkLeft4 = 0;
+            }
           }
-	  
-          if (gb2312a == 1 && !(value >= 0xA1 && value <= 0xFE)) {
-            canBeGB2312 = false;  
+    		  
+          // GBK/4
+          if (gbkLeft4 == 1 && gbkLeft2 == 0) {
+            if (!(value >= 0x40 && value <= 0xA0 && value != 0x7F)) {
+              canBeGBK = false;
+            }
+            else {
+              gbkLeft4 = 0;
+            }
           }
-          else {
-            gb2312a = 0;
+	    	  
+          // GBK/1 and GBK/5
+          if (gbkLeft5 == 1) {
+            if (!(value >= 0xA1 && value <= 0xFE) && !(value >= 0x40 && value <= 0xA0 && value != 0x7F)) {
+              canBeGBK = false;
+            }
+            else {
+              gbkLeft1 = 0;
+              gbkLeft5 = 0;
+            }
+          }
+    		  
+          // GBK/1
+          if (gbkLeft1 == 1 && gbkLeft5 == 0) {
+            if (!(value >= 0xA1 && value <= 0xFE)) {
+              canBeGBK = false;
+            }
+            else {
+              gbkLeft1 = 0;
+            }
           }
         }
       }
@@ -212,9 +263,12 @@ public final class StringUtils {
     }
     
     // Modified by Li Xiaotian 
-    // GB2312 stuff
-    if(canBeGB2312) {
-    	return GB2312;
+    // GBK stuff
+    // GBK
+    if (canBeGBK) {
+      if (gbkLeft1 == 0 && gbkLeft2 == 0 && gbkLeft3 == 0 && gbkLeft4 == 0 && gbkLeft5 == 0) {
+        return GBK;
+      }
     }
     
     // Easy -- if there is BOM or at least 1 valid not-single byte character (and no evidence it can't be UTF-8), done
