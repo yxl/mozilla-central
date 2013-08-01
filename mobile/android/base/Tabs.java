@@ -19,7 +19,6 @@ import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.graphics.Color;
 import android.net.Uri;
-import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
