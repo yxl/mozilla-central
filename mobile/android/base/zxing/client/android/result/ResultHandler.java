@@ -462,7 +462,7 @@ public abstract class ResultHandler {
   final void webSearch(String query) {
 	Intent intent = new Intent();
 	Bundle bundle = new Bundle();
-	bundle.putString("ZXING_URL", "www.baidu.com/s?wd=" + query);
+	bundle.putString("ZXING_URL", query);
 	intent.putExtras(bundle);
 	activity.setResult(Activity.RESULT_OK, intent);
 	activity.finish();
