@@ -174,6 +174,7 @@ abstract public class GeckoApp
     // Geolocation from Baidu
     public LocationClient mLocationClient = null;
     public LocationClientOption mLocationClientOption = null;
+    private String BAIDU_PROVIDER = "BAIDU_GEOLOCATION";
 
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
@@ -1646,38 +1647,40 @@ abstract public class GeckoApp
         mLocationClient.registerLocationListener(new BDLocationListener() {
           @Override
           public void onReceiveLocation(BDLocation location) {
-            if (location == null)
-              return ;
-            StringBuffer sb = new StringBuffer(256);
-            sb.append("time : ");
-            sb.append(location.getTime());
-            sb.append("\nerror code : ");
-            sb.append(location.getLocType());
-            sb.append("\nlatitude : ");
-            sb.append(location.getLatitude());
-            sb.append("\nlontitude : ");
-            sb.append(location.getLongitude());
-            sb.append("\nradius : ");
-            sb.append(location.getRadius());
-            if (location.getLocType() == BDLocation.TypeGpsLocation){
-              sb.append("\nspeed : ");
-              sb.append(location.getSpeed());
-              sb.append("\nsatellite : ");
-              sb.append(location.getSatelliteNumber());
+            if (location == null) {
+              return;
             }
-            else if (location.getLocType() == BDLocation.TypeNetWorkLocation){
-              sb.append("\naddr : ");
-              sb.append(location.getAddrStr());
-            }
+            if (Log.isLoggable(LOGTAG, Log.DEBUG)) {
+              StringBuffer sb = new StringBuffer(256);
+              sb.append("time : ");
+              sb.append(location.getTime());
+              sb.append("\nerror code : ");
+              sb.append(location.getLocType());
+              sb.append("\nlatitude : ");
+              sb.append(location.getLatitude());
+              sb.append("\nlontitude : ");
+              sb.append(location.getLongitude());
+              sb.append("\nradius : ");
+              sb.append(location.getRadius());
+              if (location.getLocType() == BDLocation.TypeGpsLocation) {
+                sb.append("\nspeed : ");
+                sb.append(location.getSpeed());
+                sb.append("\nsatellite : ");
+                sb.append(location.getSatelliteNumber());
+              } else if (location.getLocType() == BDLocation.TypeNetWorkLocation) {
+                sb.append("\naddr : ");
+                sb.append(location.getAddrStr());
+              }
 
-            Log.i(LOGTAG, sb.toString());
+              Log.d(LOGTAG, sb.toString());
+            }
 
             // Baidu to Google location interfaces
-            Location mLocation = new Location(LocationManager.GPS_PROVIDER);
+            Location mLocation = new Location(BAIDU_PROVIDER);
             mLocation.setSpeed(location.getSpeed());
             mLocation.setLatitude(location.getLatitude());
             mLocation.setLongitude(location.getLongitude());
-            if(location.hasRadius()) {
+            if (location.hasRadius()) {
               mLocation.setAccuracy(location.getRadius());
             }
             GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation));
@@ -1685,40 +1688,41 @@ abstract public class GeckoApp
 
           @Override
           public void onReceivePoi(BDLocation poiLocation) {
-            if(poiLocation == null) {
+            if (poiLocation == null) {
               return;
             }
-            StringBuffer sb = new StringBuffer(256);
-            sb.append("Poi time : ");
-            sb.append(poiLocation.getTime());
-            sb.append("\nerror code : ");
-            sb.append(poiLocation.getLocType());
-            sb.append("\nlatitude : ");
-            sb.append(poiLocation.getLatitude());
-            sb.append("\nlontitude : ");
-            sb.append(poiLocation.getLongitude());
-            sb.append("\nradius : ");
-            sb.append(poiLocation.getRadius());
-            if (poiLocation.getLocType() == BDLocation.TypeNetWorkLocation){
-              sb.append("\naddr : ");
-              sb.append(poiLocation.getAddrStr());
-            }
-            if(poiLocation.hasPoi()){
-              sb.append("\nPoi:");
-              sb.append(poiLocation.getPoi());
-            }
-            else{
-              sb.append("noPoi information");
-            }
+            if (Log.isLoggable(LOGTAG, Log.DEBUG)) {
+              StringBuffer sb = new StringBuffer(256);
+              sb.append("Poi time : ");
+              sb.append(poiLocation.getTime());
+              sb.append("\nerror code : ");
+              sb.append(poiLocation.getLocType());
+              sb.append("\nlatitude : ");
+              sb.append(poiLocation.getLatitude());
+              sb.append("\nlontitude : ");
+              sb.append(poiLocation.getLongitude());
+              sb.append("\nradius : ");
+              sb.append(poiLocation.getRadius());
+              if (poiLocation.getLocType() == BDLocation.TypeNetWorkLocation) {
+                sb.append("\naddr : ");
+                sb.append(poiLocation.getAddrStr());
+              }
+              if (poiLocation.hasPoi()) {
+                sb.append("\nPoi:");
+                sb.append(poiLocation.getPoi());
+              } else {
+                sb.append("noPoi information");
+              }
 
-            Log.i(LOGTAG, sb.toString());
+              Log.d(LOGTAG, sb.toString());
+            }
 
             // Baidu to Google location interfaces
-            Location mLocation = new Location(LocationManager.GPS_PROVIDER);
+            Location mLocation = new Location(BAIDU_PROVIDER);
             mLocation.setSpeed(poiLocation.getSpeed());
             mLocation.setLatitude(poiLocation.getLatitude());
             mLocation.setLongitude(poiLocation.getLongitude());
-            if(poiLocation.hasRadius()) {
+            if (poiLocation.hasRadius()) {
               mLocation.setAccuracy(poiLocation.getRadius());
             }
             GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation));
