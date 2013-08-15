@@ -430,30 +430,29 @@ public class GeckoAppShell
                 public void run() {
                     // Baidu location client
                     LocationClient mLocClient = GeckoApp.mAppContext.mLocationClient;
-                	LocationClientOption mLocClientOption = new LocationClientOption();
-                	
-                	if(enable) {
-	                	// Set baidu geolocation options.
-	                	mLocClientOption.setOpenGps(true);
-	            		mLocClientOption.setAddrType("all");
-	                	mLocClientOption.setCoorType("gcj02");
-	                	mLocClientOption.setPriority(LocationClientOption.GpsFirst);
-	                	mLocClientOption.setScanSpan(5000);
-	                	mLocClientOption.disableCache(true);
-	                	
-	                	// Try to start the location service.
-	                	mLocClient.setLocOption(mLocClientOption);
-	            		mLocClient.start();
-	            		
-	            		if(mLocClient != null && mLocClient.isStarted()) {
-	            			mLocClient.requestLocation();
-	            		}
-	            		else {
-	            			Log.i(LOGTAG, "Baidu geolocation can not start.");
-	            		}
-                	}
+                    LocationClientOption mLocClientOption = new LocationClientOption();
+
+                    if(enable) {
+                        // Set baidu geolocation options.
+                        // mLocClientOption.setOpenGps(true);
+                        // mLocClientOption.setAddrType("all");
+                        mLocClientOption.setCoorType("gcj02");
+                        mLocClientOption.setPriority(LocationClientOption.GpsFirst);
+                        mLocClientOption.setScanSpan(5000);
+                        mLocClientOption.disableCache(true);
+
+                        // Try to start the location service.
+                        mLocClient.setLocOption(mLocClientOption);
+                        mLocClient.start();
+                        if(mLocClient != null && mLocClient.isStarted()) {
+                            mLocClient.requestLocation();
+                        }
+                        else {
+                            Log.i(LOGTAG, "Baidu geolocation can not start.");
+                        }
+                    }
                 }
-            });
+        });
     }
 
     private static LocationManager getLocationManager() {

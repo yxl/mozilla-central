@@ -115,7 +115,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract public class GeckoApp
-                extends GeckoActivity 
+                extends GeckoActivity
                 implements GeckoEventListener, SensorEventListener, LocationListener,
                            Tabs.OnTabsChangedListener, GeckoEventResponder,
                            GeckoMenu.Callback, GeckoMenu.MenuPresenter,
@@ -170,7 +170,7 @@ abstract public class GeckoApp
 
     private PromptService mPromptService;
     private TextSelection mTextSelection;
-    
+
     // Geolocation from Baidu
     public LocationClient mLocationClient = null;
     public LocationClientOption mLocationClientOption = null;
@@ -529,9 +529,9 @@ abstract public class GeckoApp
                 onPreparePanel(featureId, mMenuPanel, mMenu);
             }
 
-            return mMenuPanel; 
+            return mMenuPanel;
         }
-  
+
         return super.onCreatePanelView(featureId);
     }
 
@@ -607,7 +607,7 @@ abstract public class GeckoApp
             mMenuPanel.addView((GeckoMenu) mMenu);
         }
     }
- 
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // Handle hardware menu key presses separately so that we can show a custom menu in some cases.
@@ -726,7 +726,7 @@ abstract public class GeckoApp
     }
 
     public void addTab() { }
-    
+
     public void addHomeTab() {}
 
     public void addPrivateTab() { }
@@ -1133,7 +1133,7 @@ abstract public class GeckoApp
         final String failureText = mAppContext.getString(R.string.wallpaper_fail);
         final String fileName = aSrc.substring(aSrc.lastIndexOf("/") + 1);
         final PendingIntent emptyIntent = PendingIntent.getActivity(mAppContext, 0, new Intent(), 0);
-        final AlertNotification notification = new AlertNotification(mAppContext, fileName.hashCode(), 
+        final AlertNotification notification = new AlertNotification(mAppContext, fileName.hashCode(),
                                 R.drawable.alert_download, fileName, progText, System.currentTimeMillis(), null);
         notification.setLatestEventInfo(mAppContext, fileName, progText, emptyIntent );
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
@@ -1156,7 +1156,7 @@ abstract public class GeckoApp
                 // Sometimes WallpaperManager's getDesiredMinimum*() methods
                 // can return 0 if a Remote Exception occurs when calling the
                 // Wallpaper Service. So if that fails, we are calculating
-                // the ideal width and height from the device's display 
+                // the ideal width and height from the device's display
                 // resolution (excluding the decorated area)
 
                 if (idealWidth <= 0 || idealHeight <= 0) {
@@ -1299,7 +1299,7 @@ abstract public class GeckoApp
     public void requestRender() {
         mLayerView.requestRender();
     }
-    
+
     public void hidePlugins(Tab tab) {
         for (Layer layer : tab.getPluginLayers()) {
             if (layer instanceof PluginLayer) {
@@ -1638,89 +1638,91 @@ abstract public class GeckoApp
                 }
             }, 1000 * 5 /* 5 seconds */);
         }
-        
+
         // Geolocation from Baidu
         mLocationClient = new LocationClient(getApplicationContext());
         mLocationClientOption = new LocationClientOption();
         // Register the listener
         mLocationClient.registerLocationListener(new BDLocationListener() {
-        	@Override
-            public void onReceiveLocation(BDLocation location) {
-            	if (location == null)
-            		return ;
-            	StringBuffer sb = new StringBuffer(256);
-            	sb.append("time : ");
-            	sb.append(location.getTime());
-            	sb.append("\nerror code : ");
-            	sb.append(location.getLocType());
-            	sb.append("\nlatitude : ");
-            	sb.append(location.getLatitude());
-            	sb.append("\nlontitude : ");
-            	sb.append(location.getLongitude());
-            	sb.append("\nradius : ");
-            	sb.append(location.getRadius());
-            	if (location.getLocType() == BDLocation.TypeGpsLocation){
-            		sb.append("\nspeed : ");
-            		sb.append(location.getSpeed());
-            		sb.append("\nsatellite : ");
-            		sb.append(location.getSatelliteNumber());
-            	} else if (location.getLocType() == BDLocation.TypeNetWorkLocation){
-            		sb.append("\naddr : ");
-            		sb.append(location.getAddrStr());
-            	}
-            		 
-            	Log.i(LOGTAG, sb.toString());
-            	
-            	// Baidu to Google location interfaces
-            	Location mLocation = new Location(LocationManager.GPS_PROVIDER);
-            	mLocation.setSpeed(location.getSpeed());
-            	mLocation.setLatitude(location.getLatitude());
-            	mLocation.setLongitude(location.getLongitude());
-                if(location.hasRadius()) {
-                	mLocation.setAccuracy(location.getRadius());
-                }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation));
+          @Override
+          public void onReceiveLocation(BDLocation location) {
+            if (location == null)
+              return ;
+            StringBuffer sb = new StringBuffer(256);
+            sb.append("time : ");
+            sb.append(location.getTime());
+            sb.append("\nerror code : ");
+            sb.append(location.getLocType());
+            sb.append("\nlatitude : ");
+            sb.append(location.getLatitude());
+            sb.append("\nlontitude : ");
+            sb.append(location.getLongitude());
+            sb.append("\nradius : ");
+            sb.append(location.getRadius());
+            if (location.getLocType() == BDLocation.TypeGpsLocation){
+              sb.append("\nspeed : ");
+              sb.append(location.getSpeed());
+              sb.append("\nsatellite : ");
+              sb.append(location.getSatelliteNumber());
             }
-            
-            @Override
-            public void onReceivePoi(BDLocation poiLocation) {
-            	if(poiLocation == null) {
-            		return;
-            	}
-            	StringBuffer sb = new StringBuffer(256);
-            	sb.append("Poi time : ");
-            	sb.append(poiLocation.getTime());
-            	sb.append("\nerror code : ");
-            	sb.append(poiLocation.getLocType());
-            	sb.append("\nlatitude : ");
-            	sb.append(poiLocation.getLatitude());
-            	sb.append("\nlontitude : ");
-            	sb.append(poiLocation.getLongitude());
-            	sb.append("\nradius : ");
-            	sb.append(poiLocation.getRadius());
-            	if (poiLocation.getLocType() == BDLocation.TypeNetWorkLocation){
-            		sb.append("\naddr : ");
-            		sb.append(poiLocation.getAddrStr());
-            	}
-            	if(poiLocation.hasPoi()){
-            		sb.append("\nPoi:");
-            		sb.append(poiLocation.getPoi());
-            	} else{	
-            		sb.append("noPoi information");
-            	}
-            	
-                Log.i(LOGTAG, sb.toString());
-            	
-            	// Baidu to Google location interfaces
-            	Location mLocation = new Location(LocationManager.GPS_PROVIDER);
-            	mLocation.setSpeed(poiLocation.getSpeed());
-            	mLocation.setLatitude(poiLocation.getLatitude());
-            	mLocation.setLongitude(poiLocation.getLongitude());
-                if(poiLocation.hasRadius()) {
-                	mLocation.setAccuracy(poiLocation.getRadius());
-                }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation));
+            else if (location.getLocType() == BDLocation.TypeNetWorkLocation){
+              sb.append("\naddr : ");
+              sb.append(location.getAddrStr());
             }
+
+            Log.i(LOGTAG, sb.toString());
+
+            // Baidu to Google location interfaces
+            Location mLocation = new Location(LocationManager.GPS_PROVIDER);
+            mLocation.setSpeed(location.getSpeed());
+            mLocation.setLatitude(location.getLatitude());
+            mLocation.setLongitude(location.getLongitude());
+            if(location.hasRadius()) {
+              mLocation.setAccuracy(location.getRadius());
+            }
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation));
+          }
+
+          @Override
+          public void onReceivePoi(BDLocation poiLocation) {
+            if(poiLocation == null) {
+              return;
+            }
+            StringBuffer sb = new StringBuffer(256);
+            sb.append("Poi time : ");
+            sb.append(poiLocation.getTime());
+            sb.append("\nerror code : ");
+            sb.append(poiLocation.getLocType());
+            sb.append("\nlatitude : ");
+            sb.append(poiLocation.getLatitude());
+            sb.append("\nlontitude : ");
+            sb.append(poiLocation.getLongitude());
+            sb.append("\nradius : ");
+            sb.append(poiLocation.getRadius());
+            if (poiLocation.getLocType() == BDLocation.TypeNetWorkLocation){
+              sb.append("\naddr : ");
+              sb.append(poiLocation.getAddrStr());
+            }
+            if(poiLocation.hasPoi()){
+              sb.append("\nPoi:");
+              sb.append(poiLocation.getPoi());
+            }
+            else{
+              sb.append("noPoi information");
+            }
+
+            Log.i(LOGTAG, sb.toString());
+
+            // Baidu to Google location interfaces
+            Location mLocation = new Location(LocationManager.GPS_PROVIDER);
+            mLocation.setSpeed(poiLocation.getSpeed());
+            mLocation.setLatitude(poiLocation.getLatitude());
+            mLocation.setLongitude(poiLocation.getLongitude());
+            if(poiLocation.hasRadius()) {
+              mLocation.setAccuracy(poiLocation.getRadius());
+            }
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation));
+          }
         });
 
         //register for events
@@ -2310,10 +2312,10 @@ abstract public class GeckoApp
 
     @Override
     public Object onRetainCustomNonConfigurationInstance() {
-        // Send a non-null value so that we can restart the application, 
+        // Send a non-null value so that we can restart the application,
         // when activity restarts due to configuration change.
         return Boolean.TRUE;
-    } 
+    }
 
     public String getContentProcessName() {
         return AppConstants.MOZ_CHILD_PROCESS_NAME;
