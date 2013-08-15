@@ -34,11 +34,15 @@ import org.mozilla.gecko.zxing.client.android.camera.FrontLightMode;
 final class AmbientLightManager implements SensorEventListener {
 
   private static final float TOO_DARK_LUX = 45.0f;
-  private static final float BRIGHT_ENOUGH_LUX = 450.0f;
+  private static final float BRIGHT_ENOUGH_LUX = 250.0f;
 
   private final Context context;
   private CameraManager cameraManager;
   private Sensor lightSensor;
+
+  // If ZXing is on result view, front light should not be turned on.
+  // If ZXing is on scan view, front light should be turned on if necessarily.
+  private boolean frontLightOnPermission;
 
   AmbientLightManager(Context context) {
     this.context = context;
@@ -46,9 +50,8 @@ final class AmbientLightManager implements SensorEventListener {
 
   void start(CameraManager cameraManager) {
     this.cameraManager = cameraManager;
-    // Modified by Li Xiaotian
-    // Turn off the front light
-    if (false) {
+    // Auto front light
+    if (true) {
       SensorManager sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
       lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
       if (lightSensor != null) {
@@ -70,7 +73,7 @@ final class AmbientLightManager implements SensorEventListener {
   public void onSensorChanged(SensorEvent sensorEvent) {
     float ambientLightLux = sensorEvent.values[0];
     if (cameraManager != null) {
-      if (ambientLightLux <= TOO_DARK_LUX) {
+      if (ambientLightLux <= TOO_DARK_LUX && frontLightOnPermission) {
         cameraManager.setTorch(true);
       } else if (ambientLightLux >= BRIGHT_ENOUGH_LUX) {
         cameraManager.setTorch(false);
@@ -81,6 +84,10 @@ final class AmbientLightManager implements SensorEventListener {
   @Override
   public void onAccuracyChanged(Sensor sensor, int accuracy) {
     // do nothing
+  }
+
+  public void setFrontLightOnPermission(boolean onPermission) {
+    frontLightOnPermission = onPermission;
   }
 
 }
