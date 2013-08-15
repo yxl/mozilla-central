@@ -16,6 +16,11 @@ import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
+
 import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
@@ -423,37 +428,30 @@ public class GeckoAppShell
         ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    LocationManager lm = getLocationManager();
-
-                    if (enable) {
-                        Location lastKnownLocation = getLastKnownLocation();
-                        if (lastKnownLocation != null) {
-                            GeckoApp.mAppContext.onLocationChanged(lastKnownLocation);
-                        }
-
-                        Criteria criteria = new Criteria();
-                        criteria.setSpeedRequired(false);
-                        criteria.setBearingRequired(false);
-                        criteria.setAltitudeRequired(false);
-                        if (mLocationHighAccuracy) {
-                            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                            criteria.setCostAllowed(true);
-                            criteria.setPowerRequirement(Criteria.POWER_HIGH);
-                        } else {
-                            criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-                            criteria.setCostAllowed(false);
-                            criteria.setPowerRequirement(Criteria.POWER_LOW);
-                        }
-
-                        String provider = lm.getBestProvider(criteria, true);
-                        if (provider == null)
-                            return;
-
-                        Looper l = Looper.getMainLooper();
-                        lm.requestLocationUpdates(provider, 100, (float).5, GeckoApp.mAppContext, l);
-                    } else {
-                        lm.removeUpdates(GeckoApp.mAppContext);
-                    }
+                    // Baidu location client
+                    LocationClient mLocClient = GeckoApp.mAppContext.mLocationClient;
+                	LocationClientOption mLocClientOption = new LocationClientOption();
+                	
+                	if(enable) {
+	                	// Set baidu geolocation options.
+	                	mLocClientOption.setOpenGps(true);
+	            		mLocClientOption.setAddrType("all");
+	                	mLocClientOption.setCoorType("gcj02");
+	                	mLocClientOption.setPriority(LocationClientOption.GpsFirst);
+	                	mLocClientOption.setScanSpan(5000);
+	                	mLocClientOption.disableCache(true);
+	                	
+	                	// Try to start the location service.
+	                	mLocClient.setLocOption(mLocClientOption);
+	            		mLocClient.start();
+	            		
+	            		if(mLocClient != null && mLocClient.isStarted()) {
+	            			mLocClient.requestLocation();
+	            		}
+	            		else {
+	            			Log.i(LOGTAG, "Baidu geolocation can not start.");
+	            		}
+                	}
                 }
             });
     }
