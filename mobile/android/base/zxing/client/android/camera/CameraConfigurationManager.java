@@ -59,12 +59,10 @@ final class CameraConfigurationManager {
     Camera.Parameters parameters = camera.getParameters();
     WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     Display display = manager.getDefaultDisplay();
-    
+
     // Modified by Li Xiaotian(2013.7.12)
-    Point point = new Point(0, 0);
-    display.getSize(point);
-    int width = point.x;
-    int height = point.y;
+    int width = display.getWidth();
+    int height = display.getHeight();
     if(width > height) {
     	int temp = width;
     	width = height;
@@ -72,7 +70,7 @@ final class CameraConfigurationManager {
     }
     //int width = display.getWidth();
     //int height = display.getHeight();
-    // We're landscape-only, and have apparently seen issues with display thinking it's portrait 
+    // We're landscape-only, and have apparently seen issues with display thinking it's portrait
     // when waking from sleep. If it's not landscape, assume it's mistaken and reverse them:
     /*
     if (width < height) {
