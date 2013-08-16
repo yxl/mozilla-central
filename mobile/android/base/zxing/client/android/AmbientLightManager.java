@@ -42,7 +42,7 @@ final class AmbientLightManager implements SensorEventListener {
 
   // If ZXing is on result view, front light should not be turned on.
   // If ZXing is on scan view, front light should be turned on if necessarily.
-  private boolean frontLightOnPermission;
+  private boolean onScanView;
 
   AmbientLightManager(Context context) {
     this.context = context;
@@ -51,12 +51,10 @@ final class AmbientLightManager implements SensorEventListener {
   void start(CameraManager cameraManager) {
     this.cameraManager = cameraManager;
     // Auto front light
-    if (true) {
-      SensorManager sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-      lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-      if (lightSensor != null) {
-        sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
-      }
+    SensorManager sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+    lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+    if (lightSensor != null) {
+      sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
   }
 
@@ -73,7 +71,7 @@ final class AmbientLightManager implements SensorEventListener {
   public void onSensorChanged(SensorEvent sensorEvent) {
     float ambientLightLux = sensorEvent.values[0];
     if (cameraManager != null) {
-      if (ambientLightLux <= TOO_DARK_LUX && frontLightOnPermission) {
+      if (ambientLightLux <= TOO_DARK_LUX && onScanView) {
         cameraManager.setTorch(true);
       } else if (ambientLightLux >= BRIGHT_ENOUGH_LUX) {
         cameraManager.setTorch(false);
@@ -86,8 +84,8 @@ final class AmbientLightManager implements SensorEventListener {
     // do nothing
   }
 
-  public void setFrontLightOnPermission(boolean onPermission) {
-    frontLightOnPermission = onPermission;
+  public void setOnScanView(boolean scanView) {
+    onScanView = scanView;
   }
 
 }

@@ -394,7 +394,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
     // Turn off the front light if decode successfully.
     cameraManager.setTorch(false);
-    ambientLightManager.setFrontLightOnPermission(false);
+    setOnScanView(false);
 
     switch (source) {
       case NATIVE_APP_INTENT:
@@ -755,7 +755,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     viewfinderView.drawViewfinder();
   }
 
-  public void setFrontLightOnPermission(boolean onPermission) {
-    ambientLightManager.setFrontLightOnPermission(onPermission);
+  public void setOnScanView(boolean scanView) {
+    ambientLightManager.setOnScanView(scanView);
   }
 }
