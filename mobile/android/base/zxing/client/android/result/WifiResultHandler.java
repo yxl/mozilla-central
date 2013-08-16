@@ -80,9 +80,12 @@ public final class WifiResultHandler extends ResultHandler {
     WifiParsedResult wifiResult = (WifiParsedResult) getResult();
     StringBuilder contents = new StringBuilder(50);
     String wifiLabel = parent.getString(R.string.wifi_ssid_label);
-    ParsedResult.maybeAppend(wifiLabel + '\n' + wifiResult.getSsid(), contents);
+    ParsedResult.maybeAppend(wifiLabel + ": " + wifiResult.getSsid() + ';', contents);
     String typeLabel = parent.getString(R.string.wifi_type_label);
-    ParsedResult.maybeAppend(typeLabel + '\n' + wifiResult.getNetworkEncryption(), contents);
+    ParsedResult.maybeAppend(typeLabel + ": " + wifiResult.getNetworkEncryption() + ';', contents);
+    // Show the wifi password.
+    String passwordLabel = parent.getString(R.string.wifi_password_label);
+    ParsedResult.maybeAppend(passwordLabel + ": " + wifiResult.getPassword() + ';', contents);
     return contents.toString();
   }
 

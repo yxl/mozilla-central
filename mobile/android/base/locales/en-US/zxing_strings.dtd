@@ -75,4 +75,5 @@
 <!ENTITY  wifi_changing_network "Requesting connection to network\u2026">
 <!ENTITY  wifi_ssid_label "Network Name">
 <!ENTITY  wifi_type_label "Type">
+<!ENTITY  wifi_password_label "Password">
 <!ENTITY  content_copied_to_clipboard "Scan result copied to clipboard">
