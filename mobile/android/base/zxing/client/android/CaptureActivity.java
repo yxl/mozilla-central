@@ -154,7 +154,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
     viewfinderView = (ViewfinderView) findViewById(R.id.viewfinder_view);
     viewfinderView.setCameraManager(cameraManager);
-    
+
     resultView = findViewById(R.id.result_view);
     statusView = (TextView) findViewById(R.id.status_view);
 
@@ -207,7 +207,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
             cameraManager.setManualFramingRect(width, height);
           }
         }
-        
+
         String customPromptMessage = intent.getStringExtra(Intents.Scan.PROMPT_MESSAGE);
         if (customPromptMessage != null) {
           statusView.setText(customPromptMessage);
@@ -240,7 +240,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
     }
   }
-  
+
   private static boolean isZXingURL(String dataString) {
     if (dataString == null) {
       return false;
@@ -392,6 +392,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
       drawResultPoints(barcode, scaleFactor, rawResult);
     }
 
+    // Turn off the front light if decode successfully.
+    cameraManager.setTorch(false);
+    setOnScanView(false);
+
     switch (source) {
       case NATIVE_APP_INTENT:
       case PRODUCT_SEARCH_LINK:
@@ -427,7 +431,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
    */
   private void drawResultPoints(Bitmap barcode, float scaleFactor, Result rawResult) {
     /*ResultPoint[] points = rawResult.getResultPoints();
-    
+
     if (points != null && points.length > 0) {
       Canvas canvas = new Canvas(barcode);
       Paint paint = new Paint();
@@ -452,10 +456,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   private static void drawLine(Canvas canvas, Paint paint, ResultPoint a, ResultPoint b, float scaleFactor) {
     if (a != null && b != null) {
-      canvas.drawLine(scaleFactor * a.getX(), 
-                      scaleFactor * a.getY(), 
-                      scaleFactor * b.getX(), 
-                      scaleFactor * b.getY(), 
+      canvas.drawLine(scaleFactor * a.getX(),
+                      scaleFactor * a.getY(),
+                      scaleFactor * b.getX(),
+                      scaleFactor * b.getY(),
                       paint);
     }
   }
@@ -465,7 +469,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 	statusView.setVisibility(View.GONE);
 	viewfinderView.setVisibility(View.GONE);
     resultView.setVisibility(View.VISIBLE);
-    
+
     Toast.makeText(this, R.string.content_copied_to_clipboard, Toast.LENGTH_SHORT).show();
 
     ImageView barcodeImageView = (ImageView) findViewById(R.id.barcode_image_view);
@@ -487,10 +491,10 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
       matrix.setRotate(90);
       Bitmap rotatedBarcode = Bitmap.createBitmap(barcode, 0, 0, barcode.getWidth(), barcode.getHeight(), matrix, false);
       Bitmap scaledBarcode = Bitmap.createScaledBitmap(rotatedBarcode, length, length, true);
-      
+
       barcodeImageView.setImageBitmap(scaledBarcode);
     }
-    
+
     /*
     TextView formatTextView = (TextView) findViewById(R.id.format_text_view);
     formatTextView.setText(rawResult.getBarcodeFormat().toString());
@@ -604,7 +608,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     }
 
     if (source == IntentSource.NATIVE_APP_INTENT) {
-      
+
       // Hand back whatever action they requested - this can be changed to Intents.Scan.ACTION when
       // the deprecated intent is retired.
       Intent intent = new Intent(getIntent().getAction());
@@ -629,7 +633,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         if (ecLevel != null) {
           intent.putExtra(Intents.Scan.RESULT_ERROR_CORRECTION_LEVEL, ecLevel);
         }
-        @SuppressWarnings("unchecked")        
+        @SuppressWarnings("unchecked")
         Iterable<byte[]> byteSegments = (Iterable<byte[]>) metadata.get(ResultMetadataType.BYTE_SEGMENTS);
         if (byteSegments != null) {
           int i = 0;
@@ -640,25 +644,25 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         }
       }
       sendReplyMessage(R.id.return_scan_result, intent, resultDurationMS);
-      
+
     } else if (source == IntentSource.PRODUCT_SEARCH_LINK) {
-      
+
       // Reformulate the URL which triggered us into a query, so that the request goes to the same
       // TLD as the scan URL.
       int end = sourceUrl.lastIndexOf("/scan");
-      String replyURL = sourceUrl.substring(0, end) + "?q=" + resultHandler.getDisplayContents() + "&source=zxing";      
+      String replyURL = sourceUrl.substring(0, end) + "?q=" + resultHandler.getDisplayContents() + "&source=zxing";
       sendReplyMessage(R.id.launch_product_query, replyURL, resultDurationMS);
-      
+
     } else if (source == IntentSource.ZXING_LINK) {
 
       if (scanFromWebPageManager != null && scanFromWebPageManager.isScanFromWebPage()) {
         String replyURL = scanFromWebPageManager.buildReplyURL(rawResult, resultHandler);
         sendReplyMessage(R.id.launch_product_query, replyURL, resultDurationMS);
       }
-      
+
     }
   }
-  
+
   private void sendReplyMessage(int id, Object arg, long delayMS) {
     Message message = Message.obtain(handler, id, arg);
     if (delayMS > 0L) {
@@ -749,5 +753,9 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   public void drawViewfinder() {
     viewfinderView.drawViewfinder();
+  }
+
+  public void setOnScanView(boolean scanView) {
+    ambientLightManager.setOnScanView(scanView);
   }
 }
