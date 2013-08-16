@@ -417,6 +417,7 @@
   <string name="wifi_changing_network">&wifi_changing_network;</string>
   <string name="wifi_ssid_label">&wifi_ssid_label;</string>
   <string name="wifi_type_label">&wifi_type_label;</string>
+  <string name="wifi_password_label">&wifi_password_label;</string>
   <string name="content_copied_to_clipboard">&content_copied_to_clipboard;</string>
 
 </resources>

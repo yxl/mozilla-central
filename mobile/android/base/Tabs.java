@@ -19,6 +19,7 @@ import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.graphics.Color;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -68,9 +69,9 @@ public class Tabs implements GeckoEventListener {
     private ContentObserver mContentObserver;
 
     private boolean mIsLowMemoryPlatform = true;
-    
+
     private String defaultSearchEngine;
-    
+
     private Tabs() {
         registerEventListener("Session:RestoreEnd");
         registerEventListener("SessionHistory:New");
@@ -374,7 +375,7 @@ public class Tabs implements GeckoEventListener {
     public boolean isLowMemoryPlatform() {
     	return mIsLowMemoryPlatform;
     }
-    
+
     // GeckoEventListener implementation
 
     @Override
@@ -384,7 +385,7 @@ public class Tabs implements GeckoEventListener {
                 notifyListeners(null, TabEvents.RESTORED);
                 return;
             }
-            
+
             if (event.equals("Platform:NotLowMemory")) {
             	mIsLowMemoryPlatform = false;
             	return;
@@ -713,7 +714,7 @@ public class Tabs implements GeckoEventListener {
 
         loadUrl(url, null, parentId, LOADURL_NEW_TAB);
     }
-    
+
     /**
      * Search the url as a new tab, and mark the selected tab as its "parent".
      *
@@ -737,17 +738,17 @@ public class Tabs implements GeckoEventListener {
         // don't mark any tabs as a parent.
         Tab selectedTab = getSelectedTab();
         final int parentId = selectedTab != null ? selectedTab.getId() : -1;
-        
+
         // Get default search engine
         PrefsHelper.getPref("browser.search.defaultenginename", new PrefsHelper.PrefHandlerBase() {
-            @Override 
+            @Override
             public void prefValue(String pref, String value) {
                 if (!TextUtils.isEmpty(value)) {
                     defaultSearchEngine = value;
                 }
             }
             @Override
-            public void finish() { 
+            public void finish() {
                 loadUrl(url, defaultSearchEngine, parentId, LOADURL_NEW_TAB);
             }
         });
