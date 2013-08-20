@@ -37,13 +37,22 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * A base class for the Android-specific barcode handlers. These allow the app to polymorphically
@@ -108,8 +117,11 @@ public abstract class ResultHandler {
     "http://book.douban.com/subject_search?search_text=";
 
   // Product search website.
-  public static final String AMAZON_PRODUCT_SEARCH_WEBSITE =
-    "";
+  public static final String AMAZON_PUBLIC_KEY = "AKIAJWQ43TKF7GPMBQWQ";
+  public static final String AMAZON_PRIVATE_KEY = "uE1h5fKbgV2Nsa3HsV2nrrxRBSOa0EXvr+migSrx";
+  public static final String AMAZON_WEBSITE = "http://webservices.amazon.com/onca/xml?";
+  public static final String AMAZON_ASSOCIATE_TAG = "mozillafire05-20";
+
 
   private final ParsedResult result;
   private final Activity activity;
@@ -481,10 +493,50 @@ public abstract class ResultHandler {
   final void productSearch(String query) {
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
-    bundle.putString(PRODUCT_SEARCH_CONTENT_KEY, AMAZON_PRODUCT_SEARCH_WEBSITE + query);
+    bundle.putString(PRODUCT_SEARCH_CONTENT_KEY, query);
+    try {
+      Log.i("LIXT", genAmazonProductSearchUrl(query));
+    } catch (Exception ex) {
+      return;
+    }
     intent.putExtras(bundle);
     activity.setResult(PRODUCT_SEARCH_CODE, intent);
     activity.finish();
+  }
+
+  private String genAmazonProductSearchUrl(String query) throws NoSuchAlgorithmException, InvalidKeyException {
+    final String Get = "Get";
+    final String WebSite = "webservices.amazon.cn";
+    final String Format = "/onca/xml";
+
+    final String AWSAccessKeyId = "AWSAccessKeyId=" + AMAZON_PUBLIC_KEY;
+    final String AssociateTag="AssociateTag=" + AMAZON_ASSOCIATE_TAG;
+    final String IdType = "IdType=" + "EAN";
+    final String ItemId = "ItemId=" + query;
+    final String Operation = "Operation=" + "ItemLookup";
+    final String SearchIndex = "SearchIndex=" + "All";
+    final String Service = "Service=" + "AESECommerceService";
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+    final String Timestamp = "Timestamp="
+        + URLEncoder.encode(sdf.format(new Date())).replace("+", "%20").replace("*", "%2A").replace("%7E", "~");
+
+    final String Version = "Version=" + "2011-08-01";
+
+    final String keyGenStr = Get + '\n' + WebSite + '\n' + Format + '\n'
+        + AWSAccessKeyId + '&' + AssociateTag + '&' + IdType + '&'
+        + ItemId + '&' + Operation + '&' + SearchIndex + '&'
+        + Service + '&' + Timestamp + '&' + Version;
+
+    Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
+    SecretKeySpec secret_key = new SecretKeySpec(AMAZON_PRIVATE_KEY.getBytes(), "HmacSHA256");
+    sha256_HMAC.init(secret_key);
+
+    final String Signature = Base64.encodeToString(keyGenStr.getBytes(), 0);
+
+    return Signature;
+    //final String Signature;
   }
 
   final void openGoogleShopper(String query) {
