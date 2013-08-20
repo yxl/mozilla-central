@@ -21,6 +21,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.AboutHome;
 import org.mozilla.gecko.zxing.client.android.CaptureActivity;
+import org.mozilla.gecko.zxing.client.android.result.ResultHandler;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -83,8 +84,6 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_FAILED = 1;
     private static final int READER_ADD_DUPLICATE = 2;
 
-    private static final int ZXING_REQUEST_CODE = 1997;
-
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
 
@@ -92,7 +91,7 @@ abstract public class BrowserApp extends GeckoApp
     private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
     private Boolean mNoImageMode = false;
-    
+
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
         public int id;
@@ -123,6 +122,9 @@ abstract public class BrowserApp extends GeckoApp
 
     // We'll ask for feedback after the user launches the app this many times.
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
+
+    // ZXing request code.
+    private static final int ZXING_REQUEST_CODE = 1997;
 
     // Whether the dynamic toolbar pref is enabled.
     private boolean mDynamicToolbarEnabled = false;
@@ -717,16 +719,39 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         String url = null;
-        
+
         if(requestCode == ZXING_REQUEST_CODE) {
-            if(resultCode == Activity.RESULT_OK && data != null) {
-                Bundle bundle = data.getExtras();
-                url = bundle.getString("ZXING_URL");
-                Tabs.getInstance().searchUrlInTab(url);
+            switch(resultCode) {
+                case ResultHandler.WEB_SEARCH_CODE: {
+                    if(data != null) {
+                        Bundle bundle = data.getExtras();
+                        url = bundle.getString(ResultHandler.WEB_SEARCH_CONTENT_KEY);
+                        Tabs.getInstance().searchUrlInTab(url);
+                    }
+                    return;
+                }
+
+                case ResultHandler.BOOK_SEARCH_CODE: {
+                    if(data != null) {
+                        Bundle bundle = data.getExtras();
+                        url = bundle.getString(ResultHandler.BOOK_SEARCH_CONTENT_KEY);
+                        Tabs.getInstance().loadUrlInTab(url);
+                    }
+                    return;
+                }
+
+                case ResultHandler.OPEN_URL_CODE: {
+                    if(data != null) {
+                        Bundle bundle = data.getExtras();
+                        url = bundle.getString(ResultHandler.OPEN_URL_CONTENT_KEY);
+                        Tabs.getInstance().loadUrlInTab(url);
+                    }
+                }
+
+                default: return;
             }
-            return;
         }
-        
+
         // Don't update the url in the toolbar if the activity was cancelled.
         if (resultCode == Activity.RESULT_OK && data != null) {
             // Don't update the url if the activity was launched to pick a site.
@@ -929,7 +954,7 @@ abstract public class BrowserApp extends GeckoApp
     public void addTab() {
         showAwesomebar(AwesomeBar.Target.NEW_TAB);
     }
-    
+
     public void addHomeTab() {
     	Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
     	CnLocalUtils.addTabCount();
@@ -1331,7 +1356,7 @@ abstract public class BrowserApp extends GeckoApp
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        // Inform the menu about the action-items bar. 
+        // Inform the menu about the action-items bar.
         if (menu instanceof GeckoMenu && HardwareUtils.isTablet())
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
 
@@ -1408,12 +1433,12 @@ abstract public class BrowserApp extends GeckoApp
     			}
     		}
     		@Override
-    		public void finish() {  
+    		public void finish() {
     			noImageMode.setChecked(mNoImageMode);
     		}
 		});
     }
-    
+
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu) {
         if (aMenu == null)
@@ -1461,7 +1486,7 @@ abstract public class BrowserApp extends GeckoApp
 
         noImageMode.setChecked(false);
         initNoImageMode(noImageMode);
-        
+
         String url = tab.getURL();
         if (ReaderModeUtils.isAboutReader(url)) {
             String urlFromReader = ReaderModeUtils.getUrlFromAboutReader(url);
@@ -1485,7 +1510,7 @@ abstract public class BrowserApp extends GeckoApp
 
         return true;
     }
-    
+
     private void toggleNoImageMode() {
     	PrefsHelper.getPref("permissions.default.image", new PrefsHelper.PrefHandlerBase() {
     		@Override
@@ -1498,7 +1523,7 @@ abstract public class BrowserApp extends GeckoApp
     			}
     		}
     		@Override
-    		public void finish() {   
+    		public void finish() {
     			if (mNoImageMode) {
     				PrefsHelper.setPref("permissions.default.image", 2);
     			} else {
@@ -1615,7 +1640,7 @@ abstract public class BrowserApp extends GeckoApp
     /*
      * If the app has been launched a certain number of times, and we haven't asked for feedback before,
      * open a new tab with about:feedback when launching the app from the icon shortcut.
-     */ 
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

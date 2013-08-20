@@ -356,7 +356,6 @@
   <string name="button_google_shopper">&button_google_shopper;</string>
   <string name="button_mms">&button_mms;</string>
   <string name="button_open_browser">&button_open_browser;</string>
-  <string name="button_product_search">&button_product_search;</string>
   <string name="button_search_book_contents">&button_search_book_contents;</string>
   <string name="button_share_app">&button_share_app;</string>
   <string name="button_share_bookmark">&button_share_bookmark;</string>
@@ -367,6 +366,8 @@
   <string name="button_show_map">&button_show_map;</string>
   <string name="button_sms">&button_sms;</string>
   <string name="button_web_search">&button_web_search;</string>
+  <string name="button_douban_search">&button_douban_search;</string>
+  <string name="button_amazon_search">&button_amazon_search;</string>
   <string name="button_wifi">&button_wifi;</string>
   <string name="contents_contact">&contents_contact;</string>
   <string name="contents_email">&contents_email;</string>

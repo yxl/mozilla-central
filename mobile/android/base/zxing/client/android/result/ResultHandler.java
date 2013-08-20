@@ -89,10 +89,27 @@ public abstract class ResultHandler {
   };
   private static final int NO_TYPE = -1;
 
-  public static final int MAX_BUTTON_COUNT = 1;
-  
-  // Result code of ZXing.
-  public static final int RESULT_ZXING = 1997;
+  public static final int MAX_BUTTON_COUNT = 2;
+
+  // Result codes.
+  public static final int WEB_SEARCH_CODE = 2000;
+  public static final int BOOK_SEARCH_CODE = 2001;
+  public static final int PRODUCT_SEARCH_CODE = 2002;
+  public static final int OPEN_URL_CODE = 2003;
+
+  // Content keys.
+  public static final String WEB_SEARCH_CONTENT_KEY = "WEB_SEARCH_CONTENT";
+  public static final String BOOK_SEARCH_CONTENT_KEY = "BOOK_SEARCH_CONTENT";
+  public static final String PRODUCT_SEARCH_CONTENT_KEY = "PRODUCT_SEARCH_CONTENT";
+  public static final String OPEN_URL_CONTENT_KEY = "OPEN_URL_CONTENT";
+
+  // Book search website.
+  public static final String DOUBAN_BOOK_SEARCH_WEBSITE =
+    "http://book.douban.com/subject_search?search_text=";
+
+  // Product search website.
+  public static final String AMAZON_PRODUCT_SEARCH_WEBSITE =
+    "";
 
   private final ParsedResult result;
   private final Activity activity;
@@ -289,7 +306,7 @@ public abstract class ResultHandler {
       // Remove extra leading '\n'
       putExtra(intent, ContactsContract.Intents.Insert.NOTES, aggregatedNotes.substring(1));
     }
-    
+
     putExtra(intent, ContactsContract.Intents.Insert.IM_HANDLE, instantMessenger);
     putExtra(intent, ContactsContract.Intents.Insert.POSTAL, address);
     if (addressType != null) {
@@ -426,13 +443,6 @@ public abstract class ResultHandler {
         "/books?vid=isbn" + isbn);
     launchIntent(new Intent(Intent.ACTION_VIEW, uri));
   }
-  
-  /*final void searchBookContents(String isbnOrUrl) {
-    Intent intent = new Intent(Intents.SearchBookContents.ACTION);
-    intent.setClassName(activity, SearchBookContentsActivity.class.getName());
-    putExtra(intent, Intents.SearchBookContents.ISBN, isbnOrUrl);
-    launchIntent(intent);
-  }*/
 
   final void openURL(String url) {
     // Strangely, some Android browsers don't seem to register to handle HTTP:// or HTTPS://.
@@ -442,33 +452,39 @@ public abstract class ResultHandler {
     } else if (url.startsWith("HTTPS://")) {
       url = "https" + url.substring(5);
     }
-
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
-    bundle.putString("ZXING_URL", url);
+    bundle.putString(OPEN_URL_CONTENT_KEY, url);
     intent.putExtras(bundle);
-    activity.setResult(Activity.RESULT_OK, intent);
+    activity.setResult(OPEN_URL_CODE, intent);
     activity.finish();
-    
-    /*
-    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-    try {
-      launchIntent(intent);
-    } catch (ActivityNotFoundException ignored) {
-      Log.w(TAG, "Nothing available to handle " + intent);
-    }*/
   }
 
   final void webSearch(String query) {
-	Intent intent = new Intent();
-	Bundle bundle = new Bundle();
-	bundle.putString("ZXING_URL", query);
-	intent.putExtras(bundle);
-	activity.setResult(Activity.RESULT_OK, intent);
-	activity.finish();
-    //Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
-    //intent.putExtra("query", query);
-    //launchIntent(intent);
+    Intent intent = new Intent();
+    Bundle bundle = new Bundle();
+    bundle.putString(WEB_SEARCH_CONTENT_KEY, query);
+    intent.putExtras(bundle);
+    activity.setResult(WEB_SEARCH_CODE, intent);
+    activity.finish();
+  }
+
+  final void bookSearch(String query) {
+    Intent intent = new Intent();
+    Bundle bundle = new Bundle();
+    bundle.putString(BOOK_SEARCH_CONTENT_KEY, DOUBAN_BOOK_SEARCH_WEBSITE + query);
+    intent.putExtras(bundle);
+    activity.setResult(BOOK_SEARCH_CODE, intent);
+    activity.finish();
+  }
+
+  final void productSearch(String query) {
+    Intent intent = new Intent();
+    Bundle bundle = new Bundle();
+    bundle.putString(PRODUCT_SEARCH_CONTENT_KEY, AMAZON_PRODUCT_SEARCH_WEBSITE + query);
+    intent.putExtras(bundle);
+    activity.setResult(PRODUCT_SEARCH_CODE, intent);
+    activity.finish();
   }
 
   final void openGoogleShopper(String query) {
@@ -543,7 +559,7 @@ public abstract class ResultHandler {
     try {
       text = URLEncoder.encode(text, "UTF-8");
     } catch (UnsupportedEncodingException e) {
-      // can't happen; UTF-8 is always supported. Continue, I guess, without encoding      
+      // can't happen; UTF-8 is always supported. Continue, I guess, without encoding
     }
     String url = customProductSearch.replace("%s", text);
     if (rawResult != null) {
