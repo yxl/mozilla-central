@@ -92,7 +92,7 @@ abstract public class BrowserApp extends GeckoApp
     private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
     private Boolean mNoImageMode = false;
-    
+
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
         public int id;
@@ -165,6 +165,10 @@ abstract public class BrowserApp extends GeckoApp
                         }
                     } else {
                         hideAboutHome();
+                    }
+
+                    if("about:barcode".equals(tab.getURL())) {
+                        openBarcodeScanner();
                     }
 
                     // Dismiss any SiteIdentity Popup
@@ -717,7 +721,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         String url = null;
-        
+
         if(requestCode == ZXING_REQUEST_CODE) {
             if(resultCode == Activity.RESULT_OK && data != null) {
                 Bundle bundle = data.getExtras();
@@ -726,7 +730,7 @@ abstract public class BrowserApp extends GeckoApp
             }
             return;
         }
-        
+
         // Don't update the url in the toolbar if the activity was cancelled.
         if (resultCode == Activity.RESULT_OK && data != null) {
             // Don't update the url if the activity was launched to pick a site.
@@ -929,7 +933,7 @@ abstract public class BrowserApp extends GeckoApp
     public void addTab() {
         showAwesomebar(AwesomeBar.Target.NEW_TAB);
     }
-    
+
     public void addHomeTab() {
     	Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
     	CnLocalUtils.addTabCount();
@@ -1331,7 +1335,7 @@ abstract public class BrowserApp extends GeckoApp
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        // Inform the menu about the action-items bar. 
+        // Inform the menu about the action-items bar.
         if (menu instanceof GeckoMenu && HardwareUtils.isTablet())
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
 
@@ -1408,12 +1412,12 @@ abstract public class BrowserApp extends GeckoApp
     			}
     		}
     		@Override
-    		public void finish() {  
+    		public void finish() {
     			noImageMode.setChecked(mNoImageMode);
     		}
 		});
     }
-    
+
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu) {
         if (aMenu == null)
@@ -1461,7 +1465,7 @@ abstract public class BrowserApp extends GeckoApp
 
         noImageMode.setChecked(false);
         initNoImageMode(noImageMode);
-        
+
         String url = tab.getURL();
         if (ReaderModeUtils.isAboutReader(url)) {
             String urlFromReader = ReaderModeUtils.getUrlFromAboutReader(url);
@@ -1485,7 +1489,7 @@ abstract public class BrowserApp extends GeckoApp
 
         return true;
     }
-    
+
     private void toggleNoImageMode() {
     	PrefsHelper.getPref("permissions.default.image", new PrefsHelper.PrefHandlerBase() {
     		@Override
@@ -1498,7 +1502,7 @@ abstract public class BrowserApp extends GeckoApp
     			}
     		}
     		@Override
-    		public void finish() {   
+    		public void finish() {
     			if (mNoImageMode) {
     				PrefsHelper.setPref("permissions.default.image", 2);
     			} else {
@@ -1615,7 +1619,7 @@ abstract public class BrowserApp extends GeckoApp
     /*
      * If the app has been launched a certain number of times, and we haven't asked for feedback before,
      * open a new tab with about:feedback when launching the app from the icon shortcut.
-     */ 
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

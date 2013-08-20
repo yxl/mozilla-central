@@ -28,6 +28,7 @@ let modules = {
     privileged: false,
     hide: true
   },
+  get barcode() this.empty,
 
   rights: {
 #ifdef MOZ_OFFICIAL_BRANDING
