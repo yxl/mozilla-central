@@ -30,7 +30,6 @@ import android.app.Activity;
 public final class GeoResultHandler extends ResultHandler {
   private static final int[] buttons = {
       R.string.button_show_map,
-      R.string.button_get_directions
   };
 
   public GeoResultHandler(Activity activity, ParsedResult result) {

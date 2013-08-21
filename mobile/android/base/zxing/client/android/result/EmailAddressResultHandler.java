@@ -30,7 +30,6 @@ import android.app.Activity;
 public final class EmailAddressResultHandler extends ResultHandler {
   private static final int[] buttons = {
       R.string.button_email,
-      R.string.button_add_contact
   };
 
   public EmailAddressResultHandler(Activity activity, ParsedResult result) {

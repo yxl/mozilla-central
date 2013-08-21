@@ -22,6 +22,9 @@ import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.widget.AboutHome;
 import org.mozilla.gecko.zxing.client.android.CaptureActivity;
 import org.mozilla.gecko.zxing.client.android.result.ResultHandler;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -62,7 +65,12 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.Vector;
@@ -721,6 +729,7 @@ abstract public class BrowserApp extends GeckoApp
         String url = null;
 
         if(requestCode == ZXING_REQUEST_CODE) {
+          Log.i("LIXT", "result code = " + resultCode);
             switch(resultCode) {
                 case ResultHandler.WEB_SEARCH_CODE: {
                     if(data != null) {
@@ -728,7 +737,7 @@ abstract public class BrowserApp extends GeckoApp
                         url = bundle.getString(ResultHandler.WEB_SEARCH_CONTENT_KEY);
                         Tabs.getInstance().searchUrlInTab(url);
                     }
-                    return;
+                    break;
                 }
 
                 case ResultHandler.BOOK_SEARCH_CODE: {
@@ -737,7 +746,16 @@ abstract public class BrowserApp extends GeckoApp
                         url = bundle.getString(ResultHandler.BOOK_SEARCH_CONTENT_KEY);
                         Tabs.getInstance().loadUrlInTab(url);
                     }
-                    return;
+                    break;
+                }
+
+                case ResultHandler.PRODUCT_SEARCH_CODE: {
+                    if(data != null) {
+                        Bundle bundle = data.getExtras();
+                        url = bundle.getString(ResultHandler.PRODUCT_SEARCH_CONTENT_KEY);
+                        primeAmazonProductInfo(url);
+                    }
+                    break;
                 }
 
                 case ResultHandler.OPEN_URL_CODE: {
@@ -746,6 +764,7 @@ abstract public class BrowserApp extends GeckoApp
                         url = bundle.getString(ResultHandler.OPEN_URL_CONTENT_KEY);
                         Tabs.getInstance().loadUrlInTab(url);
                     }
+                    break;
                 }
 
                 default: return;
@@ -1537,6 +1556,101 @@ abstract public class BrowserApp extends GeckoApp
         Intent intent = new Intent(this, CaptureActivity.class);
         startActivityForResult(intent, ZXING_REQUEST_CODE);
         return;
+    }
+
+    private void primeAmazonProductInfo(String xmlURL) {
+        final String url = xmlURL;
+
+        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
+            @Override
+            public String doInBackground(Void... params) {
+                Log.i("LIXT", "doInBackground");
+                return getAmazonProductInfo(url);
+            }
+
+            @Override
+            public void onPostExecute(String amazonProductInfo) {
+                Log.i("LIXT", "onPostExecute");
+                if (amazonProductInfo != null && amazonProductInfo.length() != 0) {
+                    readAmazonProductInfo(amazonProductInfo);
+                }
+            }
+
+        }).execute();
+    }
+
+    private String getAmazonProductInfo(String xmlURL) {
+        try {
+            URL url = new URL(xmlURL);
+            InputStream is = null;
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(3000);
+            conn.setReadTimeout(5000);
+            conn.setDoInput(true);
+            conn.setUseCaches(false);
+            conn.connect();
+            if (conn.getResponseCode() == 200) {
+                is = conn.getInputStream();
+                if (is != null) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder sb = new StringBuilder();
+                    String line = null;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                        sb.append('\n');
+                    }
+                    is.close();
+                    return sb.toString();
+                }
+            }
+        } catch (IOException e) {
+        } catch (Exception e) {
+        }
+        return "";
+    }
+
+    private void readAmazonProductInfo(String xml) {
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            XmlPullParser xpp = factory.newPullParser();
+
+            xpp.setInput(new StringReader(xml));
+            int eventType = xpp.getEventType();
+
+            boolean isDetailPageURL = false;
+            final String detailPageURLTag = "DetailPageURL";
+            String detailPageURL = null;
+
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG){
+                    Log.i("LIXT", "start tag = " + xpp.getName());
+                    if (xpp.getName().equals(detailPageURLTag)) {
+                        isDetailPageURL = true;
+                    }
+                } else if (eventType == XmlPullParser.END_TAG) {
+                    Log.i("LIXT", "end tag = " + xpp.getName());
+                    if (xpp.getName().equals(detailPageURLTag)) {
+                        isDetailPageURL = false;
+                        break;
+                    }
+                } else if (eventType == XmlPullParser.TEXT) {
+                    Log.i("LIXT", "text = " + xpp.getText());
+                    if (isDetailPageURL) {
+                        detailPageURL = xpp.getText();
+                    }
+                }
+                eventType = xpp.next();
+            }
+
+            Log.i("LIXT", "All = " + xml);
+            if(detailPageURL != null) {
+                Log.i("LIXT", "Detail = " + detailPageURL);
+                Tabs.getInstance().loadUrl(detailPageURL);
+            }
+        } catch (XmlPullParserException e) {
+        } catch (IOException e) {
+        }
     }
 
     @Override

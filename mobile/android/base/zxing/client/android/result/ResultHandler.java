@@ -16,12 +16,30 @@
 
 package org.mozilla.gecko.zxing.client.android.result;
 
-import org.mozilla.gecko.BrowserApp;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TimeZone;
+import java.util.TreeMap;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.zxing.Result;
 import org.mozilla.gecko.zxing.client.android.Contents;
-import org.mozilla.gecko.zxing.client.android.Intents;
 import org.mozilla.gecko.zxing.client.android.LocaleManager;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.zxing.client.result.ParsedResult;
 import org.mozilla.gecko.zxing.client.result.ParsedResultType;
 import org.mozilla.gecko.zxing.client.result.ResultParser;
@@ -35,24 +53,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+//import org.apache.commons.codec.binary.Base64;
 
 /**
  * A base class for the Android-specific barcode handlers. These allow the app to polymorphically
@@ -115,13 +120,6 @@ public abstract class ResultHandler {
   // Book search website.
   public static final String DOUBAN_BOOK_SEARCH_WEBSITE =
     "http://book.douban.com/subject_search?search_text=";
-
-  // Product search website.
-  public static final String AMAZON_PUBLIC_KEY = "AKIAJWQ43TKF7GPMBQWQ";
-  public static final String AMAZON_PRIVATE_KEY = "uE1h5fKbgV2Nsa3HsV2nrrxRBSOa0EXvr+migSrx";
-  public static final String AMAZON_WEBSITE = "http://webservices.amazon.com/onca/xml?";
-  public static final String AMAZON_ASSOCIATE_TAG = "mozillafire05-20";
-
 
   private final ParsedResult result;
   private final Activity activity;
@@ -493,50 +491,15 @@ public abstract class ResultHandler {
   final void productSearch(String query) {
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
-    bundle.putString(PRODUCT_SEARCH_CONTENT_KEY, query);
     try {
-      Log.i("LIXT", genAmazonProductSearchUrl(query));
+      Log.i("LIXT", amazonSignedRequest(query));
+      bundle.putString(PRODUCT_SEARCH_CONTENT_KEY, amazonSignedRequest(query));
+      intent.putExtras(bundle);
+      activity.setResult(PRODUCT_SEARCH_CODE, intent);
+      activity.finish();
     } catch (Exception ex) {
       return;
     }
-    intent.putExtras(bundle);
-    activity.setResult(PRODUCT_SEARCH_CODE, intent);
-    activity.finish();
-  }
-
-  private String genAmazonProductSearchUrl(String query) throws NoSuchAlgorithmException, InvalidKeyException {
-    final String Get = "Get";
-    final String WebSite = "webservices.amazon.cn";
-    final String Format = "/onca/xml";
-
-    final String AWSAccessKeyId = "AWSAccessKeyId=" + AMAZON_PUBLIC_KEY;
-    final String AssociateTag="AssociateTag=" + AMAZON_ASSOCIATE_TAG;
-    final String IdType = "IdType=" + "EAN";
-    final String ItemId = "ItemId=" + query;
-    final String Operation = "Operation=" + "ItemLookup";
-    final String SearchIndex = "SearchIndex=" + "All";
-    final String Service = "Service=" + "AESECommerceService";
-
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-    final String Timestamp = "Timestamp="
-        + URLEncoder.encode(sdf.format(new Date())).replace("+", "%20").replace("*", "%2A").replace("%7E", "~");
-
-    final String Version = "Version=" + "2011-08-01";
-
-    final String keyGenStr = Get + '\n' + WebSite + '\n' + Format + '\n'
-        + AWSAccessKeyId + '&' + AssociateTag + '&' + IdType + '&'
-        + ItemId + '&' + Operation + '&' + SearchIndex + '&'
-        + Service + '&' + Timestamp + '&' + Version;
-
-    Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-    SecretKeySpec secret_key = new SecretKeySpec(AMAZON_PRIVATE_KEY.getBytes(), "HmacSHA256");
-    sha256_HMAC.init(secret_key);
-
-    final String Signature = Base64.encodeToString(keyGenStr.getBytes(), 0);
-
-    return Signature;
-    //final String Signature;
   }
 
   final void openGoogleShopper(String query) {
@@ -622,6 +585,126 @@ public abstract class ResultHandler {
       }
     }
     return url;
+  }
+
+  private static final String UTF8_CHARSET = "UTF-8";
+  private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+  private static final String REQUEST_URI = "/onca/xml";
+  private static final String REQUEST_METHOD = "GET";
+  private String endpoint = "webservices.amazon.cn"; // must be lowercase
+  private String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
+
+  private String amazonSignedRequest(String query) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+    final String UTF8_CHARSET = "UTF-8";
+    final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+    final String REQUEST_URI = "/onca/xml";
+    final String REQUEST_METHOD = "GET";
+
+    String endpoint = "webservices.amazon.cn"; // must be lowercase
+    String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
+    String awsSecretKey = "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";
+    String associateTag = "mozillafire05-20";
+    String contentType = "html";
+    String operation = "ItemLookup";
+    String service = "AWSECommerceService";
+    String version = "2011-08-01";
+    String idType = "EAN";
+    String searchIndex = "All";
+
+    // Initial sign params.
+    Map<String, String> params = new HashMap<String, String>();
+    params.put("AWSAccessKeyId", awsAccessKeyId);
+    params.put("AssociateTag", associateTag);
+    params.put("ContentType", contentType);
+    params.put("Operation", operation);
+    params.put("Service", service);
+    params.put("Version", version);
+    params.put("Timestamp", timestamp());
+    params.put("ItemId", query);
+    params.put("IdType", idType);
+    params.put("SearchIndex", searchIndex);
+
+    SortedMap<String, String> sortedParamMap = new TreeMap<String, String>(params);
+    String canonicalQS = canonicalize(sortedParamMap);
+
+    String toSign =
+        REQUEST_METHOD + "\n"
+        + endpoint + "\n"
+        + REQUEST_URI + "\n"
+        + canonicalQS;
+
+    byte[] secretyKeyBytes = awsSecretKey.getBytes(UTF8_CHARSET);
+    SecretKeySpec secretKeySpec = new SecretKeySpec(secretyKeyBytes, HMAC_SHA256_ALGORITHM);
+
+    String hmac = hmac(toSign, secretKeySpec);
+    String sig = percentEncodeRfc3986(hmac);
+    String url = "http://" + endpoint + REQUEST_URI + "?" +
+    canonicalQS + "&Signature=" + sig;
+
+    return url;
+  }
+
+  private String canonicalize(SortedMap<String, String> sortedParamMap)
+  {
+    if (sortedParamMap.isEmpty()) {
+      return "";
+    }
+
+    StringBuffer buffer = new StringBuffer();
+    Iterator<Map.Entry<String, String>> iter = sortedParamMap.entrySet().iterator();
+
+    while (iter.hasNext()) {
+      Map.Entry<String, String> kvpair = iter.next();
+      buffer.append(percentEncodeRfc3986(kvpair.getKey()));
+      buffer.append("=");
+      buffer.append(percentEncodeRfc3986(kvpair.getValue()));
+      if (iter.hasNext()) {
+        buffer.append("&");
+      }
+    }
+    String canonical = buffer.toString();
+      return canonical;
+  }
+
+  private String percentEncodeRfc3986(String s) {
+    final String UTF8_CHARSET = "UTF-8";
+    String out;
+    try {
+      out = URLEncoder.encode(s, UTF8_CHARSET)
+      .replace("+", "%20")
+      .replace("*", "%2A")
+      .replace("%7E", "~");
+    } catch (UnsupportedEncodingException e) {
+      out = s;
+    }
+    return out;
+  }
+
+  private String hmac(String stringToSign, SecretKeySpec secretKeySpec) throws NoSuchAlgorithmException, InvalidKeyException {
+    final String UTF8_CHARSET = "UTF-8";
+    Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
+    mac.init(secretKeySpec);
+    String signature = null;
+    byte[] data;
+    byte[] rawHmac;
+    try {
+      data = stringToSign.getBytes(UTF8_CHARSET);
+      rawHmac = mac.doFinal(data);
+      Base64 encoder = new Base64();
+      signature = new String(encoder.encode(rawHmac));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(UTF8_CHARSET + " is unsupported!", e);
+    }
+    return signature;
+  }
+
+  private String timestamp() {
+    String timestamp = null;
+    Calendar cal = Calendar.getInstance();
+    DateFormat dfm = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    dfm.setTimeZone(TimeZone.getTimeZone("GMT"));
+    timestamp = dfm.format(cal.getTime());
+    return timestamp;
   }
 
 }
