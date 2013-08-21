@@ -156,7 +156,11 @@ abstract public class BrowserApp extends GeckoApp
                 // fall through
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    if ("about:home".equals(tab.getURL())) {
+                    if("about:barcode".equals(tab.getURL())) {
+                      //mLayerView.getLayerMarginsAnimator().showMargins(false);
+                      openBarcodeScanner();
+                    }
+                    else if ("about:home".equals(tab.getURL())) {
                         showAboutHome();
 
                         if (isDynamicToolbarEnabled()) {
@@ -165,10 +169,6 @@ abstract public class BrowserApp extends GeckoApp
                         }
                     } else {
                         hideAboutHome();
-                    }
-
-                    if("about:barcode".equals(tab.getURL())) {
-                        openBarcodeScanner();
                     }
 
                     // Dismiss any SiteIdentity Popup

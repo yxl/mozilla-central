@@ -28,7 +28,6 @@ let modules = {
     privileged: false,
     hide: true
   },
-  get barcode() this.empty,
 
   rights: {
 #ifdef MOZ_OFFICIAL_BRANDING
@@ -52,6 +51,8 @@ let modules = {
     uri: "chrome://browser/content/aboutHome.xhtml",
     privileged: false
   },
+  get barcode() this.home,
+
   apps: {
     uri: "chrome://browser/content/aboutApps.xhtml",
     privileged: true
