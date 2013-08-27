@@ -93,6 +93,8 @@ abstract public class BrowserApp extends GeckoApp
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
     private Boolean mNoImageMode = false;
 
+    private Boolean isFirstLaunch = false;
+
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
         public int id;
@@ -156,11 +158,7 @@ abstract public class BrowserApp extends GeckoApp
                 // fall through
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    if("about:barcode".equals(tab.getURL())) {
-                      //mLayerView.getLayerMarginsAnimator().showMargins(false);
-                      openBarcodeScanner();
-                    }
-                    else if ("about:home".equals(tab.getURL())) {
+                    if ("about:home".equals(tab.getURL())) {
                         showAboutHome();
 
                         if (isDynamicToolbarEnabled()) {
@@ -364,6 +362,8 @@ abstract public class BrowserApp extends GeckoApp
         mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         super.onCreate(savedInstanceState);
+
+        createBarcodeScannerShortcut();
 
         RelativeLayout actionBar = (RelativeLayout) findViewById(R.id.browser_toolbar);
 
@@ -738,6 +738,14 @@ abstract public class BrowserApp extends GeckoApp
             if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
                 // Update the toolbar with the url that was just entered.
                 url = data.getStringExtra(AwesomeBar.URL_KEY);
+
+                // If the URL is "about:barcode", open barcode scanner
+                // instead of opening an URL.
+                if (url.equals("about:barcode")) {
+                    super.openBarcodeScanner();
+                    mBrowserToolbar.fromAwesomeBarSearch(url);
+                    return;
+                }
             }
         }
 
@@ -1146,6 +1154,25 @@ abstract public class BrowserApp extends GeckoApp
         refreshToolbarHeight();
     }
 
+    public void createBarcodeScannerShortcut() {
+        int isFirstLaunch;
+        isFirstLaunch = PrefsHelper.getPref("first_launch", new PrefsHelper.PrefHandlerBase() {
+            @Override
+            public void prefValue(String pref, int value) {
+            }
+            @Override
+            public void finish() {
+            }
+        });
+
+        Log.i("LIXT", "isFirstLaunch = " + isFirstLaunch);
+
+        if(isFirstLaunch == 1) {
+            GeckoAppShell.createShortcut("Barcode Scanner", "about:barcode", "about:barcode", "bookmark");
+            PrefsHelper.setPref("first_launch", 0);
+        }
+    }
+
     private class HideTabsTouchListener implements TouchEventInterceptor {
         private boolean mIsHidingTabs = false;
 
@@ -1512,12 +1539,6 @@ abstract public class BrowserApp extends GeckoApp
 		});
     }
 
-    private void openBarcodeScanner() {
-        Intent intent = new Intent(this, CaptureActivity.class);
-        startActivityForResult(intent, ZXING_REQUEST_CODE);
-        return;
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Tab tab = null;
@@ -1595,7 +1616,7 @@ abstract public class BrowserApp extends GeckoApp
                 addPrivateTab();
                 return true;
             case R.id.barcode_scanner:
-                openBarcodeScanner();
+                super.openBarcodeScanner();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
