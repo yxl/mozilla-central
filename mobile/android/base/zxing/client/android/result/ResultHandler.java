@@ -16,12 +16,20 @@
 
 package org.mozilla.gecko.zxing.client.android.result;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,12 +45,18 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.zxing.Result;
 import org.mozilla.gecko.zxing.client.android.Contents;
 import org.mozilla.gecko.zxing.client.android.LocaleManager;
 import org.mozilla.gecko.zxing.client.result.ParsedResult;
 import org.mozilla.gecko.zxing.client.result.ParsedResultType;
 import org.mozilla.gecko.zxing.client.result.ResultParser;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -53,9 +67,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
+import android.os.AsyncTask;
 
 //import org.apache.commons.codec.binary.Base64;
 
@@ -106,16 +123,14 @@ public abstract class ResultHandler {
   public static final int MAX_BUTTON_COUNT = 2;
 
   // Result codes.
-  public static final int WEB_SEARCH_CODE = 2000;
-  public static final int BOOK_SEARCH_CODE = 2001;
-  public static final int PRODUCT_SEARCH_CODE = 2002;
-  public static final int OPEN_URL_CODE = 2003;
+  // If SEARCH_CODE is used, only the search contents will be sent back.
+  // If URL_CODE is used, the whole url will be sent back.
+  public static final int SEARCH_CODE = 2000;
+  public static final int URL_CODE = 2001;
 
   // Content keys.
-  public static final String WEB_SEARCH_CONTENT_KEY = "WEB_SEARCH_CONTENT";
-  public static final String BOOK_SEARCH_CONTENT_KEY = "BOOK_SEARCH_CONTENT";
-  public static final String PRODUCT_SEARCH_CONTENT_KEY = "PRODUCT_SEARCH_CONTENT";
-  public static final String OPEN_URL_CONTENT_KEY = "OPEN_URL_CONTENT";
+  public static final String SEARCH_KEY = "SEARCH_KEY";
+  public static final String URL_KEY = "URL_KEY";
 
   // Book search website.
   public static final String DOUBAN_BOOK_SEARCH_WEBSITE =
@@ -464,27 +479,27 @@ public abstract class ResultHandler {
     }
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
-    bundle.putString(OPEN_URL_CONTENT_KEY, url);
+    bundle.putString(URL_KEY, url);
     intent.putExtras(bundle);
-    activity.setResult(OPEN_URL_CODE, intent);
+    activity.setResult(URL_CODE, intent);
     activity.finish();
   }
 
   final void webSearch(String query) {
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
-    bundle.putString(WEB_SEARCH_CONTENT_KEY, query);
+    bundle.putString(SEARCH_KEY, query);
     intent.putExtras(bundle);
-    activity.setResult(WEB_SEARCH_CODE, intent);
+    activity.setResult(SEARCH_CODE, intent);
     activity.finish();
   }
 
   final void bookSearch(String query) {
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
-    bundle.putString(BOOK_SEARCH_CONTENT_KEY, DOUBAN_BOOK_SEARCH_WEBSITE + query);
+    bundle.putString(URL_KEY, DOUBAN_BOOK_SEARCH_WEBSITE + query);
     intent.putExtras(bundle);
-    activity.setResult(BOOK_SEARCH_CODE, intent);
+    activity.setResult(URL_CODE, intent);
     activity.finish();
   }
 
@@ -492,11 +507,106 @@ public abstract class ResultHandler {
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
     try {
-      Log.i("LIXT", amazonSignedRequest(query));
-      bundle.putString(PRODUCT_SEARCH_CONTENT_KEY, amazonSignedRequest(query));
-      intent.putExtras(bundle);
-      activity.setResult(PRODUCT_SEARCH_CODE, intent);
-      activity.finish();
+      // Generate Amazon signed request.
+      String signedRequest = amazonSignedRequest(query);
+
+      (new AsyncTask<String, Integer, String>() {
+        @Override
+        protected String doInBackground(String... url) {
+          return getAmazonProductInfo(url[0]);
+        }
+        /*
+        @Override
+        protected void onProgressUpdate(Integer... progress) {
+          setProgressPercent(progress[0]);
+        }*/
+        @Override
+        protected void onPostExecute(String amazonProductInfo) {
+          if (amazonProductInfo != null && amazonProductInfo.length() != 0) {
+            showAmazonProductInfo(amazonProductInfo);
+          }
+        }
+
+        private String getAmazonProductInfo(String xmlURL) {
+          try {
+            URL url = new URL(xmlURL);
+            InputStream is = null;
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(3000);
+            conn.setReadTimeout(5000);
+            conn.setDoInput(true);
+            conn.setUseCaches(false);
+            conn.connect();
+            if (conn.getResponseCode() == 200) {
+                is = conn.getInputStream();
+                if (is != null) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder sb = new StringBuilder();
+                    String line = null;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                        sb.append('\n');
+                    }
+                    is.close();
+                    return sb.toString();
+                }
+            }
+          } catch (IOException e) {
+          } catch (Exception e) {
+          }
+          return "";
+        }
+
+        private void showAmazonProductInfo(String xml) {
+          try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            XmlPullParser xpp = factory.newPullParser();
+
+            xpp.setInput(new StringReader(xml));
+            int eventType = xpp.getEventType();
+
+            ArrayList<String> titleList = new ArrayList<String>();
+            ArrayList<String> detailList = new ArrayList<String>();
+            boolean isError = false;
+            String currentKey = null;
+
+            boolean isDetailPageURL = false;
+            final String detailPageURLTag = "DetailPageURL";
+            String detailPageURL = null;
+
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG){
+                    currentKey = xpp.getName();
+                } else if (eventType == XmlPullParser.END_TAG) {
+                    currentKey = null;
+                } else if (eventType == XmlPullParser.TEXT) {
+                  // DetailPageURL.
+                  if (currentKey.equals("DetailPageURL")) {
+                    detailList.add(xpp.getText());
+                  }
+                  // Title.
+                  if (currentKey.equals("Title")) {
+                    titleList.add(xpp.getText());
+                  }
+                }
+                eventType = xpp.next();
+            }
+
+            String[] title = new String[titleList.size()];
+            for (int i = 0; i != titleList.size(); i++) {
+              title[i] = titleList.get(i);
+            }
+
+            new AlertDialog.Builder(activity.getApplicationContext()).show();
+
+          } catch (XmlPullParserException e) {
+          } catch (IOException e) {
+          }
+        }
+      }).execute(signedRequest);
+
+      //activity.finish();
     } catch (Exception ex) {
       return;
     }

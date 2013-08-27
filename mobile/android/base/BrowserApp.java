@@ -731,24 +731,24 @@ abstract public class BrowserApp extends GeckoApp
         if(requestCode == ZXING_REQUEST_CODE) {
           Log.i("LIXT", "result code = " + resultCode);
             switch(resultCode) {
-                case ResultHandler.WEB_SEARCH_CODE: {
+                case ResultHandler.SEARCH_CODE: {
                     if(data != null) {
                         Bundle bundle = data.getExtras();
-                        url = bundle.getString(ResultHandler.WEB_SEARCH_CONTENT_KEY);
+                        url = bundle.getString(ResultHandler.SEARCH_KEY);
                         Tabs.getInstance().searchUrlInTab(url);
                     }
                     break;
                 }
 
-                case ResultHandler.BOOK_SEARCH_CODE: {
+                case ResultHandler.URL_CODE: {
                     if(data != null) {
                         Bundle bundle = data.getExtras();
-                        url = bundle.getString(ResultHandler.BOOK_SEARCH_CONTENT_KEY);
+                        url = bundle.getString(ResultHandler.URL_KEY);
                         Tabs.getInstance().loadUrlInTab(url);
                     }
                     break;
                 }
-
+/*
                 case ResultHandler.PRODUCT_SEARCH_CODE: {
                     if(data != null) {
                         Bundle bundle = data.getExtras();
@@ -756,17 +756,7 @@ abstract public class BrowserApp extends GeckoApp
                         primeAmazonProductInfo(url);
                     }
                     break;
-                }
-
-                case ResultHandler.OPEN_URL_CODE: {
-                    if(data != null) {
-                        Bundle bundle = data.getExtras();
-                        url = bundle.getString(ResultHandler.OPEN_URL_CONTENT_KEY);
-                        Tabs.getInstance().loadUrlInTab(url);
-                    }
-                    break;
-                }
-
+                }*/
                 default: return;
             }
         }
