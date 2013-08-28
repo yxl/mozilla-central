@@ -1575,6 +1575,15 @@ abstract public class GeckoApp
 
         initializeChrome();
 
+        // If the URL is "about:barcode", open barcode scanner
+        // instead of opening an URL.
+        Log.i("LIXT", "URL = " + passedUri);
+
+        if (passedUri != null && passedUri.equals("about:barcode")) {
+            Log.i("LIXT", "Barcode start");
+            openBarcodeScanner();
+            loadStartupTab(null);
+        } else {
         // If we are doing a restore, read the session data and send it to Gecko
         String restoreMessage = null;
         if (mRestoreMode != RESTORE_NONE && !mIsRestoringActivity) {
@@ -1598,7 +1607,7 @@ abstract public class GeckoApp
         if (!mIsRestoringActivity) {
             loadStartupTab(isExternalURL ? passedUri : null);
         }
-
+        }
         if (mRestoreMode == RESTORE_OOM) {
             // If we successfully did an OOM restore, we now have tab stubs
             // from the last session. Any future tabs should be animated.
@@ -2702,7 +2711,11 @@ abstract public class GeckoApp
             case R.id.pasteandgo: {
                 String text = GeckoAppShell.getClipboardText();
                 if (!TextUtils.isEmpty(text)) {
-                    Tabs.getInstance().loadUrl(text);
+                    if (text.equals("about:barcode")) {
+                        openBarcodeScanner();
+                    } else {
+                        Tabs.getInstance().loadUrl(text);
+                    }
                 }
                 return true;
             }

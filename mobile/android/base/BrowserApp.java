@@ -31,6 +31,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -45,6 +46,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -92,8 +94,6 @@ abstract public class BrowserApp extends GeckoApp
     private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
     private Boolean mNoImageMode = false;
-
-    private Boolean isFirstLaunch = false;
 
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
@@ -1155,21 +1155,13 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     public void createBarcodeScannerShortcut() {
-        int isFirstLaunch;
-        isFirstLaunch = PrefsHelper.getPref("first_launch", new PrefsHelper.PrefHandlerBase() {
-            @Override
-            public void prefValue(String pref, int value) {
-            }
-            @Override
-            public void finish() {
-            }
-        });
-
-        Log.i("LIXT", "isFirstLaunch = " + isFirstLaunch);
-
-        if(isFirstLaunch == 1) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean firstStart = prefs.getBoolean("first_start", true);
+        if (firstStart) {
+            Editor pEditor = prefs.edit();
+            pEditor.putBoolean("first_start", false);
+            pEditor.commit();
             GeckoAppShell.createShortcut("Barcode Scanner", "about:barcode", "about:barcode", "bookmark");
-            PrefsHelper.setPref("first_launch", 0);
         }
     }
 
