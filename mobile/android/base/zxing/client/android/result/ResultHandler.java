@@ -861,21 +861,3 @@ public abstract class ResultHandler {
   }
 
 }
-
-class NoLineClickableSpan extends ClickableSpan {
-  String text;
-
-  public NoLineClickableSpan(String text) {
-    super();
-    this.text = text;
-  }
-
-  @Override
-  public void updateDrawState(TextPaint ds) {
-  }
-
-  @Override
-  public void onClick(View widget) {
-    ;
-  }
-}
