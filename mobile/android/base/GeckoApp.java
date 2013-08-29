@@ -1577,10 +1577,7 @@ abstract public class GeckoApp
 
         // If the URL is "about:barcode", open barcode scanner
         // instead of opening an URL.
-        Log.i("LIXT", "URL = " + passedUri);
-
         if (passedUri != null && passedUri.equals("about:barcode")) {
-            Log.i("LIXT", "Barcode start");
             openBarcodeScanner();
             loadStartupTab(null);
         } else {
