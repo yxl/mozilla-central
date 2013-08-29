@@ -82,7 +82,9 @@ import android.text.style.ClickableSpan;
 import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.os.AsyncTask;
 
 //import org.apache.commons.codec.binary.Base64;
@@ -151,6 +153,18 @@ public abstract class ResultHandler {
   private final Activity activity;
   private final Result rawResult;
   private final String customProductSearch;
+
+  // Amazon product search.
+  private static final String UTF8_CHARSET = "UTF-8";
+  private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+  private static final String REQUEST_URI = "/onca/xml";
+  private static final String REQUEST_METHOD = "GET";
+  private String endpoint = "webservices.amazon.cn"; // must be lowercase
+  private String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
+  private ArrayList<String> titleList;
+  private ArrayList<String> detailList;
+  private ProgressBar pBar;
+  private boolean netConnectFailure;
 
   private final DialogInterface.OnClickListener shopperMarketListener =
       new DialogInterface.OnClickListener() {
@@ -515,6 +529,8 @@ public abstract class ResultHandler {
   }
 
   final void productSearch(String query) {
+    pBar = (ProgressBar) activity.findViewById(R.id.progress_bar_view);
+    pBar.setVisibility(ProgressBar.VISIBLE);
     try {
       // Generate Amazon signed request.
       String signedRequest = amazonSignedRequest(query);
@@ -524,20 +540,19 @@ public abstract class ResultHandler {
         protected String doInBackground(String... url) {
           return getAmazonProductInfo(url[0]);
         }
-        /*
-        @Override
-        protected void onProgressUpdate(Integer... progress) {
-          setProgressPercent(progress[0]);
-        }*/
+
         @Override
         protected void onPostExecute(String amazonProductInfo) {
+          pBar.setVisibility(ProgressBar.GONE);
+          if(netConnectFailure) {
+            showNetConnectFailure();
+          }
           if (amazonProductInfo != null && amazonProductInfo.length() != 0) {
             showAmazonProductInfo(amazonProductInfo);
           }
         }
 
         private String getAmazonProductInfo(String xmlURL) {
-          Log.i("LIXT", "xmlURL = " + xmlURL);
           try {
             URL url = new URL(xmlURL);
             InputStream is = null;
@@ -548,28 +563,40 @@ public abstract class ResultHandler {
             conn.setUseCaches(false);
             conn.connect();
             if (conn.getResponseCode() == 200) {
-                is = conn.getInputStream();
-                if (is != null) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                    StringBuilder sb = new StringBuilder();
-                    String line = null;
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
-                        sb.append('\n');
-                    }
-                    is.close();
-                    return sb.toString();
+              setNetConnectFailure(false);
+              is = conn.getInputStream();
+              if (is != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                StringBuilder sb = new StringBuilder();
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                  sb.append(line);
+                  sb.append('\n');
                 }
+                is.close();
+                return sb.toString();
+              }
+            } else {
+              setNetConnectFailure(true);
             }
           } catch (IOException e) {
+            setNetConnectFailure(true);
           } catch (Exception e) {
+            setNetConnectFailure(true);
           }
           return "";
         }
 
+        private void setNetConnectFailure(boolean failure) {
+          netConnectFailure = failure;
+        }
+
+        private void showNetConnectFailure() {
+          Toast.makeText(activity.getApplicationContext(), R.string.amazon_product_info_net_failure, Toast.LENGTH_SHORT).show();
+        }
+
         private void showAmazonProductInfo(String xml) {
           try {
-            Log.i("LIXT", "xml = " + xml);
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             factory.setNamespaceAware(true);
             XmlPullParser xpp = factory.newPullParser();
@@ -577,51 +604,56 @@ public abstract class ResultHandler {
             xpp.setInput(new StringReader(xml));
             int eventType = xpp.getEventType();
 
-            ArrayList<String> titleList = new ArrayList<String>();
-            ArrayList<String> detailList = new ArrayList<String>();
+            titleList = new ArrayList<String>();
+            detailList = new ArrayList<String>();
             String currentKey = null;
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG){
-                    currentKey = xpp.getName();
-                } else if (eventType == XmlPullParser.END_TAG) {
-                    currentKey = null;
-                } else if (eventType == XmlPullParser.TEXT) {
-                  Log.i("LIXT", "text = " + xpp.getText());
-                  // DetailPageURL.
-                  if (currentKey.equals("DetailPageURL")) {
-                    detailList.add(xpp.getText());
-                  }
-                  // Title.
-                  if (currentKey.equals("Title")) {
-                    titleList.add(xpp.getText());
-                  }
+              if (eventType == XmlPullParser.START_TAG){
+                  currentKey = xpp.getName();
+              } else if (eventType == XmlPullParser.END_TAG) {
+                  currentKey = null;
+              } else if (eventType == XmlPullParser.TEXT) {
+                // DetailPageURL.
+                if (currentKey.equals("DetailPageURL")) {
+                  detailList.add(xpp.getText());
                 }
-                eventType = xpp.next();
+                // Title.
+                if (currentKey.equals("Title")) {
+                  titleList.add(xpp.getText());
+                }
+              }
+              eventType = xpp.next();
             }
 
-            TextView productInfoTextView = (TextView) activity.findViewById(R.id.contents_text_view);
-            productInfoTextView.setText("");
             for(int i = 0; i != titleList.size(); i++) {
+              titleList.set(i, String.valueOf(i+1) + ". " + titleList.get(i));
+            }
 
-                SpannableString spStr = new SpannableString(Integer.toString(i+1) + ". " + titleList.get(i));
-                spStr.setSpan(new URLSpan(detailList.get(i)) {
-                  @Override
-                  public void onClick(View widget) {
+            if(titleList.size() == 0 || detailList.size() == 0) {
+              new AlertDialog.Builder(activity, AlertDialog.THEME_HOLO_DARK)
+                .setTitle(R.string.amazon_product_info_title)
+                .setPositiveButton(R.string.amazon_product_info_button_close, null)
+                .setMessage(R.string.amazon_product_info_none)
+                .show();
+            }
+            else {
+              new AlertDialog.Builder(activity, AlertDialog.THEME_HOLO_DARK)
+                .setTitle(R.string.amazon_product_info_title)
+                .setPositiveButton(R.string.amazon_product_info_button_close, null)
+                .setItems(titleList.toArray(new String[1]), new DialogInterface.OnClickListener() {
+                  public void onClick(DialogInterface dialog, int which) {
+                    // TODO Auto-generated method stub
                     Intent intent = new Intent();
                     Bundle bundle = new Bundle();
-                    bundle.putString(URL_KEY, getURL());
+                    bundle.putString(URL_KEY, detailList.get(which));
                     intent.putExtras(bundle);
                     activity.setResult(URL_CODE, intent);
                     activity.finish();
                   }
-                }, 0, spStr.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-
-                productInfoTextView.append(spStr);
-                productInfoTextView.append("\n\n");
+                })
+                .show();
             }
-            productInfoTextView.setMovementMethod(LinkMovementMethod.getInstance());
-
           } catch (XmlPullParserException e) {
           } catch (IOException e) {
           }
@@ -719,18 +751,7 @@ public abstract class ResultHandler {
     return url;
   }
 
-  private static final String UTF8_CHARSET = "UTF-8";
-  private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
-  private static final String REQUEST_URI = "/onca/xml";
-  private static final String REQUEST_METHOD = "GET";
-  private String endpoint = "webservices.amazon.cn"; // must be lowercase
-  private String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
-
   private String amazonSignedRequest(String query) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
-    //final String UTF8_CHARSET = "UTF-8";
-    //final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
-    //final String REQUEST_URI = "/onca/xml";
-    //final String REQUEST_METHOD = "GET";
 
     String endpoint = "webservices.amazon.cn"; // must be lowercase
     String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";

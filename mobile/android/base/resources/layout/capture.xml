@@ -25,7 +25,14 @@
   <org.mozilla.gecko.zxing.client.android.ViewfinderView
       android:id="@+id/viewfinder_view"
       android:layout_width="fill_parent"
-      android:layout_height="fill_parent"/>
+	  android:layout_height="fill_parent"/>
+
+  <ProgressBar
+      android:id="@+id/progress_bar_view"
+      android:layout_width="wrap_content"
+	  android:layout_height="wrap_content"
+	  android:layout_gravity="center">
+  </ProgressBar>
 
   <LinearLayout android:id="@+id/result_view"
                 android:orientation="vertical"
@@ -33,7 +40,7 @@
                 android:layout_height="fill_parent"
                 android:background="@color/result_view"
                 android:visibility="gone"
-                android:baselineAligned="false">
+				android:baselineAligned="false">
 
     <LinearLayout
         android:orientation="vertical"

@@ -419,5 +419,9 @@
   <string name="wifi_ssid_label">&wifi_ssid_label;</string>
   <string name="wifi_type_label">&wifi_type_label;</string>
   <string name="content_copied_to_clipboard">&content_copied_to_clipboard;</string>
+  <string name="amazon_product_info_title">&amazon_product_info_title;</string>
+  <string name="amazon_product_info_button_close">&amazon_product_info_button_close;</string>
+  <string name="amazon_product_info_none">&amazon_product_info_none;</string>
+  <string name="amazon_product_info_net_failure">&amazon_product_info_net_failure;</string>
 
 </resources>
