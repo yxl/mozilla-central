@@ -663,7 +663,7 @@ public class GeckoAppShell
                 else
                     intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
                 if (aTitle.equals("Barcode Scanner")) {
-                    intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, BitmapUtils.decodeResource(GeckoApp.mAppContext, R.drawable.ic_menu_barcode_scanner));
+                    intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, BitmapUtils.decodeResource(GeckoApp.mAppContext, R.drawable.barcode_scanner_icon));
                 } else {
                     intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon, aType));
                 }

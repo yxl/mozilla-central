@@ -608,6 +608,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/awesomebar_tab_right.9.png \
   res/drawable-mdpi/awesomebar_sep_left.9.png \
   res/drawable-mdpi/awesomebar_sep_right.9.png \
+  res/drawable-mdpi/barcode_scanner_icon.png \
   res/drawable-mdpi/desktop_notification.png \
   res/drawable-mdpi/ic_addons_empty.png \
   res/drawable-mdpi/ic_awesomebar_go.png \
@@ -846,6 +847,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
   res/drawable-xhdpi/awesomebar_sep_left.9.png \
   res/drawable-xhdpi/awesomebar_sep_right.9.png \
+  res/drawable-xhdpi/barcode_scanner_icon.png \
   res/drawable-xhdpi/ic_addons_empty.png \
   res/drawable-xhdpi/ic_awesomebar_go.png \
   res/drawable-xhdpi/ic_awesomebar_reader.png \
