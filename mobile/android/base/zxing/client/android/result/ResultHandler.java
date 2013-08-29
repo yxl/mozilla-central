@@ -17,6 +17,7 @@
 package org.mozilla.gecko.zxing.client.android.result;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -58,6 +59,8 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import ch.boye.httpclientandroidlib.util.EncodingUtils;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.SearchManager;
@@ -70,8 +73,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.os.AsyncTask;
 
 //import org.apache.commons.codec.binary.Base64;
@@ -504,8 +515,6 @@ public abstract class ResultHandler {
   }
 
   final void productSearch(String query) {
-    Intent intent = new Intent();
-    Bundle bundle = new Bundle();
     try {
       // Generate Amazon signed request.
       String signedRequest = amazonSignedRequest(query);
@@ -528,6 +537,7 @@ public abstract class ResultHandler {
         }
 
         private String getAmazonProductInfo(String xmlURL) {
+          Log.i("LIXT", "xmlURL = " + xmlURL);
           try {
             URL url = new URL(xmlURL);
             InputStream is = null;
@@ -559,6 +569,7 @@ public abstract class ResultHandler {
 
         private void showAmazonProductInfo(String xml) {
           try {
+            Log.i("LIXT", "xml = " + xml);
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             factory.setNamespaceAware(true);
             XmlPullParser xpp = factory.newPullParser();
@@ -568,12 +579,7 @@ public abstract class ResultHandler {
 
             ArrayList<String> titleList = new ArrayList<String>();
             ArrayList<String> detailList = new ArrayList<String>();
-            boolean isError = false;
             String currentKey = null;
-
-            boolean isDetailPageURL = false;
-            final String detailPageURLTag = "DetailPageURL";
-            String detailPageURL = null;
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG){
@@ -581,6 +587,7 @@ public abstract class ResultHandler {
                 } else if (eventType == XmlPullParser.END_TAG) {
                     currentKey = null;
                 } else if (eventType == XmlPullParser.TEXT) {
+                  Log.i("LIXT", "text = " + xpp.getText());
                   // DetailPageURL.
                   if (currentKey.equals("DetailPageURL")) {
                     detailList.add(xpp.getText());
@@ -593,12 +600,27 @@ public abstract class ResultHandler {
                 eventType = xpp.next();
             }
 
-            String[] title = new String[titleList.size()];
-            for (int i = 0; i != titleList.size(); i++) {
-              title[i] = titleList.get(i);
-            }
+            TextView productInfoTextView = (TextView) activity.findViewById(R.id.contents_text_view);
+            productInfoTextView.setText("");
+            for(int i = 0; i != titleList.size(); i++) {
 
-            new AlertDialog.Builder(activity.getApplicationContext()).show();
+                SpannableString spStr = new SpannableString(Integer.toString(i+1) + ". " + titleList.get(i));
+                spStr.setSpan(new URLSpan(detailList.get(i)) {
+                  @Override
+                  public void onClick(View widget) {
+                    Intent intent = new Intent();
+                    Bundle bundle = new Bundle();
+                    bundle.putString(URL_KEY, getURL());
+                    intent.putExtras(bundle);
+                    activity.setResult(URL_CODE, intent);
+                    activity.finish();
+                  }
+                }, 0, spStr.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+                productInfoTextView.append(spStr);
+                productInfoTextView.append("\n\n");
+            }
+            productInfoTextView.setMovementMethod(LinkMovementMethod.getInstance());
 
           } catch (XmlPullParserException e) {
           } catch (IOException e) {
@@ -705,16 +727,16 @@ public abstract class ResultHandler {
   private String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
 
   private String amazonSignedRequest(String query) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
-    final String UTF8_CHARSET = "UTF-8";
-    final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
-    final String REQUEST_URI = "/onca/xml";
-    final String REQUEST_METHOD = "GET";
+    //final String UTF8_CHARSET = "UTF-8";
+    //final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+    //final String REQUEST_URI = "/onca/xml";
+    //final String REQUEST_METHOD = "GET";
 
     String endpoint = "webservices.amazon.cn"; // must be lowercase
     String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
     String awsSecretKey = "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";
     String associateTag = "mozillafire05-20";
-    String contentType = "html";
+    String contentType = "text";
     String operation = "ItemLookup";
     String service = "AWSECommerceService";
     String version = "2011-08-01";
@@ -725,7 +747,7 @@ public abstract class ResultHandler {
     Map<String, String> params = new HashMap<String, String>();
     params.put("AWSAccessKeyId", awsAccessKeyId);
     params.put("AssociateTag", associateTag);
-    params.put("ContentType", contentType);
+    //params.put("ContentType", contentType);
     params.put("Operation", operation);
     params.put("Service", service);
     params.put("Version", version);
@@ -817,4 +839,22 @@ public abstract class ResultHandler {
     return timestamp;
   }
 
+}
+
+class NoLineClickableSpan extends ClickableSpan {
+  String text;
+
+  public NoLineClickableSpan(String text) {
+    super();
+    this.text = text;
+  }
+
+  @Override
+  public void updateDrawState(TextPaint ds) {
+  }
+
+  @Override
+  public void onClick(View widget) {
+    ;
+  }
 }
