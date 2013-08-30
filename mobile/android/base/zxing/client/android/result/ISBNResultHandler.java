@@ -31,7 +31,8 @@ import android.view.View;
  */
 public final class ISBNResultHandler extends ResultHandler {
   private static final int[] buttons = {
-      R.string.button_web_search,
+    R.string.button_web_search,
+    R.string.button_douban_search,
   };
 
   public ISBNResultHandler(Activity activity, ParsedResult result, Result rawResult) {
@@ -51,7 +52,10 @@ public final class ISBNResultHandler extends ResultHandler {
   @Override
   public void handleButtonPress(int index) {
     ISBNParsedResult isbnResult = (ISBNParsedResult) getResult();
-    webSearch(isbnResult.getISBN());
+    switch(index) {
+      case 0: webSearch(isbnResult.getISBN()); break;
+      case 1: bookSearch(isbnResult.getISBN()); break;
+    }
   }
 
   @Override

@@ -32,18 +32,12 @@ import android.view.View;
  */
 public final class ProductResultHandler extends ResultHandler {
   private static final int[] buttons = {
-      R.string.button_web_search,
+    R.string.button_web_search,
+    R.string.button_amazon_search,
   };
 
   public ProductResultHandler(Activity activity, ParsedResult result, Result rawResult) {
     super(activity, result, rawResult);
-    /*showGoogleShopperButton(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        ProductParsedResult productResult = (ProductParsedResult) getResult();
-        openGoogleShopper(productResult.getNormalizedProductID());
-      }
-    });*/
   }
 
   @Override
@@ -67,7 +61,10 @@ public final class ProductResultHandler extends ResultHandler {
     } else {
       throw new IllegalArgumentException(rawResult.getClass().toString());
     }
-    webSearch(productID);
+    switch(index) {
+      case 0: webSearch(productID); break;
+      case 1: productSearch(productID); break;
+    }
   }
 
   @Override

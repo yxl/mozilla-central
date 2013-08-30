@@ -16,15 +16,50 @@
 
 package org.mozilla.gecko.zxing.client.android.result;
 
-import org.mozilla.gecko.BrowserApp;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TimeZone;
+import java.util.TreeMap;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.zxing.Result;
 import org.mozilla.gecko.zxing.client.android.Contents;
-import org.mozilla.gecko.zxing.client.android.Intents;
 import org.mozilla.gecko.zxing.client.android.LocaleManager;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.zxing.client.result.ParsedResult;
 import org.mozilla.gecko.zxing.client.result.ParsedResultType;
 import org.mozilla.gecko.zxing.client.result.ResultParser;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import ch.boye.httpclientandroidlib.util.EncodingUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -35,15 +70,24 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.ContactsContract;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.os.AsyncTask;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.Locale;
+//import org.apache.commons.codec.binary.Base64;
 
 /**
  * A base class for the Android-specific barcode handlers. These allow the app to polymorphically
@@ -89,15 +133,38 @@ public abstract class ResultHandler {
   };
   private static final int NO_TYPE = -1;
 
-  public static final int MAX_BUTTON_COUNT = 1;
-  
-  // Result code of ZXing.
-  public static final int RESULT_ZXING = 1997;
+  public static final int MAX_BUTTON_COUNT = 2;
+
+  // Result codes.
+  // If SEARCH_CODE is used, only the search contents will be sent back.
+  // If URL_CODE is used, the whole url will be sent back.
+  public static final int SEARCH_CODE = 2000;
+  public static final int URL_CODE = 2001;
+
+  // Content keys.
+  public static final String SEARCH_KEY = "SEARCH_KEY";
+  public static final String URL_KEY = "URL_KEY";
+
+  // Book search website.
+  public static final String DOUBAN_BOOK_SEARCH_WEBSITE =
+    "http://book.douban.com/subject_search?search_text=";
 
   private final ParsedResult result;
   private final Activity activity;
   private final Result rawResult;
   private final String customProductSearch;
+
+  // Amazon product search.
+  private static final String UTF8_CHARSET = "UTF-8";
+  private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
+  private static final String REQUEST_URI = "/onca/xml";
+  private static final String REQUEST_METHOD = "GET";
+  private String endpoint = "webservices.amazon.cn"; // must be lowercase
+  private String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
+  private ArrayList<String> titleList;
+  private ArrayList<String> detailList;
+  private ProgressBar pBar;
+  private boolean netConnectFailure;
 
   private final DialogInterface.OnClickListener shopperMarketListener =
       new DialogInterface.OnClickListener() {
@@ -289,7 +356,7 @@ public abstract class ResultHandler {
       // Remove extra leading '\n'
       putExtra(intent, ContactsContract.Intents.Insert.NOTES, aggregatedNotes.substring(1));
     }
-    
+
     putExtra(intent, ContactsContract.Intents.Insert.IM_HANDLE, instantMessenger);
     putExtra(intent, ContactsContract.Intents.Insert.POSTAL, address);
     if (addressType != null) {
@@ -426,13 +493,6 @@ public abstract class ResultHandler {
         "/books?vid=isbn" + isbn);
     launchIntent(new Intent(Intent.ACTION_VIEW, uri));
   }
-  
-  /*final void searchBookContents(String isbnOrUrl) {
-    Intent intent = new Intent(Intents.SearchBookContents.ACTION);
-    intent.setClassName(activity, SearchBookContentsActivity.class.getName());
-    putExtra(intent, Intents.SearchBookContents.ISBN, isbnOrUrl);
-    launchIntent(intent);
-  }*/
 
   final void openURL(String url) {
     // Strangely, some Android browsers don't seem to register to handle HTTP:// or HTTPS://.
@@ -442,33 +502,168 @@ public abstract class ResultHandler {
     } else if (url.startsWith("HTTPS://")) {
       url = "https" + url.substring(5);
     }
-
     Intent intent = new Intent();
     Bundle bundle = new Bundle();
-    bundle.putString("ZXING_URL", url);
+    bundle.putString(URL_KEY, url);
     intent.putExtras(bundle);
-    activity.setResult(Activity.RESULT_OK, intent);
+    activity.setResult(URL_CODE, intent);
     activity.finish();
-    
-    /*
-    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-    try {
-      launchIntent(intent);
-    } catch (ActivityNotFoundException ignored) {
-      Log.w(TAG, "Nothing available to handle " + intent);
-    }*/
   }
 
   final void webSearch(String query) {
-	Intent intent = new Intent();
-	Bundle bundle = new Bundle();
-	bundle.putString("ZXING_URL", query);
-	intent.putExtras(bundle);
-	activity.setResult(Activity.RESULT_OK, intent);
-	activity.finish();
-    //Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
-    //intent.putExtra("query", query);
-    //launchIntent(intent);
+    Intent intent = new Intent();
+    Bundle bundle = new Bundle();
+    bundle.putString(SEARCH_KEY, query);
+    intent.putExtras(bundle);
+    activity.setResult(SEARCH_CODE, intent);
+    activity.finish();
+  }
+
+  final void bookSearch(String query) {
+    Intent intent = new Intent();
+    Bundle bundle = new Bundle();
+    bundle.putString(URL_KEY, DOUBAN_BOOK_SEARCH_WEBSITE + query);
+    intent.putExtras(bundle);
+    activity.setResult(URL_CODE, intent);
+    activity.finish();
+  }
+
+  final void productSearch(String query) {
+    pBar = (ProgressBar) activity.findViewById(R.id.progress_bar_view);
+    pBar.setVisibility(ProgressBar.VISIBLE);
+    try {
+      // Generate Amazon signed request.
+      String signedRequest = amazonSignedRequest(query);
+
+      (new AsyncTask<String, Integer, String>() {
+        @Override
+        protected String doInBackground(String... url) {
+          return getAmazonProductInfo(url[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String amazonProductInfo) {
+          pBar.setVisibility(ProgressBar.GONE);
+          if(netConnectFailure) {
+            showNetConnectFailure();
+          }
+          if (amazonProductInfo != null && amazonProductInfo.length() != 0) {
+            showAmazonProductInfo(amazonProductInfo);
+          }
+        }
+
+        private String getAmazonProductInfo(String xmlURL) {
+          try {
+            URL url = new URL(xmlURL);
+            InputStream is = null;
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(3000);
+            conn.setReadTimeout(5000);
+            conn.setDoInput(true);
+            conn.setUseCaches(false);
+            conn.connect();
+            if (conn.getResponseCode() == 200) {
+              setNetConnectFailure(false);
+              is = conn.getInputStream();
+              if (is != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                StringBuilder sb = new StringBuilder();
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                  sb.append(line);
+                  sb.append('\n');
+                }
+                is.close();
+                return sb.toString();
+              }
+            } else {
+              setNetConnectFailure(true);
+            }
+          } catch (IOException e) {
+            setNetConnectFailure(true);
+          } catch (Exception e) {
+            setNetConnectFailure(true);
+          }
+          return "";
+        }
+
+        private void setNetConnectFailure(boolean failure) {
+          netConnectFailure = failure;
+        }
+
+        private void showNetConnectFailure() {
+          Toast.makeText(activity.getApplicationContext(), R.string.amazon_product_info_net_failure, Toast.LENGTH_SHORT).show();
+        }
+
+        private void showAmazonProductInfo(String xml) {
+          try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            XmlPullParser xpp = factory.newPullParser();
+
+            xpp.setInput(new StringReader(xml));
+            int eventType = xpp.getEventType();
+
+            titleList = new ArrayList<String>();
+            detailList = new ArrayList<String>();
+            String currentKey = null;
+
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+              if (eventType == XmlPullParser.START_TAG){
+                  currentKey = xpp.getName();
+              } else if (eventType == XmlPullParser.END_TAG) {
+                  currentKey = null;
+              } else if (eventType == XmlPullParser.TEXT) {
+                // DetailPageURL.
+                if (currentKey.equals("DetailPageURL")) {
+                  detailList.add(xpp.getText());
+                }
+                // Title.
+                if (currentKey.equals("Title")) {
+                  titleList.add(xpp.getText());
+                }
+              }
+              eventType = xpp.next();
+            }
+
+            for(int i = 0; i != titleList.size(); i++) {
+              titleList.set(i, String.valueOf(i+1) + ". " + titleList.get(i));
+            }
+
+            if(titleList.size() == 0 || detailList.size() == 0) {
+              new AlertDialog.Builder(activity, AlertDialog.THEME_HOLO_DARK)
+                .setTitle(R.string.amazon_product_info_title)
+                .setPositiveButton(R.string.amazon_product_info_button_close, null)
+                .setMessage(R.string.amazon_product_info_none)
+                .show();
+            }
+            else {
+              new AlertDialog.Builder(activity, AlertDialog.THEME_HOLO_DARK)
+                .setTitle(R.string.amazon_product_info_title)
+                .setPositiveButton(R.string.amazon_product_info_button_close, null)
+                .setItems(titleList.toArray(new String[1]), new DialogInterface.OnClickListener() {
+                  public void onClick(DialogInterface dialog, int which) {
+                    // TODO Auto-generated method stub
+                    Intent intent = new Intent();
+                    Bundle bundle = new Bundle();
+                    bundle.putString(URL_KEY, detailList.get(which));
+                    intent.putExtras(bundle);
+                    activity.setResult(URL_CODE, intent);
+                    activity.finish();
+                  }
+                })
+                .show();
+            }
+          } catch (XmlPullParserException e) {
+          } catch (IOException e) {
+          }
+        }
+      }).execute(signedRequest);
+
+      //activity.finish();
+    } catch (Exception ex) {
+      return;
+    }
   }
 
   final void openGoogleShopper(String query) {
@@ -543,7 +738,7 @@ public abstract class ResultHandler {
     try {
       text = URLEncoder.encode(text, "UTF-8");
     } catch (UnsupportedEncodingException e) {
-      // can't happen; UTF-8 is always supported. Continue, I guess, without encoding      
+      // can't happen; UTF-8 is always supported. Continue, I guess, without encoding
     }
     String url = customProductSearch.replace("%s", text);
     if (rawResult != null) {
@@ -554,6 +749,115 @@ public abstract class ResultHandler {
       }
     }
     return url;
+  }
+
+  private String amazonSignedRequest(String query) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+
+    String endpoint = "webservices.amazon.cn"; // must be lowercase
+    String awsAccessKeyId = "AKIAJWQ43TKF7GPMBQWQ";
+    String awsSecretKey = "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";
+    String associateTag = "mozillafire05-20";
+    String contentType = "text";
+    String operation = "ItemLookup";
+    String service = "AWSECommerceService";
+    String version = "2011-08-01";
+    String idType = "EAN";
+    String searchIndex = "All";
+
+    // Initial sign params.
+    Map<String, String> params = new HashMap<String, String>();
+    params.put("AWSAccessKeyId", awsAccessKeyId);
+    params.put("AssociateTag", associateTag);
+    //params.put("ContentType", contentType);
+    params.put("Operation", operation);
+    params.put("Service", service);
+    params.put("Version", version);
+    params.put("Timestamp", timestamp());
+    params.put("ItemId", query);
+    params.put("IdType", idType);
+    params.put("SearchIndex", searchIndex);
+
+    SortedMap<String, String> sortedParamMap = new TreeMap<String, String>(params);
+    String canonicalQS = canonicalize(sortedParamMap);
+
+    String toSign =
+        REQUEST_METHOD + "\n"
+        + endpoint + "\n"
+        + REQUEST_URI + "\n"
+        + canonicalQS;
+
+    byte[] secretyKeyBytes = awsSecretKey.getBytes(UTF8_CHARSET);
+    SecretKeySpec secretKeySpec = new SecretKeySpec(secretyKeyBytes, HMAC_SHA256_ALGORITHM);
+
+    String hmac = hmac(toSign, secretKeySpec);
+    String sig = percentEncodeRfc3986(hmac);
+    String url = "http://" + endpoint + REQUEST_URI + "?" +
+    canonicalQS + "&Signature=" + sig;
+
+    return url;
+  }
+
+  private String canonicalize(SortedMap<String, String> sortedParamMap)
+  {
+    if (sortedParamMap.isEmpty()) {
+      return "";
+    }
+
+    StringBuffer buffer = new StringBuffer();
+    Iterator<Map.Entry<String, String>> iter = sortedParamMap.entrySet().iterator();
+
+    while (iter.hasNext()) {
+      Map.Entry<String, String> kvpair = iter.next();
+      buffer.append(percentEncodeRfc3986(kvpair.getKey()));
+      buffer.append("=");
+      buffer.append(percentEncodeRfc3986(kvpair.getValue()));
+      if (iter.hasNext()) {
+        buffer.append("&");
+      }
+    }
+    String canonical = buffer.toString();
+      return canonical;
+  }
+
+  private String percentEncodeRfc3986(String s) {
+    final String UTF8_CHARSET = "UTF-8";
+    String out;
+    try {
+      out = URLEncoder.encode(s, UTF8_CHARSET)
+      .replace("+", "%20")
+      .replace("*", "%2A")
+      .replace("%7E", "~");
+    } catch (UnsupportedEncodingException e) {
+      out = s;
+    }
+    return out;
+  }
+
+  private String hmac(String stringToSign, SecretKeySpec secretKeySpec) throws NoSuchAlgorithmException, InvalidKeyException {
+    final String UTF8_CHARSET = "UTF-8";
+    Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
+    mac.init(secretKeySpec);
+    String signature = null;
+    byte[] data;
+    byte[] rawHmac;
+    try {
+      data = stringToSign.getBytes(UTF8_CHARSET);
+      rawHmac = mac.doFinal(data);
+      Base64 encoder = new Base64();
+      signature = new String(encoder.encode(rawHmac));
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(UTF8_CHARSET + " is unsupported!", e);
+    }
+    return signature;
+  }
+
+  private String timestamp() {
+    String timestamp = null;
+    Calendar cal = Calendar.getInstance();
+    DateFormat dfm = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    dfm.setTimeZone(TimeZone.getTimeZone("GMT"));
+    timestamp = dfm.format(cal.getTime());
+    return timestamp;
   }
 
 }

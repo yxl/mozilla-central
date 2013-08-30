@@ -14,7 +14,6 @@
 <!ENTITY  button_google_shopper "Shopper">
 <!ENTITY  button_mms "Send MMS">
 <!ENTITY  button_open_browser "Open browser">
-<!ENTITY  button_product_search "Product Search">
 <!ENTITY  button_search_book_contents "Search contents">
 <!ENTITY  button_share_app "Application">
 <!ENTITY  button_share_bookmark "Bookmark">
@@ -25,6 +24,8 @@
 <!ENTITY  button_show_map "Show map">
 <!ENTITY  button_sms "Send SMS">
 <!ENTITY  button_web_search "Web search">
+<!ENTITY  button_amazon_search "Amazon search">
+<!ENTITY  button_douban_search "Douban search">
 <!ENTITY  button_wifi "Connect to Network">
 <!ENTITY  contents_contact "Contact info">
 <!ENTITY  contents_email "Email address">
@@ -76,3 +77,7 @@
 <!ENTITY  wifi_ssid_label "Network Name">
 <!ENTITY  wifi_type_label "Type">
 <!ENTITY  content_copied_to_clipboard "Scan result copied to clipboard">
+<!ENTITY  amazon_product_info_title "Amazon Product Information">
+<!ENTITY  amazon_product_info_button_close "Close">
+<!ENTITY  amazon_product_info_none "No product information">
+<!ENTITY  amazon_product_info_net_failure "Network failure, try later">

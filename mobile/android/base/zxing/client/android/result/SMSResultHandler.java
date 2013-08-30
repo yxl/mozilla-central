@@ -31,7 +31,6 @@ import android.telephony.PhoneNumberUtils;
 public final class SMSResultHandler extends ResultHandler {
   private static final int[] buttons = {
       R.string.button_sms,
-      R.string.button_mms
   };
 
   public SMSResultHandler(Activity activity, ParsedResult result) {
