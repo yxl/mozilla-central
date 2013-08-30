@@ -31,6 +31,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -45,6 +46,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -92,7 +94,7 @@ abstract public class BrowserApp extends GeckoApp
     private AboutHome mAboutHome;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
     private Boolean mNoImageMode = false;
-    
+
     private static final int ADDON_MENU_OFFSET = 1000;
     private class MenuItemInfo {
         public int id;
@@ -360,6 +362,8 @@ abstract public class BrowserApp extends GeckoApp
         mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         super.onCreate(savedInstanceState);
+
+        createBarcodeScannerShortcut();
 
         RelativeLayout actionBar = (RelativeLayout) findViewById(R.id.browser_toolbar);
 
@@ -717,7 +721,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         String url = null;
-        
+
         if(requestCode == ZXING_REQUEST_CODE) {
             if(resultCode == Activity.RESULT_OK && data != null) {
                 Bundle bundle = data.getExtras();
@@ -726,7 +730,7 @@ abstract public class BrowserApp extends GeckoApp
             }
             return;
         }
-        
+
         // Don't update the url in the toolbar if the activity was cancelled.
         if (resultCode == Activity.RESULT_OK && data != null) {
             // Don't update the url if the activity was launched to pick a site.
@@ -734,6 +738,14 @@ abstract public class BrowserApp extends GeckoApp
             if (!AwesomeBar.Target.PICK_SITE.toString().equals(targetKey)) {
                 // Update the toolbar with the url that was just entered.
                 url = data.getStringExtra(AwesomeBar.URL_KEY);
+
+                // If the URL is "about:barcode", open barcode scanner
+                // instead of opening an URL.
+                if (url.equals("about:barcode")) {
+                    super.openBarcodeScanner();
+                    mBrowserToolbar.fromAwesomeBarSearch(url);
+                    return;
+                }
             }
         }
 
@@ -929,7 +941,7 @@ abstract public class BrowserApp extends GeckoApp
     public void addTab() {
         showAwesomebar(AwesomeBar.Target.NEW_TAB);
     }
-    
+
     public void addHomeTab() {
     	Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
     	CnLocalUtils.addTabCount();
@@ -1142,6 +1154,17 @@ abstract public class BrowserApp extends GeckoApp
         refreshToolbarHeight();
     }
 
+    public void createBarcodeScannerShortcut() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean firstStart = prefs.getBoolean("first_start", true);
+        if (firstStart) {
+            Editor pEditor = prefs.edit();
+            pEditor.putBoolean("first_start", false);
+            pEditor.commit();
+            GeckoAppShell.createShortcut("Barcode Scanner", "about:barcode", "about:barcode", "bookmark");
+        }
+    }
+
     private class HideTabsTouchListener implements TouchEventInterceptor {
         private boolean mIsHidingTabs = false;
 
@@ -1331,7 +1354,7 @@ abstract public class BrowserApp extends GeckoApp
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
 
-        // Inform the menu about the action-items bar. 
+        // Inform the menu about the action-items bar.
         if (menu instanceof GeckoMenu && HardwareUtils.isTablet())
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
 
@@ -1408,12 +1431,12 @@ abstract public class BrowserApp extends GeckoApp
     			}
     		}
     		@Override
-    		public void finish() {  
+    		public void finish() {
     			noImageMode.setChecked(mNoImageMode);
     		}
 		});
     }
-    
+
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu) {
         if (aMenu == null)
@@ -1461,7 +1484,7 @@ abstract public class BrowserApp extends GeckoApp
 
         noImageMode.setChecked(false);
         initNoImageMode(noImageMode);
-        
+
         String url = tab.getURL();
         if (ReaderModeUtils.isAboutReader(url)) {
             String urlFromReader = ReaderModeUtils.getUrlFromAboutReader(url);
@@ -1485,7 +1508,7 @@ abstract public class BrowserApp extends GeckoApp
 
         return true;
     }
-    
+
     private void toggleNoImageMode() {
     	PrefsHelper.getPref("permissions.default.image", new PrefsHelper.PrefHandlerBase() {
     		@Override
@@ -1498,7 +1521,7 @@ abstract public class BrowserApp extends GeckoApp
     			}
     		}
     		@Override
-    		public void finish() {   
+    		public void finish() {
     			if (mNoImageMode) {
     				PrefsHelper.setPref("permissions.default.image", 2);
     			} else {
@@ -1506,12 +1529,6 @@ abstract public class BrowserApp extends GeckoApp
     			}
     		}
 		});
-    }
-
-    private void openBarcodeScanner() {
-        Intent intent = new Intent(this, CaptureActivity.class);
-        startActivityForResult(intent, ZXING_REQUEST_CODE);
-        return;
     }
 
     @Override
@@ -1591,7 +1608,7 @@ abstract public class BrowserApp extends GeckoApp
                 addPrivateTab();
                 return true;
             case R.id.barcode_scanner:
-                openBarcodeScanner();
+                super.openBarcodeScanner();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -1615,7 +1632,7 @@ abstract public class BrowserApp extends GeckoApp
     /*
      * If the app has been launched a certain number of times, and we haven't asked for feedback before,
      * open a new tab with about:feedback when launching the app from the icon shortcut.
-     */ 
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

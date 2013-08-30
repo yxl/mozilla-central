@@ -24,6 +24,7 @@ import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.zxing.client.android.CaptureActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -109,7 +110,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract public class GeckoApp
-                extends GeckoActivity 
+                extends GeckoActivity
                 implements GeckoEventListener, SensorEventListener, LocationListener,
                            Tabs.OnTabsChangedListener, GeckoEventResponder,
                            GeckoMenu.Callback, GeckoMenu.MenuPresenter,
@@ -193,6 +194,8 @@ abstract public class GeckoApp
 
     private static final String RESTARTER_ACTION = "org.mozilla.gecko.restart";
     private static final String RESTARTER_CLASS = "org.mozilla.gecko.Restarter";
+
+    private static final int ZXING_REQUEST_CODE = 1997;
 
     @SuppressWarnings("serial")
     class SessionRestoreException extends Exception {
@@ -519,9 +522,9 @@ abstract public class GeckoApp
                 onPreparePanel(featureId, mMenuPanel, mMenu);
             }
 
-            return mMenuPanel; 
+            return mMenuPanel;
         }
-  
+
         return super.onCreatePanelView(featureId);
     }
 
@@ -597,7 +600,7 @@ abstract public class GeckoApp
             mMenuPanel.addView((GeckoMenu) mMenu);
         }
     }
- 
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // Handle hardware menu key presses separately so that we can show a custom menu in some cases.
@@ -716,7 +719,7 @@ abstract public class GeckoApp
     }
 
     public void addTab() { }
-    
+
     public void addHomeTab() {}
 
     public void addPrivateTab() { }
@@ -1123,7 +1126,7 @@ abstract public class GeckoApp
         final String failureText = mAppContext.getString(R.string.wallpaper_fail);
         final String fileName = aSrc.substring(aSrc.lastIndexOf("/") + 1);
         final PendingIntent emptyIntent = PendingIntent.getActivity(mAppContext, 0, new Intent(), 0);
-        final AlertNotification notification = new AlertNotification(mAppContext, fileName.hashCode(), 
+        final AlertNotification notification = new AlertNotification(mAppContext, fileName.hashCode(),
                                 R.drawable.alert_download, fileName, progText, System.currentTimeMillis(), null);
         notification.setLatestEventInfo(mAppContext, fileName, progText, emptyIntent );
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
@@ -1146,7 +1149,7 @@ abstract public class GeckoApp
                 // Sometimes WallpaperManager's getDesiredMinimum*() methods
                 // can return 0 if a Remote Exception occurs when calling the
                 // Wallpaper Service. So if that fails, we are calculating
-                // the ideal width and height from the device's display 
+                // the ideal width and height from the device's display
                 // resolution (excluding the decorated area)
 
                 if (idealWidth <= 0 || idealHeight <= 0) {
@@ -1289,7 +1292,7 @@ abstract public class GeckoApp
     public void requestRender() {
         mLayerView.requestRender();
     }
-    
+
     public void hidePlugins(Tab tab) {
         for (Layer layer : tab.getPluginLayers()) {
             if (layer instanceof PluginLayer) {
@@ -1572,6 +1575,12 @@ abstract public class GeckoApp
 
         initializeChrome();
 
+        // If the URL is "about:barcode", open barcode scanner
+        // instead of opening an URL.
+        if (passedUri != null && passedUri.equals("about:barcode")) {
+            openBarcodeScanner();
+            loadStartupTab(null);
+        } else {
         // If we are doing a restore, read the session data and send it to Gecko
         String restoreMessage = null;
         if (mRestoreMode != RESTORE_NONE && !mIsRestoringActivity) {
@@ -1595,7 +1604,7 @@ abstract public class GeckoApp
         if (!mIsRestoringActivity) {
             loadStartupTab(isExternalURL ? passedUri : null);
         }
-
+        }
         if (mRestoreMode == RESTORE_OOM) {
             // If we successfully did an OOM restore, we now have tab stubs
             // from the last session. Any future tabs should be animated.
@@ -1961,6 +1970,12 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createWebappLoadEvent(uri));
         } else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
+            // If the URL is "about:barcode", open barcode scanner
+            // instead of opening an URL.
+            if(uri.equals("about:barcode")) {
+                openBarcodeScanner();
+                return;
+            }
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
         } else if (Intent.ACTION_SEARCH.equals(action)) {
             String uri = getURIFromIntent(intent);
@@ -2216,10 +2231,10 @@ abstract public class GeckoApp
 
     @Override
     public Object onRetainCustomNonConfigurationInstance() {
-        // Send a non-null value so that we can restart the application, 
+        // Send a non-null value so that we can restart the application,
         // when activity restarts due to configuration change.
         return Boolean.TRUE;
-    } 
+    }
 
     public String getContentProcessName() {
         return AppConstants.MOZ_CHILD_PROCESS_NAME;
@@ -2693,7 +2708,11 @@ abstract public class GeckoApp
             case R.id.pasteandgo: {
                 String text = GeckoAppShell.getClipboardText();
                 if (!TextUtils.isEmpty(text)) {
-                    Tabs.getInstance().loadUrl(text);
+                    if (text.equals("about:barcode")) {
+                        openBarcodeScanner();
+                    } else {
+                        Tabs.getInstance().loadUrl(text);
+                    }
                 }
                 return true;
             }
@@ -2755,5 +2774,11 @@ abstract public class GeckoApp
         // Don't use a notification service; we may be killed in the background
         // during downloads.
         return new AppNotificationClient(getApplicationContext());
+    }
+
+    public void openBarcodeScanner() {
+        Intent intent = new Intent(this, CaptureActivity.class);
+        startActivityForResult(intent, ZXING_REQUEST_CODE);
+        return;
     }
 }
