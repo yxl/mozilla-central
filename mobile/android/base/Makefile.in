@@ -608,7 +608,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/awesomebar_tab_right.9.png \
   res/drawable-mdpi/awesomebar_sep_left.9.png \
   res/drawable-mdpi/awesomebar_sep_right.9.png \
-  res/drawable-mdpi/barcode_scanner_icon.png \
   res/drawable-mdpi/desktop_notification.png \
   res/drawable-mdpi/ic_addons_empty.png \
   res/drawable-mdpi/ic_awesomebar_go.png \
@@ -847,7 +846,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
   res/drawable-xhdpi/awesomebar_sep_left.9.png \
   res/drawable-xhdpi/awesomebar_sep_right.9.png \
-  res/drawable-xhdpi/barcode_scanner_icon.png \
   res/drawable-xhdpi/ic_addons_empty.png \
   res/drawable-xhdpi/ic_awesomebar_go.png \
   res/drawable-xhdpi/ic_awesomebar_reader.png \
@@ -1105,7 +1103,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/ic_menu_back.xml                       \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_off.xml           \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_on.xml            \
-  mobile/android/base/resources/drawable/ic_menu_no_image_mode.xml           \
+  mobile/android/base/resources/drawable/ic_menu_no_image_mode.xml              \
   mobile/android/base/resources/drawable/ic_menu_barcode_scanner.xml            \
   mobile/android/base/resources/drawable/ic_menu_quit.xml                       \
   mobile/android/base/resources/drawable/menu_item_state.xml                    \
@@ -1319,6 +1317,23 @@ res/drawable-xxhdpi/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable-xxhdpi
 	cp $(ICON_PATH_XXHDPI) $@
 
+BARCODE_ICON_PATH = resources/barcode/barcode_scanner_icon_48x48.png
+BARCODE_ICON_PATH_HDPI = resources/barcode/barcode_scanner_icon_72x72.png
+BARCODE_ICON_PATH_XHDPI = resources/barcode/barcode_scanner_icon_96x96.png
+BARCODE_ICON_PATH_XXHDPI = resources/barcode/barcode_scanner_icon_144x144.png
+
+res/drawable-mdpi/barcode_scanner_icon.png: $(srcdir)/$(BARCODE_ICON_PATH)
+	cp $(srcdir)/$(BARCODE_ICON_PATH) $@
+
+res/drawable-hdpi/barcode_scanner_icon.png: $(srcdir)/$(BARCODE_ICON_PATH_HDPI)
+	cp $(srcdir)/$(BARCODE_ICON_PATH_HDPI) $@
+
+res/drawable-xhdpi/barcode_scanner_icon.png: $(srcdir)/$(BARCODE_ICON_PATH_XHDPI)
+	cp $(srcdir)/$(BARCODE_ICON_PATH_XHDPI) $@
+
+res/drawable-xxhdpi/barcode_scanner_icon.png: $(srcdir)/$(BARCODE_ICON_PATH_XXHDPI)
+	cp $(srcdir)/$(BARCODE_ICON_PATH_XXHDPI) $@
+
 RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
 $(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 	$(NSINSTALL) -D res/drawable
@@ -1364,10 +1379,10 @@ $(ASSETS_DIRS):
 $(ASSETS): $(ASSETS_DIRS) $(subst assets/,$(srcdir)/cmhomepage-assets/,$(ASSETS))
 	$(NSINSTALL) $(subst assets/,$(srcdir)/cmhomepage-assets/,$@) $(dir $@)
 
-R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/values/strings.xml AndroidManifest.xml $(ASSETS) FORCE
+R.java: $(MOZ_APP_ICON) $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/drawable-mdpi/barcode_scanner_icon.png res/drawable-hdpi/barcode_scanner_icon.png res/drawable-xhdpi/barcode_scanner_icon.png res/drawable-xxhdpi/barcode_scanner_icon.png res/values/strings.xml AndroidManifest.xml $(ASSETS) FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -A assets -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/values/strings.xml $(ASSETS) FORCE
+gecko.ap_: AndroidManifest.xml res/drawable-mdpi/icon.png res/drawable-hdpi/icon.png res/drawable-xhdpi/icon.png res/drawable-xxhdpi/icon.png res/drawable-mdpi/barcode_scanner_icon.png res/drawable-hdpi/barcode_scanner_icon.png res/drawable-xhdpi/barcode_scanner_icon.png res/drawable-xxhdpi/barcode_scanner_icon.png $(RESOURCES) $(RES_DRAWABLE) $(RES_BRANDING_DRAWABLE_MDPI) $(PP_RES_XML) res/values/strings.xml $(ASSETS) FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -A assets -F $@
 
 libs:: classes.dex package-name.txt jni-stubs.inc
