@@ -969,7 +969,7 @@ Navigator::GetFilesystem(const FilesystemParameters& parameters, ErrorResult& aR
     return nullptr;
   }
 
-  return filesystem::Filesystem::GetFilesystem(mWindow, parameters, aRv).forget();
+  return filesystem::Filesystem::GetInstance(mWindow, parameters, aRv);
 }
 
 Geolocation*
