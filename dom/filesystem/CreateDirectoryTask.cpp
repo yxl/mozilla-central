@@ -13,6 +13,7 @@
 #include "FileUtils.h"
 #include "nsIFile.h"
 #include "FileUtils.h"
+#include "DeviceStorage.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
@@ -26,9 +27,9 @@ namespace filesystem {
 CreateDirectoryTask::CreateDirectoryTask(
   Directory* aDir, const nsAString& aPath)
 {
-  nsRefPtr<Filesystem> f = aDir->GetFilesystem();
-  mPromise = new Promise(f->GetWindow());
-  mFilesystem = do_GetWeakReference(f);
+  nsRefPtr<nsDOMDeviceStorage> s = aDir->GetDeviceStorage();
+  mPromise = new Promise(s->GetOwner());
+  mDeviceStorage = do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(s));
 
   if (aDir->GetRealPath(aPath, mTargetRealPath)) {
     Start();
@@ -109,12 +110,12 @@ CreateDirectoryTask::Work()
 void
 CreateDirectoryTask::HandlerCallback()
 {
-  nsCOMPtr<Filesystem> filesystem = GetFilesystem();
-  if (!filesystem) {
+  nsRefPtr<nsDOMDeviceStorage> d = GetDeviceStorage();
+  if (!d) {
     return;
   }
   nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(
-      filesystem->GetWindow());
+      d->GetOwner());
   if (!globalObject) {
     return;
   }
@@ -123,7 +124,7 @@ CreateDirectoryTask::HandlerCallback()
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   if (!HasError()) {
-    nsRefPtr<Directory> dir = FileUtils::CreateDirectory(filesystem,
+    nsRefPtr<Directory> dir = FileUtils::CreateDirectory(d,
       mTargetInfo.realPath, mTargetInfo.name);
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
@@ -139,11 +140,15 @@ CreateDirectoryTask::HandlerCallback()
   mPromise->MaybeReject(cx, val);
 }
 
-already_AddRefed<Filesystem>
-CreateDirectoryTask::GetFilesystem()
+already_AddRefed<nsDOMDeviceStorage>
+CreateDirectoryTask::GetDeviceStorage()
 {
-  nsCOMPtr<Filesystem> filesystem = do_QueryReferent(mFilesystem);
-  return filesystem.forget();
+  nsRefPtr<nsIDOMDeviceStorage> target = do_QueryReferent(mDeviceStorage);
+  if (!target) {
+    return nullptr;
+  }
+  nsRefPtr<nsDOMDeviceStorage> storage = static_cast<nsDOMDeviceStorage*>(target.get());
+  return storage.forget();
 }
 
 }

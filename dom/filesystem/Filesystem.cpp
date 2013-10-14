@@ -35,44 +35,6 @@ Filesystem::~Filesystem()
 }
 
 // static
-already_AddRefed<Promise>
-Filesystem::GetInstance(nsPIDOMWindow* aWindow, const FilesystemParameters& parameters, ErrorResult& aRv)
-{
-  switch (parameters.mStorage) {
-
-    case StorageType::Temporary: // Fall through.
-    case StorageType::Persistent: {
-      // TODO Make utility function to handle promise callback.
-      nsRefPtr<Promise> promise = new Promise(aWindow);
-      nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aWindow);
-      if (!globalObject) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return nullptr;
-      }
-      nsRefPtr<DOMError> domError =
-        new DOMError(nullptr, NS_LITERAL_STRING("Not implemented"));
-      AutoSafeJSContext cx;
-      JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
-      Optional<JS::Handle<JS::Value> > val(cx,
-        OBJECT_TO_JSVAL(domError->WrapObject(cx, global)));
-      promise->MaybeReject(cx, val);
-      return promise.forget();
-    }
-
-    case StorageType::Sdcard: {
-      if (!sSdcardFilesystem) {
-        sSdcardFilesystem = new Filesystem(aWindow);
-      }
-      nsRefPtr<GetEntranceTask> task = new GetEntranceTask(sSdcardFilesystem);
-      return task->GetPromise();
-    }
-  }
-
-  aRv.Throw(NS_ERROR_FAILURE);
-  return nullptr;
-}
-
-// static
 void
 Filesystem::ShutdownAll()
 {

@@ -14,6 +14,7 @@
 #include "nsWeakReference.h"
 
 class nsString;
+class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
@@ -27,7 +28,7 @@ class Directory;
 class GetEntranceTask : public TaskBase
 {
 public:
-  GetEntranceTask(Filesystem* aFs);
+  GetEntranceTask(nsDOMDeviceStorage* aDeviceStorage);
   GetEntranceTask(const FilesystemEntranceParams& aParam,
                       FilesystemRequestParent* aParent);
 
@@ -44,10 +45,10 @@ protected:
 
 private:
   static const uint32_t CREATE_DIRECTORY_PERMISSION = 0700;
-  // Weak reference to Filesystem
-  nsWeakPtr mFilesystem;
+  // Weak reference to nsDOMDeviceStorage
+  nsWeakPtr mDeviceStorage;
 
-  already_AddRefed<Filesystem> GetFilesystem();
+  already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
 
   nsString mTargetRealPath;
   FileInfo mTargetInfo;

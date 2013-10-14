@@ -15,6 +15,8 @@
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
 
+class nsDOMDeviceStorage;
+
 namespace mozilla {
 namespace dom {
 namespace filesystem {
@@ -30,14 +32,16 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Directory)
 
 public:
-  Directory(Filesystem* aFilesystem, const nsAString& aPath, const nsAString& aName);
+  static already_AddRefed<Promise> GetRoot(nsDOMDeviceStorage* aDeviceStorage);
+
+  Directory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aPath, const nsAString& aName);
   ~Directory();
 
   Directory* GetParentObject() const;
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  already_AddRefed<Filesystem> GetFilesystem();
+  already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
 
   void GetName(nsString& retval) const;
 
@@ -46,8 +50,8 @@ public:
   bool GetRealPath(const nsAString& aPath, nsString& aRealPath);
 
 private:
-  // Weak reference to Filesystem
-  nsWeakPtr mFilesystem;
+  // Weak reference to nsDOMDeviceStorage
+  nsWeakPtr mDeviceStorage;
   const nsString mPath;
   const nsString mName;
 };

@@ -10,6 +10,7 @@
 #include "nsString.h"
 
 class nsIFile;
+class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
@@ -39,7 +40,7 @@ public:
   static nsresult GetFileInfo(nsIFile* aFile,
                               FileInfo& aInfo);
   // TODO Remove the dependance of Filesystem
-  static Directory* CreateDirectory(Filesystem* aFilesystem,
+  static Directory* CreateDirectory(nsDOMDeviceStorage* aDeviceStorage,
                                     const nsAString& aRealPath,
                                     const nsAString& aName);
 };

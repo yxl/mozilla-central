@@ -12,6 +12,8 @@
 #include "Error.h"
 #include "PathManager.h"
 #include "CreateDirectoryTask.h"
+#include "GetEntranceTask.h"
+#include "DeviceStorage.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,10 +27,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Directory)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Directory::Directory(Filesystem* aFilesystem,
+// static
+already_AddRefed<Promise>
+Directory::GetRoot(nsDOMDeviceStorage* aDeviceStorage)
+{
+  nsRefPtr<GetEntranceTask> task = new GetEntranceTask(aDeviceStorage);
+  return task->GetPromise();
+}
+
+Directory::Directory(nsDOMDeviceStorage* aDeviceStorage,
                      const nsAString& aPath,
                      const nsAString& aName)
-  : mFilesystem(do_GetWeakReference(aFilesystem)),
+  : mDeviceStorage(do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(aDeviceStorage))),
     mPath(aPath),
     mName(aName)
 {
@@ -51,11 +61,15 @@ Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return DirectoryBinding::Wrap(aCx, aScope, this);
 }
 
-already_AddRefed<Filesystem>
-Directory::GetFilesystem()
+already_AddRefed<nsDOMDeviceStorage>
+Directory::GetDeviceStorage()
 {
-  nsCOMPtr<Filesystem> filesystem = do_QueryReferent(mFilesystem);
-  return filesystem.forget();
+  nsRefPtr<nsIDOMDeviceStorage> target = do_QueryReferent(mDeviceStorage);
+  if (!target) {
+    return nullptr;
+  }
+  nsRefPtr<nsDOMDeviceStorage> storage = static_cast<nsDOMDeviceStorage*>(target.get());
+  return storage.forget();
 }
 
 void
@@ -74,7 +88,7 @@ Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
 bool
 Directory::GetRealPath(const nsAString& aPath, nsString& aRealPath)
 {
-  nsRefPtr<PathManager> p = GetFilesystem().get()->GetPathManager();
+  nsRefPtr<PathManager> p = new PathManager(NS_LITERAL_STRING("/sdcard"));
 
   // Check if path is valid.
   if (!p->IsValidPath(aPath)) {

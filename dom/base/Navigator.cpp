@@ -49,8 +49,6 @@
 #include "TimeManager.h"
 #include "DeviceStorage.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/filesystem/Filesystem.h"
-#include "mozilla/dom/FilesystemBinding.h"
 #include "nsIDOMNavigatorSystemMessages.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
@@ -959,17 +957,6 @@ Navigator::GetDeviceStorages(const nsAString& aType,
   nsDOMDeviceStorage::CreateDeviceStoragesFor(mWindow, aType, aStores);
 
   mDeviceStorageStores.AppendElements(aStores);
-}
-
-already_AddRefed<Promise>
-Navigator::GetFilesystem(const FilesystemParameters& parameters, ErrorResult& aRv)
-{
-  if (!mWindow) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  return filesystem::Filesystem::GetInstance(mWindow, parameters, aRv);
 }
 
 Geolocation*

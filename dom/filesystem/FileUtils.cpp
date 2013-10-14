@@ -69,9 +69,9 @@ FileUtils::GetFileInfo(nsIFile* aFile, FileInfo& aInfo)
 
 // static
 Directory*
-FileUtils::CreateDirectory(Filesystem* aFilesystem, const nsAString& aRealPath, const nsAString& aName)
+FileUtils::CreateDirectory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aRealPath, const nsAString& aName)
 {
-  nsRefPtr<PathManager> p = aFilesystem->GetPathManager();
+  nsRefPtr<PathManager> p = new PathManager(NS_LITERAL_STRING("/sdcard"));
 
   if (p->WithinBase(aRealPath)) {
     nsString name;
@@ -82,7 +82,7 @@ FileUtils::CreateDirectory(Filesystem* aFilesystem, const nsAString& aRealPath, 
     nsString path;
     p->RealPathToDOMPath(aRealPath, path);
 
-    return new Directory(aFilesystem, path, name);
+    return new Directory(aDeviceStorage, path, name);
   }
 
   return nullptr;

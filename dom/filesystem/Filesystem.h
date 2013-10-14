@@ -29,10 +29,6 @@ class Filesystem MOZ_FINAL : public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
-  static already_AddRefed<Promise>
-  GetInstance(nsPIDOMWindow* aWindow, const FilesystemParameters& parameters,
-                ErrorResult& aRv);
-
   static void ShutdownAll();
 
   nsPIDOMWindow* GetWindow() const { return mWindow; }

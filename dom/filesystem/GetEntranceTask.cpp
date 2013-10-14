@@ -13,20 +13,19 @@
 #include "FileUtils.h"
 #include "nsIFile.h"
 #include "FileUtils.h"
+#include "DeviceStorage.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
 
 namespace mozilla {
-
 namespace dom {
-
 namespace filesystem {
 
-GetEntranceTask::GetEntranceTask(Filesystem* aFs)
+GetEntranceTask::GetEntranceTask(nsDOMDeviceStorage* aDeviceStorage)
 {
-  mPromise = new Promise(aFs->GetWindow());
-  mFilesystem = do_GetWeakReference(aFs);
+  mPromise = new Promise(aDeviceStorage->GetOwner());
+  mDeviceStorage = do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(aDeviceStorage));
 
   mTargetRealPath = NS_LITERAL_STRING("/sdcard");
   Start();
@@ -96,12 +95,12 @@ GetEntranceTask::Work()
 void
 GetEntranceTask::HandlerCallback()
 {
-  nsCOMPtr<Filesystem> filesystem = GetFilesystem();
-  if (!filesystem) {
+  nsRefPtr<nsDOMDeviceStorage> storage = GetDeviceStorage();
+  if (!storage) {
     return;
   }
   nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(
-      filesystem->GetWindow());
+      storage->GetOwner());
   if (!globalObject) {
     return;
   }
@@ -110,7 +109,7 @@ GetEntranceTask::HandlerCallback()
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   if (!HasError()) {
-    nsRefPtr<Directory> dir = FileUtils::CreateDirectory(filesystem,
+    nsRefPtr<Directory> dir = FileUtils::CreateDirectory(storage,
       mTargetInfo.realPath, mTargetInfo.name);
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
@@ -126,11 +125,15 @@ GetEntranceTask::HandlerCallback()
   mPromise->MaybeReject(cx, val);
 }
 
-already_AddRefed<Filesystem>
-GetEntranceTask::GetFilesystem()
+already_AddRefed<nsDOMDeviceStorage>
+GetEntranceTask::GetDeviceStorage()
 {
-  nsCOMPtr<Filesystem> filesystem = do_QueryReferent(mFilesystem);
-  return filesystem.forget();
+  nsRefPtr<nsIDOMDeviceStorage> target = do_QueryReferent(mDeviceStorage);
+  if (!target) {
+    return nullptr;
+  }
+  nsRefPtr<nsDOMDeviceStorage> storage = static_cast<nsDOMDeviceStorage*>(target.get());
+  return storage.forget();
 }
 
 }
