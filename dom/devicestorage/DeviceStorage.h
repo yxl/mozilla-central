@@ -12,6 +12,7 @@
 #include "nsIPrincipal.h"
 #include "nsIObserver.h"
 #include "nsDOMEventTargetHelper.h"
+#include "nsWeakReference.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "DOMRequest.h"
@@ -30,6 +31,7 @@ namespace dom {
 class DeviceStorageEnumerationParameters;
 class DOMCursor;
 class DOMRequest;
+class Promise;
 } // namespace dom
 } // namespace mozilla
 
@@ -142,12 +144,14 @@ class nsDOMDeviceStorage MOZ_FINAL
   : public nsDOMEventTargetHelper
   , public nsIDOMDeviceStorage
   , public nsIObserver
+  , public nsSupportsWeakReference
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::DeviceStorageEnumerationParameters
     EnumerationParameters;
   typedef mozilla::dom::DOMCursor DOMCursor;
   typedef mozilla::dom::DOMRequest DOMRequest;
+  typedef mozilla::dom::Promise Promise;
 public:
   typedef nsTArray<nsString> VolumeNameArray;
 
@@ -235,6 +239,7 @@ public:
 
   bool Default();
 
+  already_AddRefed<Promise> GetRoot();
   // Uses XPCOM GetStorageName
 
   static void

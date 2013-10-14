@@ -16,6 +16,7 @@
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -3104,6 +3105,12 @@ nsDOMDeviceStorage::Default()
   nsString defaultStorageName;
   GetDefaultStorageName(mStorageType, defaultStorageName);
   return mStorageName.Equals(defaultStorageName);
+}
+
+already_AddRefed<Promise>
+nsDOMDeviceStorage::GetRoot()
+{
+  return nullptr;
 }
 
 NS_IMETHODIMP
