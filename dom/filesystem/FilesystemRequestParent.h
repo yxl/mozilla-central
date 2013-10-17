@@ -7,16 +7,13 @@
 #ifndef mozilla_dom_filesystemrequestparent_h__
 #define mozilla_dom_filesystemrequestparent_h__
 
-#include "mozilla/dom/filesystem/PFilesystemRequestParent.h"
+#include "mozilla/dom/PFilesystemRequestParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
-
-class FilesystemEvent;
 
 class FilesystemRequestParent : public PFilesystemRequestParent
 {
@@ -35,7 +32,6 @@ private:
   FilesystemParams mParams;
 };
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla
 

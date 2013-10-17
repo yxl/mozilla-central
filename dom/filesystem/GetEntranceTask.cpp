@@ -7,7 +7,6 @@
 
 #include "GetEntranceTask.h"
 #include "nsString.h"
-#include "Filesystem.h"
 #include "Directory.h"
 #include "Error.h"
 #include "FileUtils.h"
@@ -20,7 +19,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 GetEntranceTask::GetEntranceTask(nsDOMDeviceStorage* aDeviceStorage)
 {
@@ -136,6 +134,5 @@ GetEntranceTask::GetDeviceStorage()
   return storage.forget();
 }
 
-}
 }
 }

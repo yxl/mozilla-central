@@ -12,8 +12,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
-
 /*
  * FileSystem path manager.
  */
@@ -75,7 +73,6 @@ public:
   void Absolutize(const nsAString& aPath, const nsAString& aParent, nsString& retval);
 };
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla
 

@@ -20,9 +20,6 @@ namespace mozilla {
 namespace dom {
 
 class FilesystemCreateDirectoryParams;
-
-namespace filesystem {
-
 class Directory;
 
 class CreateDirectoryTask : public TaskBase
@@ -55,9 +52,6 @@ private:
 };
 
 }
-
-}
-
 }
 
 #endif /* CREATEDIRECTORYTASK_H_ */

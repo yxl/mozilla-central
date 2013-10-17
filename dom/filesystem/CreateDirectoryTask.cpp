@@ -7,7 +7,6 @@
 
 #include "CreateDirectoryTask.h"
 #include "nsString.h"
-#include "Filesystem.h"
 #include "Directory.h"
 #include "Error.h"
 #include "FileUtils.h"
@@ -19,10 +18,7 @@
 #include "mozilla/dom/PContent.h"
 
 namespace mozilla {
-
 namespace dom {
-
-namespace filesystem {
 
 CreateDirectoryTask::CreateDirectoryTask(
   Directory* aDir, const nsAString& aPath)
@@ -153,4 +149,4 @@ CreateDirectoryTask::GetDeviceStorage()
 
 }
 }
-}
+

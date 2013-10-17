@@ -7,14 +7,12 @@
 #include "FileUtils.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
-#include "Filesystem.h"
 #include "Directory.h"
 #include "nsAutoPtr.h"
 #include "PathManager.h"
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 // static
 nsresult
@@ -88,6 +86,5 @@ FileUtils::CreateDirectory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& 
   return nullptr;
 }
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla

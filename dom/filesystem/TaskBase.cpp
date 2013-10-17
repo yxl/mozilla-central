@@ -10,7 +10,6 @@
 #include "Error.h"
 
 #include "nsXULAppAPI.h"
-#include "mozilla/dom/FilesystemBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/Promise.h"
@@ -18,7 +17,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 TaskBase::TaskBase()
 {
@@ -105,7 +103,7 @@ FilesystemResponseValue
 TaskBase::GetRequestResult()
 {
   if (HasError()) {
-    return ErrorResponse(mErrorName);
+    return FilesystemErrorResponse(mErrorName);
   } else {
     return GetSuccessRequestResult();
   }
@@ -114,8 +112,8 @@ TaskBase::GetRequestResult()
 void
 TaskBase::SetRequestResult(const FilesystemResponseValue& aValue)
 {
-  if (aValue.type() == FilesystemResponseValue::TErrorResponse) {
-    ErrorResponse r = aValue;
+  if (aValue.type() == FilesystemResponseValue::TFilesystemErrorResponse) {
+    FilesystemErrorResponse r = aValue;
     mErrorName = r.error();
   } else {
     SetSuccessRequestResult(aValue);
@@ -148,6 +146,5 @@ TaskBase::SetError(const nsresult& aErrorCode)
   Error::ErrorNameFromCode(mErrorName, aErrorCode);
 }
 
-}
 }
 }

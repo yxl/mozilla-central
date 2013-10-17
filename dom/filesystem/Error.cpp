@@ -8,7 +8,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 const nsString Error::DOM_ERROR_ENCODING =
   NS_LITERAL_STRING("EncodingError");
@@ -103,6 +102,5 @@ Error::GetDOMError(const nsresult& aErrorCode)
   return domError;
 }
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla

@@ -8,16 +8,18 @@ XPIDL_MODULE = 'dom_filesystem'
 
 MODULE = 'dom'
 
-EXPORTS.mozilla.dom.filesystem += [
+EXPORTS.mozilla.dom += [
+    'AbortableProgressPromise.h',
     'Directory.h',
-    'Filesystem.h',
+    'EventStream.h',
     'FilesystemRequestParent.h',
 ]
 
 CPP_SOURCES += [
+    'AbortableProgressPromise.cpp',
     'Directory.cpp',
+    'EventStream.cpp',
     'Error.cpp',
-    'Filesystem.cpp',
     'FilesystemRequestParent.cpp',
     'FileUtils.cpp',
     'PathManager.cpp',

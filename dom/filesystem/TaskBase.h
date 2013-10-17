@@ -9,18 +9,15 @@
 #define mozilla_dom_taskbase_h__
 
 #include "nsThreadUtils.h"
-#include "mozilla/dom/filesystem/PFilesystemRequestChild.h"
+#include "mozilla/dom/PFilesystemRequestChild.h"
+#include "FilesystemRequestParent.h"
 #include "mozilla/ErrorResult.h"
 
 namespace mozilla {
 namespace dom {
 
-class FilesystemParams;
 class Promise;
-
-namespace filesystem {
-
-class FilesystemRequestParent;
+class FilesystemParams;
 
 class TaskBase : public nsRunnable, public PFilesystemRequestChild
 {
@@ -65,7 +62,6 @@ private:
   nsCOMPtr<nsIThread> mWorkerThread;
 };
 
-}
 }
 }
 

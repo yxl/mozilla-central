@@ -9,7 +9,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 NS_IMPL_ADDREF(PathManager)
 NS_IMPL_RELEASE(PathManager)
@@ -250,6 +249,5 @@ PathManager::Absolutize(const nsAString& aPath, const nsAString& aParent,
   // PathManager::RemoveExtraParentReferences(retval);
 }
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla

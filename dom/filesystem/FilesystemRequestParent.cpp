@@ -9,7 +9,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 NS_IMPL_ADDREF(FilesystemRequestParent)
 NS_IMPL_RELEASE(FilesystemRequestParent)
@@ -53,6 +52,5 @@ FilesystemRequestParent::ActorDestroy(ActorDestroyReason)
 {
 }
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla

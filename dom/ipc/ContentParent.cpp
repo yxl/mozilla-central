@@ -36,7 +36,7 @@
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
-#include "mozilla/dom/filesystem/FilesystemRequestParent.h"
+#include "mozilla/dom/FilesystemRequestParent.h"
 #include "SmsParent.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/TestShellParent.h"
@@ -145,7 +145,6 @@ using base::ChildPrivileges;
 using base::KillProcess;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
-using namespace mozilla::dom::filesystem;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobilemessage;
@@ -1705,25 +1704,25 @@ ContentParent::RecvSetClipboardText(const nsString& text,
     nsCOMPtr<nsISupportsString> dataWrapper =
         do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, true);
-    
+
     rv = dataWrapper->SetData(text);
     NS_ENSURE_SUCCESS(rv, true);
-    
+
     nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
     NS_ENSURE_SUCCESS(rv, true);
     trans->Init(nullptr);
-    
+
     // If our data flavor has already been added, this will fail. But we don't care
     trans->AddDataFlavor(kUnicodeMime);
     trans->SetIsPrivateData(isPrivateData);
-    
+
     nsCOMPtr<nsISupports> nsisupportsDataWrapper =
         do_QueryInterface(dataWrapper);
-    
+
     rv = trans->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
                                 text.Length() * sizeof(PRUnichar));
     NS_ENSURE_SUCCESS(rv, true);
-    
+
     clipboard->SetData(trans, NULL, whichClipboard);
     return true;
 }
@@ -1738,7 +1737,7 @@ ContentParent::RecvGetClipboardText(const int32_t& whichClipboard, nsString* tex
     nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
     NS_ENSURE_SUCCESS(rv, true);
     trans->Init(nullptr);
-    
+
     clipboard->GetData(trans, whichClipboard);
     nsCOMPtr<nsISupports> tmp;
     uint32_t len;
@@ -1773,7 +1772,7 @@ ContentParent::RecvClipboardHasText(bool* hasText)
     nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
     NS_ENSURE_SUCCESS(rv, true);
 
-    clipboard->HasDataMatchingFlavors(sClipboardTextFlavors, 1, 
+    clipboard->HasDataMatchingFlavors(sClipboardTextFlavors, 1,
                                       nsIClipboard::kGlobalClipboard, hasText);
     return true;
 }
@@ -2386,7 +2385,7 @@ ContentParent::KillHard()
         FROM_HERE,
         NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated,
                             OtherProcess(), /*force=*/true));
-    //We do clean-up here 
+    //We do clean-up here
     MessageLoop::current()->PostDelayedTask(
         FROM_HERE,
         NewRunnableMethod(this, &ContentParent::ShutDownProcess,
@@ -3142,7 +3141,7 @@ ContentParent::RecvConsoleMessage(const nsString& aMessage)
   if (!consoleService) {
     return true;
   }
-  
+
   nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
   consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
   return true;

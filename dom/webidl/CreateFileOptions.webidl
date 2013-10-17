@@ -4,4 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-enum StorageType { "persistent", "temporary" };
+dictionary CreateFileOptions {
+  CreateIfExistsMode ifExists = "fail";
+  (DOMString or Blob or ArrayBuffer or ArrayBufferView) data;
+};
+

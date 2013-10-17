@@ -9,20 +9,28 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
+#include "nsDOMFile.h"
 
 class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
-class Filesystem;
 struct FileInfo;
+
+class Promise;
+class AbortableProgressPromise;
+class CreateFileOptions;
+class EventStream;
+class OpenWriteOptions;
+class StringOrDirectoryOrDestinationDict;
+class StringOrFileOrDirectory;
+class StringOrFile;
 
 class Directory MOZ_FINAL : public nsISupports,
                             public nsWrapperCache
@@ -37,15 +45,41 @@ public:
   Directory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aPath, const nsAString& aName);
   ~Directory();
 
+  // ========= Begin WebIDL bindings. ===========
+
+  // TODO: return something sensible here, and change the return type
   Directory* GetParentObject() const;
+
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
-
   void GetName(nsString& retval) const;
 
-  already_AddRefed<Promise> CreateDirectory(const nsAString& aPath, ErrorResult& aRv);
+  already_AddRefed<Promise> CreateFile(const nsAString& path, const CreateFileOptions& options, ErrorResult& aRv);
+
+  already_AddRefed<Promise> CreateDirectory(const nsAString& path, ErrorResult& aRv);
+
+  already_AddRefed<Promise> Get(const nsAString& path, ErrorResult& aRv);
+
+  already_AddRefed<AbortableProgressPromise> Move(const StringOrFileOrDirectory& path, const StringOrDirectoryOrDestinationDict& dest, ErrorResult& aRv);
+
+  already_AddRefed<Promise> Remove(const StringOrFileOrDirectory& path, ErrorResult& aRv);
+
+  already_AddRefed<Promise> RemoveDeep(const StringOrFileOrDirectory& path, ErrorResult& aRv);
+
+  already_AddRefed<Promise> OpenRead(const StringOrFile& path, ErrorResult& aRv);
+
+  already_AddRefed<Promise> OpenWrite(const StringOrFile& path, const OpenWriteOptions& options, ErrorResult& aRv);
+
+  // Mark this as resultNotAddRefed to return raw pointers
+  already_AddRefed<EventStream> Enumerate(const Optional<nsAString >& path);
+
+  // Mark this as resultNotAddRefed to return raw pointers
+  already_AddRefed<EventStream> EnumerateDeep(const Optional<nsAString >& path);
+
+  // =========== End WebIDL bindings.============
+public:
+  already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
 
   bool GetRealPath(const nsAString& aPath, nsString& aRealPath);
 
@@ -56,7 +90,6 @@ private:
   const nsString mName;
 };
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla
 

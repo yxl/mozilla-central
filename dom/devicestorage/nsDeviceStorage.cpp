@@ -17,7 +17,7 @@
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/filesystem/Directory.h"
+#include "mozilla/dom/Directory.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -3111,7 +3111,7 @@ nsDOMDeviceStorage::Default()
 already_AddRefed<Promise>
 nsDOMDeviceStorage::GetRoot()
 {
-  return mozilla::dom::filesystem::Directory::GetRoot(this);
+  return mozilla::dom::Directory::GetRoot(this);
 }
 
 NS_IMETHODIMP

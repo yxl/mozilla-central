@@ -8,7 +8,6 @@ include protocol PContent;
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 struct DirectoryResponse
 {
@@ -16,7 +15,7 @@ struct DirectoryResponse
   nsString name;
 };
 
-struct ErrorResponse
+struct FilesystemErrorResponse
 {
   nsString error;
 };
@@ -24,7 +23,7 @@ struct ErrorResponse
 union FilesystemResponseValue
 {
   DirectoryResponse;
-  ErrorResponse;
+  FilesystemErrorResponse;
 };
 
 sync protocol PFilesystemRequest
@@ -35,6 +34,5 @@ child:
   __delete__(FilesystemResponseValue response);
 };
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla

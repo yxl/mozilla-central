@@ -15,7 +15,6 @@ class DOMError;
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
 
 /*
  * This class is for error handling.
@@ -41,7 +40,6 @@ public:
   static const nsString DOM_ERROR_UNKNOWN;
 };
 
-} // namespace filesystem
 } // namespace dom
 } // namespace mozilla
 

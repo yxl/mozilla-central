@@ -14,10 +14,7 @@ class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
-namespace filesystem {
-
 class Directory;
-class Filesystem;
 
 struct FileInfo
 {
@@ -39,13 +36,11 @@ public:
                               FileInfo& aInfo);
   static nsresult GetFileInfo(nsIFile* aFile,
                               FileInfo& aInfo);
-  // TODO Remove the dependance of Filesystem
   static Directory* CreateDirectory(nsDOMDeviceStorage* aDeviceStorage,
                                     const nsAString& aRealPath,
                                     const nsAString& aName);
 };
 
-} // namespace sdcard
 } // namespace dom
 } // namespace mozilla
 

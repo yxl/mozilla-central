@@ -98,7 +98,7 @@
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
-#include "mozilla/dom/filesystem/PFilesystemRequestChild.h"
+#include "mozilla/dom/PFilesystemRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -124,7 +124,6 @@ using namespace mozilla;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
-using namespace mozilla::dom::filesystem;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::indexedDB;
@@ -227,7 +226,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
 {
     if (!mChild)
         return NS_OK;
-    
+
     nsCOMPtr<nsIScriptError> scriptError = do_QueryInterface(aMessage);
     if (scriptError) {
         nsString msg, sourceName, sourceLine;
@@ -1199,7 +1198,7 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   nsPermissionManager* permissionManager =
       static_cast<nsPermissionManager*>(permissionManagerIface.get());
-  NS_ABORT_IF_FALSE(permissionManager, 
+  NS_ABORT_IF_FALSE(permissionManager,
                    "We have no permissionManager in the Content process !");
 
   nsCOMPtr<nsIURI> uri;

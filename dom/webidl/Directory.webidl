@@ -4,25 +4,24 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+interface File;
+
 interface Directory {
   readonly attribute DOMString name;
 
-/*
-  [Creator, Throws]
-  Promise createFile(DOMString path,
-                           CreateFileOptions options);
-*/
+  //[Creator, Throws]
+  //Promise createFile(DOMString path, optional CreateFileOptions options);
+
   [Creator, Throws]
   Promise createDirectory(DOMString path);
 
-/*
   [Creator, Throws]
   Promise get(DOMString path);
 
   [Creator, Throws]
   AbortableProgressPromise
     move((DOMString or File or Directory) path,
-         (DOMString or Directory or DestinationDict) dest);
+         optional (DOMString or Directory or DestinationDict) dest);
 
   [Creator, Throws]
   Promise remove((DOMString or File or Directory) path);
@@ -32,20 +31,21 @@ interface Directory {
   [Creator, Throws]
   Promise openRead((DOMString or File) path);
   [Creator, Throws]
-  Promise openWrite((DOMString or File) path, OpenWriteOptions options);
+  Promise openWrite((DOMString or File) path, optional OpenWriteOptions options);
 
   EventStream enumerate(optional DOMString path);
   EventStream enumerateDeep(optional DOMString path);
-*/
 };
 
-dictionary FilesystemParameters {
-  StorageType storage = "temporary";
+callback VoidAnyCallback = void (optional any value);
+interface AbortableProgressPromise : Promise {
+  void abort();
+  AbortableProgressPromise progress(VoidAnyCallback callback);
 };
-/*
-dictionary CreateFileOptions {
-  CreateIfExistsMode ifExists = "fail";
-  (DOMString or Blob or ArrayBuffer or ArrayBufferView) data;
+
+callback ForEachCallback = Promise? (optional any value);
+interface EventStream {
+  Promise forEach(ForEachCallback callback);
 };
 
 dictionary OpenWriteOptions {
@@ -63,4 +63,4 @@ dictionary DestinationDict {
 };
 
 enum FileOpenMode { "readonly", "readwrite" };
-*/
+

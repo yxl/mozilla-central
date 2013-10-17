@@ -20,9 +20,6 @@ namespace mozilla {
 namespace dom {
 
 class FilesystemEntranceParams;
-
-namespace filesystem {
-
 class Directory;
 
 class GetEntranceTask : public TaskBase
@@ -55,9 +52,6 @@ private:
 };
 
 }
-
-}
-
 }
 
 #endif // mozilla_dom_getentrance_h__
