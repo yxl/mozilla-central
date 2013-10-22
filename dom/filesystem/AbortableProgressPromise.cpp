@@ -41,6 +41,18 @@ AbortableProgressPromise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScop
   return AbortableProgressPromiseBinding::Wrap(aCx, aScope, this);
 }
 
+void
+AbortableProgressPromise::Abort()
+{
+  // TODO
+}
+
+// Mark this as resultNotAddRefed to return raw pointers
+already_AddRefed<AbortableProgressPromise>
+AbortableProgressPromise::Progress(VoidAnyCallback& callback)
+{
+  return nullptr;
+}
 
 } // namespace dom
 } // namespace mozilla
