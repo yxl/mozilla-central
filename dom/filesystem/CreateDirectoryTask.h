@@ -10,7 +10,6 @@
 
 #include "TaskBase.h"
 #include "nsAutoPtr.h"
-#include "FileUtils.h"
 #include "nsWeakReference.h"
 
 class nsString;
@@ -19,6 +18,7 @@ class nsDOMDeviceStorage;
 namespace mozilla {
 namespace dom {
 
+class FilesystemFile;
 class FilesystemCreateDirectoryParams;
 class Directory;
 
@@ -48,7 +48,7 @@ private:
   already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
 
   nsString mTargetRealPath;
-  FileInfo mTargetInfo;
+  nsRefPtr<FilesystemFile> mTargetFile;
 };
 
 }

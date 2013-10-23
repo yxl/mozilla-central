@@ -21,7 +21,7 @@ CPP_SOURCES += [
     'EventStream.cpp',
     'Error.cpp',
     'FilesystemRequestParent.cpp',
-    'FileUtils.cpp',
+    'FilesystemFile.cpp',
     'PathManager.cpp',
     'TaskBase.cpp',
     'CreateDirectoryTask.cpp',

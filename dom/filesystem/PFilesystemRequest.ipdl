@@ -9,9 +9,10 @@ include protocol PContent;
 namespace mozilla {
 namespace dom {
 
-struct DirectoryResponse
+struct FilesystemFileResponse
 {
   nsString realPath;
+  bool isDirectory;
 };
 
 struct FilesystemErrorResponse
@@ -21,7 +22,7 @@ struct FilesystemErrorResponse
 
 union FilesystemResponseValue
 {
-  DirectoryResponse;
+  FilesystemFileResponse;
   FilesystemErrorResponse;
 };
 

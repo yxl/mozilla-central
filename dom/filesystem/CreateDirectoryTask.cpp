@@ -9,10 +9,9 @@
 #include "nsString.h"
 #include "Directory.h"
 #include "Error.h"
-#include "FileUtils.h"
 #include "nsIFile.h"
-#include "FileUtils.h"
 #include "DeviceStorage.h"
+#include "FilesystemFile.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
@@ -57,14 +56,14 @@ CreateDirectoryTask::GetRequestParams()
 FilesystemResponseValue
 CreateDirectoryTask::GetSuccessRequestResult()
 {
-  return DirectoryResponse(mTargetInfo.realPath);
+  return FilesystemFileResponse(mTargetFile->getPath(), mTargetFile->isDirectory());
 }
 
 void
 CreateDirectoryTask::SetSuccessRequestResult(const FilesystemResponseValue& aValue)
 {
-  DirectoryResponse r = aValue;
-  mTargetInfo.realPath = r.realPath();
+  FilesystemFileResponse r = aValue;
+  mTargetFile = new FilesystemFile(r.realPath(), r.isDirectory());
 }
 
 void
@@ -78,13 +77,14 @@ CreateDirectoryTask::Work()
     return;
   }
 
-  rv = FileUtils::GetFileInfo(file, mTargetInfo);
+  bool ret;
+  rv = file->Exists(&ret);
   if (NS_FAILED(rv)) {
     SetError(rv);
     return;
   }
 
-  if (mTargetInfo.exists) {
+  if (ret) {
     SetError(Error::DOM_ERROR_PATH_EXISTS);
     return;
   }
@@ -95,11 +95,7 @@ CreateDirectoryTask::Work()
     return;
   }
 
-  rv = FileUtils::GetFileInfo(file, mTargetInfo);
-  if (NS_FAILED(rv)) {
-    SetError(rv);
-    return;
-  }
+  mTargetFile = new FilesystemFile(mTargetRealPath, true);
 }
 
 void
@@ -119,8 +115,7 @@ CreateDirectoryTask::HandlerCallback()
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   if (!HasError()) {
-    nsRefPtr<Directory> dir = FileUtils::CreateDirectory(d,
-      mTargetInfo.realPath);
+    nsRefPtr<Directory> dir = new Directory(d, mTargetFile->getPath());
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
           OBJECT_TO_JSVAL(dir->WrapObject(cx, global)));
