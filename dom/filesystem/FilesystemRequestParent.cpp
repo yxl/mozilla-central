@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "FilesystemRequestParent.h"
 #include "CreateDirectoryTask.h"
-#include "GetEntranceTask.h"
+#include "GetFileOrDirectoryTask.h"
 
 namespace mozilla {
 namespace dom {
@@ -35,7 +35,7 @@ FilesystemRequestParent::Dispatch()
     }
 
     case FilesystemParams::TFilesystemEntranceParams: {
-      nsRefPtr<GetEntranceTask>(new GetEntranceTask(mParams, this));
+      nsRefPtr<GetFileOrDirectoryTask>(new GetFileOrDirectoryTask(mParams, this));
       break;
     }
 

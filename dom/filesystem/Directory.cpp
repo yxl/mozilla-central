@@ -10,7 +10,7 @@
 #include "Error.h"
 #include "PathManager.h"
 #include "CreateDirectoryTask.h"
-#include "GetEntranceTask.h"
+#include "GetFileOrDirectoryTask.h"
 #include "DeviceStorage.h"
 #include "EventStream.h"
 #include "AbortableProgressPromise.h"
@@ -33,7 +33,7 @@ NS_INTERFACE_MAP_END
 already_AddRefed<Promise>
 Directory::GetRoot(nsDOMDeviceStorage* aDeviceStorage)
 {
-  nsRefPtr<GetEntranceTask> task = new GetEntranceTask(aDeviceStorage);
+  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(aDeviceStorage);
   return task->GetPromise();
 }
 

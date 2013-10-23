@@ -25,7 +25,7 @@ CPP_SOURCES += [
     'PathManager.cpp',
     'TaskBase.cpp',
     'CreateDirectoryTask.cpp',
-    'GetEntranceTask.cpp',
+    'GetFileOrDirectoryTask.cpp',
 ]
 
 IPDL_SOURCES += [

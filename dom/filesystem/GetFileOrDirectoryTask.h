@@ -1,5 +1,5 @@
 /*
- * GetEntranceTask.h
+ * GetFileOrDirectoryTask.h
  *
  *  Created on: Sep 30, 2013
  *      Author: yuan
@@ -22,14 +22,14 @@ namespace dom {
 class FilesystemEntranceParams;
 class Directory;
 
-class GetEntranceTask : public TaskBase
+class GetFileOrDirectoryTask : public TaskBase
 {
 public:
-  GetEntranceTask(nsDOMDeviceStorage* aDeviceStorage);
-  GetEntranceTask(const FilesystemEntranceParams& aParam,
+  GetFileOrDirectoryTask(nsDOMDeviceStorage* aDeviceStorage);
+  GetFileOrDirectoryTask(const FilesystemEntranceParams& aParam,
                       FilesystemRequestParent* aParent);
 
-  virtual ~GetEntranceTask();
+  virtual ~GetFileOrDirectoryTask();
 
 protected:
   virtual FilesystemParams GetRequestParams() MOZ_OVERRIDE;

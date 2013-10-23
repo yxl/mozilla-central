@@ -1,11 +1,11 @@
 /*
- * GetEntranceTask.cpp
+ * GetFileOrDirectoryTask.cpp
  *
  *  Created on: Sep 30, 2013
  *      Author: yuan
  */
 
-#include "GetEntranceTask.h"
+#include "GetFileOrDirectoryTask.h"
 #include "nsString.h"
 #include "Directory.h"
 #include "Error.h"
@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace dom {
 
-GetEntranceTask::GetEntranceTask(nsDOMDeviceStorage* aDeviceStorage)
+GetFileOrDirectoryTask::GetFileOrDirectoryTask(nsDOMDeviceStorage* aDeviceStorage)
 {
   mPromise = new Promise(aDeviceStorage->GetOwner());
   mDeviceStorage = do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(aDeviceStorage));
@@ -29,7 +29,7 @@ GetEntranceTask::GetEntranceTask(nsDOMDeviceStorage* aDeviceStorage)
   Start();
 }
 
-GetEntranceTask::GetEntranceTask(
+GetFileOrDirectoryTask::GetFileOrDirectoryTask(
   const FilesystemEntranceParams& aParam,
   FilesystemRequestParent* aParent)
   : TaskBase(aParent)
@@ -38,24 +38,24 @@ GetEntranceTask::GetEntranceTask(
   Start();
 }
 
-GetEntranceTask::~GetEntranceTask()
+GetFileOrDirectoryTask::~GetFileOrDirectoryTask()
 {
 }
 
 FilesystemParams
-GetEntranceTask::GetRequestParams()
+GetFileOrDirectoryTask::GetRequestParams()
 {
   return FilesystemEntranceParams(mTargetRealPath);
 }
 
 FilesystemResponseValue
-GetEntranceTask::GetSuccessRequestResult()
+GetFileOrDirectoryTask::GetSuccessRequestResult()
 {
   return DirectoryResponse(mTargetInfo.realPath, mTargetInfo.name);
 }
 
 void
-GetEntranceTask::SetSuccessRequestResult(const FilesystemResponseValue& aValue)
+GetFileOrDirectoryTask::SetSuccessRequestResult(const FilesystemResponseValue& aValue)
 {
   DirectoryResponse r = aValue;
   mTargetInfo.realPath = r.realPath();
@@ -63,7 +63,7 @@ GetEntranceTask::SetSuccessRequestResult(const FilesystemResponseValue& aValue)
 }
 
 void
-GetEntranceTask::Work()
+GetFileOrDirectoryTask::Work()
 {
   // Resolve nsIFile from mTargetRealPath.
   nsCOMPtr<nsIFile> file;
@@ -91,7 +91,7 @@ GetEntranceTask::Work()
 }
 
 void
-GetEntranceTask::HandlerCallback()
+GetFileOrDirectoryTask::HandlerCallback()
 {
   nsRefPtr<nsDOMDeviceStorage> storage = GetDeviceStorage();
   if (!storage) {
@@ -124,7 +124,7 @@ GetEntranceTask::HandlerCallback()
 }
 
 already_AddRefed<nsDOMDeviceStorage>
-GetEntranceTask::GetDeviceStorage()
+GetFileOrDirectoryTask::GetDeviceStorage()
 {
   nsRefPtr<nsIDOMDeviceStorage> target = do_QueryReferent(mDeviceStorage);
   if (!target) {
