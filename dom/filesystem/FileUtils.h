@@ -22,7 +22,6 @@ struct FileInfo
   bool isDirectory;
   bool isFile;
   nsString realPath;
-  nsString name;
 };
 
 /*
@@ -37,8 +36,7 @@ public:
   static nsresult GetFileInfo(nsIFile* aFile,
                               FileInfo& aInfo);
   static Directory* CreateDirectory(nsDOMDeviceStorage* aDeviceStorage,
-                                    const nsAString& aRealPath,
-                                    const nsAString& aName);
+                                    const nsAString& aRealPath);
 };
 
 } // namespace dom

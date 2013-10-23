@@ -56,31 +56,20 @@ FileUtils::GetFileInfo(nsIFile* aFile, FileInfo& aInfo)
     return rv;
   }
 
-   // Get name
-  rv = aFile->GetLeafName(aInfo.name);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   return rv;
 }
 
 // static
 Directory*
-FileUtils::CreateDirectory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aRealPath, const nsAString& aName)
+FileUtils::CreateDirectory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aRealPath)
 {
   nsRefPtr<PathManager> p = new PathManager(NS_LITERAL_STRING("/sdcard"));
 
   if (p->WithinBase(aRealPath)) {
-    nsString name;
-    if (!p->IsBase(aRealPath)) {
-      name = aName;
-    }
-
     nsString path;
     p->RealPathToDOMPath(aRealPath, path);
 
-    return new Directory(aDeviceStorage, path, name);
+    return new Directory(aDeviceStorage, path);
   }
 
   return nullptr;

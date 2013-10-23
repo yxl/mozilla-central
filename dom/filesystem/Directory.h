@@ -21,8 +21,6 @@ class nsDOMDeviceStorage;
 namespace mozilla {
 namespace dom {
 
-struct FileInfo;
-
 class Promise;
 class AbortableProgressPromise;
 class CreateFileOptions;
@@ -42,7 +40,7 @@ public:
 public:
   static already_AddRefed<Promise> GetRoot(nsDOMDeviceStorage* aDeviceStorage);
 
-  Directory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aPath, const nsAString& aName);
+  Directory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aPath);
   ~Directory();
 
   // ========= Begin WebIDL bindings. ===========
@@ -87,7 +85,6 @@ private:
   // Weak reference to nsDOMDeviceStorage
   nsWeakPtr mDeviceStorage;
   const nsString mPath;
-  const nsString mName;
 };
 
 } // namespace dom

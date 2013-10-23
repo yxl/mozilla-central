@@ -12,7 +12,6 @@ namespace dom {
 struct DirectoryResponse
 {
   nsString realPath;
-  nsString name;
 };
 
 struct FilesystemErrorResponse

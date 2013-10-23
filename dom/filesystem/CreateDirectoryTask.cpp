@@ -57,7 +57,7 @@ CreateDirectoryTask::GetRequestParams()
 FilesystemResponseValue
 CreateDirectoryTask::GetSuccessRequestResult()
 {
-  return DirectoryResponse(mTargetInfo.realPath, mTargetInfo.name);
+  return DirectoryResponse(mTargetInfo.realPath);
 }
 
 void
@@ -65,7 +65,6 @@ CreateDirectoryTask::SetSuccessRequestResult(const FilesystemResponseValue& aVal
 {
   DirectoryResponse r = aValue;
   mTargetInfo.realPath = r.realPath();
-  mTargetInfo.name = r.name();
 }
 
 void
@@ -121,7 +120,7 @@ CreateDirectoryTask::HandlerCallback()
 
   if (!HasError()) {
     nsRefPtr<Directory> dir = FileUtils::CreateDirectory(d,
-      mTargetInfo.realPath, mTargetInfo.name);
+      mTargetInfo.realPath);
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
           OBJECT_TO_JSVAL(dir->WrapObject(cx, global)));

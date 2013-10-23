@@ -53,7 +53,7 @@ GetFileOrDirectoryTask::GetRequestParams()
 FilesystemResponseValue
 GetFileOrDirectoryTask::GetSuccessRequestResult()
 {
-  return DirectoryResponse(mTargetInfo.realPath, mTargetInfo.name);
+  return DirectoryResponse(mTargetInfo.realPath);
 }
 
 void
@@ -61,7 +61,6 @@ GetFileOrDirectoryTask::SetSuccessRequestResult(const FilesystemResponseValue& a
 {
   DirectoryResponse r = aValue;
   mTargetInfo.realPath = r.realPath();
-  mTargetInfo.name = r.name();
 }
 
 void
@@ -110,7 +109,7 @@ GetFileOrDirectoryTask::HandlerCallback()
 
   if (!HasError()) {
     nsRefPtr<Directory> dir = FileUtils::CreateDirectory(storage,
-      mTargetInfo.realPath, mTargetInfo.name);
+      mTargetInfo.realPath);
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
           OBJECT_TO_JSVAL(dir->WrapObject(cx, global)));

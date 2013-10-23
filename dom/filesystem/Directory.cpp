@@ -40,11 +40,9 @@ Directory::GetRoot(nsDOMDeviceStorage* aDeviceStorage)
 }
 
 Directory::Directory(nsDOMDeviceStorage* aDeviceStorage,
-                     const nsAString& aPath,
-                     const nsAString& aName)
+                     const nsAString& aPath)
   : mDeviceStorage(do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(aDeviceStorage))),
-    mPath(aPath),
-    mName(aName)
+    mPath(aPath)
 {
   SetIsDOMBinding();
 }
@@ -68,7 +66,8 @@ Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 Directory::GetName(nsString& retval) const
 {
-  retval = mName;
+  // TODO Return the directory name instead of the path.
+  retval = mPath;
 }
 
 already_AddRefed<Promise>
