@@ -34,7 +34,7 @@ FilesystemRequestParent::Dispatch()
       break;
     }
 
-    case FilesystemParams::TFilesystemEntranceParams: {
+    case FilesystemParams::TFilesystemGetFileOrDirectoryParams: {
       nsRefPtr<GetFileOrDirectoryTask>(new GetFileOrDirectoryTask(mParams, this));
       break;
     }

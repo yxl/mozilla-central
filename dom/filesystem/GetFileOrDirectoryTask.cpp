@@ -20,21 +20,23 @@
 namespace mozilla {
 namespace dom {
 
-GetFileOrDirectoryTask::GetFileOrDirectoryTask(nsDOMDeviceStorage* aDeviceStorage)
+GetFileOrDirectoryTask::GetFileOrDirectoryTask(
+  nsDOMDeviceStorage* aDeviceStorage,
+  const nsString& aTargetPath)
+  : mTargetRealPath(aTargetPath)
 {
   mPromise = new Promise(aDeviceStorage->GetOwner());
   mDeviceStorage = do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(aDeviceStorage));
 
-  mTargetRealPath = NS_LITERAL_STRING("/sdcard");
   Start();
 }
 
 GetFileOrDirectoryTask::GetFileOrDirectoryTask(
-  const FilesystemEntranceParams& aParam,
+  const FilesystemGetFileOrDirectoryParams& aParam,
   FilesystemRequestParent* aParent)
   : TaskBase(aParent)
 {
-  mTargetRealPath = aParam.basePath();
+  mTargetRealPath = aParam.realPath();
   Start();
 }
 
@@ -45,7 +47,7 @@ GetFileOrDirectoryTask::~GetFileOrDirectoryTask()
 FilesystemParams
 GetFileOrDirectoryTask::GetRequestParams()
 {
-  return FilesystemEntranceParams(mTargetRealPath);
+  return FilesystemGetFileOrDirectoryParams(mTargetRealPath);
 }
 
 FilesystemResponseValue

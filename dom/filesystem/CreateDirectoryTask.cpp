@@ -51,7 +51,7 @@ CreateDirectoryTask::~CreateDirectoryTask()
 FilesystemParams
 CreateDirectoryTask::GetRequestParams()
 {
-  return FilesystemEntranceParams(mTargetRealPath);
+  return FilesystemCreateDirectoryParams(mTargetRealPath);
 }
 
 FilesystemResponseValue

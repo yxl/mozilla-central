@@ -25,8 +25,9 @@ class Directory;
 class GetFileOrDirectoryTask : public TaskBase
 {
 public:
-  GetFileOrDirectoryTask(nsDOMDeviceStorage* aDeviceStorage);
-  GetFileOrDirectoryTask(const FilesystemEntranceParams& aParam,
+  GetFileOrDirectoryTask(nsDOMDeviceStorage* aDeviceStorage,
+                         const nsString& aTargetPath);
+  GetFileOrDirectoryTask(const FilesystemGetFileOrDirectoryParams& aParam,
                       FilesystemRequestParent* aParent);
 
   virtual ~GetFileOrDirectoryTask();

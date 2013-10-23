@@ -170,15 +170,15 @@ struct FilesystemCreateDirectoryParams
   nsString realPath;
 };
 
-struct FilesystemEntranceParams
+struct FilesystemGetFileOrDirectoryParams
 {
-  nsString basePath;
+  nsString realPath;
 };
 
 union FilesystemParams
 {
   FilesystemCreateDirectoryParams;
-  FilesystemEntranceParams;
+  FilesystemGetFileOrDirectoryParams;
 };
 
 union PrefValue {

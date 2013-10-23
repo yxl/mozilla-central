@@ -33,7 +33,9 @@ NS_INTERFACE_MAP_END
 already_AddRefed<Promise>
 Directory::GetRoot(nsDOMDeviceStorage* aDeviceStorage)
 {
-  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(aDeviceStorage);
+  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
+      aDeviceStorage,
+      NS_LITERAL_STRING("/sdcard"));
   return task->GetPromise();
 }
 
