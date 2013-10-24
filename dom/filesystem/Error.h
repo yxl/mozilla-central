@@ -4,8 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_error_h__
-#define mozilla_dom_error_h__
+#ifndef mozilla_dom_filesystemutils_h__
+#define mozilla_dom_filesystemutils_h__
+
+#ifdef DEBUG
+  #ifdef MOZ_WIDGET_GONK
+    #include <android/log.h>
+    #define FILESYSTEM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Filesystem" , ## args)
+  #else
+    #define FILESYSTEM_LOG(fmt, ...) printf("\n"); printf(fmt, ##__VA_ARGS__); printf("\n")
+  #endif
+#else
+  #define FILESYSTEM_LOG(fmt, ...)
+#endif
 
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
@@ -43,4 +54,4 @@ public:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_error_h__
+#endif // mozilla_dom_filesystemutils_h__
