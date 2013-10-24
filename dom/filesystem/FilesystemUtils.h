@@ -18,11 +18,7 @@
   #define FILESYSTEM_LOG(fmt, ...)
 #endif
 
-#include "nsAutoPtr.h"
 #include "nsStringGlue.h"
-#include "mozilla/dom/DOMError.h"
-
-class DOMError;
 
 namespace mozilla {
 namespace dom {
@@ -31,14 +27,12 @@ namespace dom {
  * This class is for error handling.
  * All methods in this class are static.
  */
-class Error
+class FilesystemError
 {
 public:
-  static void ErrorNameFromCode(nsAString& aErrorName, const nsresult& aErrorCode);
-  static DOMError* GetDOMError(const nsAString& aErrorName);
-  static DOMError* GetDOMError(const nsresult& aErrorCode);
+  static const nsString& ErrorNameFromCode(const nsresult& aErrorCode);
 
-  static const nsString DOM_ERROR_ENCODING;
+  static const nsString DOM_ERROR_INVALID_PATH;
   static const nsString DOM_ERROR_INVALID_MODIFICATION;
   static const nsString DOM_ERROR_INVALID_STATE;
   static const nsString DOM_ERROR_NOT_FOUND;

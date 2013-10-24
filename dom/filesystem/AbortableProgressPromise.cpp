@@ -6,7 +6,6 @@
 
 #include "AbortableProgressPromise.h"
 #include "mozilla/dom/DirectoryBinding.h"
-#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {

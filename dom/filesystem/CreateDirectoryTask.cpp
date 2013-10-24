@@ -8,7 +8,7 @@
 #include "CreateDirectoryTask.h"
 #include "nsString.h"
 #include "Directory.h"
-#include "Error.h"
+#include "FilesystemUtils.h"
 #include "nsIFile.h"
 #include "DeviceStorage.h"
 #include "FilesystemFile.h"
@@ -29,7 +29,7 @@ CreateDirectoryTask::CreateDirectoryTask(
   if (aDir->DOMPathToRealPath(aPath, mTargetRealPath)) {
     Start();
   } else {
-    SetError(Error::DOM_ERROR_ENCODING);
+    SetError(FilesystemError::DOM_ERROR_INVALID_PATH);
     HandlerCallback();
   }
 }
@@ -85,7 +85,7 @@ CreateDirectoryTask::Work()
   }
 
   if (ret) {
-    SetError(Error::DOM_ERROR_PATH_EXISTS);
+    SetError(FilesystemError::DOM_ERROR_PATH_EXISTS);
     return;
   }
 
@@ -122,9 +122,9 @@ CreateDirectoryTask::HandlerCallback()
       mPromise->MaybeResolve(cx, val);
       return;
     }
-    mErrorName = Error::DOM_ERROR_SECURITY;
+    mErrorName = FilesystemError::DOM_ERROR_SECURITY;
   }
-  nsRefPtr<DOMError> domError = Error::GetDOMError(mErrorName);
+  nsRefPtr<DOMError> domError = new DOMError(d->GetOwner(), mErrorName);
   Optional<JS::Handle<JS::Value> > val(cx,
       OBJECT_TO_JSVAL(domError->WrapObject(cx, global)));
   mPromise->MaybeReject(cx, val);

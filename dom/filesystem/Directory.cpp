@@ -10,14 +10,12 @@
 #include "EventStream.h"
 #include "AbortableProgressPromise.h"
 #include "FilesystemFile.h"
-#include "Error.h"
+#include "FilesystemUtils.h"
 
 #include "DeviceStorage.h"
 #include "nsXULAppAPI.h"
 #include "nsWeakReference.h"
 #include "nsStringGlue.h"
-
-#include "nsContentUtils.h"
 
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/Promise.h"

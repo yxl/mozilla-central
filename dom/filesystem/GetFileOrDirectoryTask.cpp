@@ -8,7 +8,7 @@
 #include "GetFileOrDirectoryTask.h"
 #include "nsString.h"
 #include "Directory.h"
-#include "Error.h"
+#include "FilesystemUtils.h"
 #include "nsIFile.h"
 #include "DeviceStorage.h"
 #include "FilesystemFile.h"
@@ -81,7 +81,7 @@ GetFileOrDirectoryTask::Work()
   }
 
   if (!ret) {
-    SetError(Error::DOM_ERROR_NOT_FOUND);
+    SetError(FilesystemError::DOM_ERROR_NOT_FOUND);
     return;
   }
 
@@ -103,7 +103,7 @@ GetFileOrDirectoryTask::Work()
     }
     if (!ret) {
       // Neither directory or file.
-      SetError(Error::DOM_ERROR_TYPE_MISMATCH);
+      SetError(FilesystemError::DOM_ERROR_TYPE_MISMATCH);
       return;
     }
   }
@@ -135,9 +135,9 @@ GetFileOrDirectoryTask::HandlerCallback()
       mPromise->MaybeResolve(cx, val);
       return;
     }
-    mErrorName = Error::DOM_ERROR_SECURITY;
+    mErrorName = FilesystemError::DOM_ERROR_SECURITY;
   }
-  nsRefPtr<DOMError> domError = Error::GetDOMError(mErrorName);
+  nsRefPtr<DOMError> domError = new DOMError(storage->GetOwner(), mErrorName);
   Optional<JS::Handle<JS::Value> > val(cx,
       OBJECT_TO_JSVAL(domError->WrapObject(cx, global)));
   mPromise->MaybeReject(cx, val);

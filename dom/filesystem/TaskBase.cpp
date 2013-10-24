@@ -7,7 +7,7 @@
 
 #include "TaskBase.h"
 #include "FilesystemRequestParent.h"
-#include "Error.h"
+#include "FilesystemUtils.h"
 
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/ContentChild.h"
@@ -143,7 +143,7 @@ TaskBase::SetError(const nsString& aErrorName)
 void
 TaskBase::SetError(const nsresult& aErrorCode)
 {
-  Error::ErrorNameFromCode(mErrorName, aErrorCode);
+  mErrorName = FilesystemError::ErrorNameFromCode(aErrorCode);
 }
 
 }
