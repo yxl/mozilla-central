@@ -128,7 +128,7 @@ GetFileOrDirectoryTask::HandlerCallback()
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   if (!HasError()) {
-    nsRefPtr<Directory> dir = new Directory(storage, mTargetFile->getPath());
+    nsRefPtr<Directory> dir = new Directory(storage, mTargetFile);
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
           OBJECT_TO_JSVAL(dir->WrapObject(cx, global)));

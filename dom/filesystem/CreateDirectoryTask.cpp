@@ -26,7 +26,7 @@ CreateDirectoryTask::CreateDirectoryTask(
   mPromise = new Promise(s->GetOwner());
   mDeviceStorage = do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(s));
 
-  if (aDir->GetRealPath(aPath, mTargetRealPath)) {
+  if (aDir->DOMPathToRealPath(aPath, mTargetRealPath)) {
     Start();
   } else {
     SetError(Error::DOM_ERROR_ENCODING);
@@ -115,7 +115,7 @@ CreateDirectoryTask::HandlerCallback()
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   if (!HasError()) {
-    nsRefPtr<Directory> dir = new Directory(d, mTargetFile->getPath());
+    nsRefPtr<Directory> dir = new Directory(d, mTargetFile);
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
           OBJECT_TO_JSVAL(dir->WrapObject(cx, global)));

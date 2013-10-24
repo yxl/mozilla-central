@@ -29,6 +29,7 @@ class OpenWriteOptions;
 class StringOrDirectoryOrDestinationDict;
 class StringOrFileOrDirectory;
 class StringOrFile;
+class FilesystemFile;
 
 class Directory MOZ_FINAL : public nsISupports,
                             public nsWrapperCache
@@ -40,7 +41,7 @@ public:
 public:
   static already_AddRefed<Promise> GetRoot(nsDOMDeviceStorage* aDeviceStorage);
 
-  Directory(nsDOMDeviceStorage* aDeviceStorage, const nsAString& aPath);
+  Directory(nsDOMDeviceStorage* aDeviceStorage, FilesystemFile* aFile);
   ~Directory();
 
   // ========= Begin WebIDL bindings. ===========
@@ -78,13 +79,18 @@ public:
   // =========== End WebIDL bindings.============
 public:
   already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
-
-  bool GetRealPath(const nsAString& aPath, nsString& aRealPath);
+  /*
+   * Convert relative DOM path to the absolute real path.
+   * @return true if succeed. false if the DOM path is invalid.
+   */
+  bool DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath);
 
 private:
+  static bool IsValidDOMPath(const nsString& aPath);
+
   // Weak reference to nsDOMDeviceStorage
   nsWeakPtr mDeviceStorage;
-  const nsString mPath;
+  nsRefPtr<FilesystemFile> mFile;
 };
 
 } // namespace dom

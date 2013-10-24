@@ -22,7 +22,6 @@ CPP_SOURCES += [
     'Error.cpp',
     'FilesystemRequestParent.cpp',
     'FilesystemFile.cpp',
-    'PathManager.cpp',
     'TaskBase.cpp',
     'CreateDirectoryTask.cpp',
     'GetFileOrDirectoryTask.cpp',

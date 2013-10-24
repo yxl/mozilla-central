@@ -5,15 +5,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Directory.h"
-#include "nsXULAppAPI.h"
-#include "nsWeakReference.h"
-#include "Error.h"
-#include "PathManager.h"
 #include "CreateDirectoryTask.h"
 #include "GetFileOrDirectoryTask.h"
-#include "DeviceStorage.h"
 #include "EventStream.h"
 #include "AbortableProgressPromise.h"
+#include "FilesystemFile.h"
+#include "Error.h"
+
+#include "DeviceStorage.h"
+#include "nsXULAppAPI.h"
+#include "nsWeakReference.h"
+#include "nsStringGlue.h"
+
+#include "nsContentUtils.h"
 
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -40,9 +44,9 @@ Directory::GetRoot(nsDOMDeviceStorage* aDeviceStorage)
 }
 
 Directory::Directory(nsDOMDeviceStorage* aDeviceStorage,
-                     const nsAString& aPath)
+                     FilesystemFile* aFile)
   : mDeviceStorage(do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(aDeviceStorage))),
-    mPath(aPath)
+    mFile(aFile)
 {
   SetIsDOMBinding();
 }
@@ -67,7 +71,7 @@ void
 Directory::GetName(nsString& retval) const
 {
   // TODO Return the directory name instead of the path.
-  retval = mPath;
+  retval = mFile->getPath();
 }
 
 already_AddRefed<Promise>
@@ -150,19 +154,72 @@ Directory::GetDeviceStorage()
 }
 
 bool
-Directory::GetRealPath(const nsAString& aPath, nsString& aRealPath)
+Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath)
 {
-  nsRefPtr<PathManager> p = new PathManager(NS_LITERAL_STRING("/sdcard"));
+  nsString relativePath;
 
-  // Check if path is valid.
-  if (!p->IsValidPath(aPath)) {
+  // Normalize the DOM path to remove the leading "./".
+  if (StringBeginsWith(aPath, NS_LITERAL_STRING("./"))) {
+    relativePath = Substring(aPath, 2);
+  } else {
+    relativePath = aPath;
+  }
+
+  if (!IsValidDOMPath(relativePath)) {
     return false;
   }
 
-  // Make sure real path is absolute.
-  nsString dirRealPath;
-  p->DOMPathToRealPath(mPath, dirRealPath);
-  p->Absolutize(aPath, dirRealPath, aRealPath);
+  aRealPath = mFile->getPath() + relativePath;
+
+  return true;
+}
+
+// static
+bool
+Directory::IsValidDOMPath(const nsString& aPath)
+{
+  if (aPath.IsEmpty()) {
+    return true;
+  }
+
+  // Absolute path is not allowed.
+  if (aPath.First() == PRUnichar('/')) {
+    return false;
+  }
+
+#if defined(XP_WIN)
+  static const nsString kInvalidChars = NS_LITERAL_STRING("|\\?*<\":>+[]\0");
+#elif defined (XP_OS2)
+  static const nsString kInvalidChars = NS_LITERAL_STRING(":\0");
+#elif defined (XP_UNIX)
+  static const nsString kInvalidChars = NS_LITERAL_STRING("\0");
+#endif
+
+  if (aPath.Find(kInvalidChars, 0, -1) != kNotFound) {
+    return false;
+  }
+
+  static const PRUnichar kSeparatorChar = PRUnichar('/');
+  static const nsString kCurrentDir = NS_LITERAL_STRING(".");
+  static const nsString kParentDir = NS_LITERAL_STRING("..");
+
+  // Split path and check each path component.
+  PRInt32 begin = 0;
+  PRInt32 end;
+  for (begin = 0;
+       (end = aPath.FindChar(kSeparatorChar, begin)) != kNotFound;
+       begin = end + 1) {
+    // The path containing empty components, such as "foo//bar", is invalid.
+    if (begin == end) {
+      return false;
+    }
+    // We don't allow paths, such as "../foo", "foo/./bar" and "foo/../bar",
+    // to walk up the directory.
+    nsDependentSubstring pathComponent = Substring(aPath, begin, end - begin);
+    if (pathComponent.Equals(kCurrentDir) || pathComponent.Equals(kParentDir)) {
+      return false;
+    }
+  }
 
   return true;
 }
