@@ -56,7 +56,7 @@ CreateDirectoryTask::GetRequestParams()
 FilesystemResponseValue
 CreateDirectoryTask::GetSuccessRequestResult()
 {
-  return FilesystemFileResponse(mTargetFile->getPath(), mTargetFile->isDirectory());
+  return FilesystemFileResponse(mTargetFile->GetPath(), mTargetFile->IsDirectory());
 }
 
 void

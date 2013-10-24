@@ -23,10 +23,15 @@ public:
   FilesystemFile(const nsString& aPath, bool aIsDirectory);
   virtual ~FilesystemFile();
 
-  const nsString& getPath() const { return mPath; }
-  bool isDirectory() const { return mIsDirectory; }
+  const nsString& GetPath() const { return mPath; }
+  bool IsDirectory() const { return mIsDirectory; }
+  void GetName(nsAString& aName) const;
+
+public:
+  static bool IsValidRelativePath(const nsString& aPath);
 private:
-  nsString mPath;
+  static const PRUnichar kSeparatorChar = PRUnichar('/');
+  const nsString mPath;
   bool mIsDirectory;
 };
 

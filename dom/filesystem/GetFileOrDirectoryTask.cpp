@@ -52,7 +52,7 @@ GetFileOrDirectoryTask::GetRequestParams()
 FilesystemResponseValue
 GetFileOrDirectoryTask::GetSuccessRequestResult()
 {
-  return FilesystemFileResponse(mTargetFile->getPath(), mTargetFile->isDirectory());
+  return FilesystemFileResponse(mTargetFile->GetPath(), mTargetFile->IsDirectory());
 }
 
 void

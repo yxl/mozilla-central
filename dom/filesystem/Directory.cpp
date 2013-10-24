@@ -68,8 +68,7 @@ Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 Directory::GetName(nsString& retval) const
 {
-  // TODO Return the directory name instead of the path.
-  retval = mFile->getPath();
+  mFile->GetName(retval);
 }
 
 already_AddRefed<Promise>
@@ -163,61 +162,11 @@ Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath)
     relativePath = aPath;
   }
 
-  if (!IsValidDOMPath(relativePath)) {
+  if (!FilesystemFile::IsValidRelativePath(relativePath)) {
     return false;
   }
 
-  aRealPath = mFile->getPath() + relativePath;
-
-  return true;
-}
-
-// static
-bool
-Directory::IsValidDOMPath(const nsString& aPath)
-{
-  if (aPath.IsEmpty()) {
-    return true;
-  }
-
-  // Absolute path is not allowed.
-  if (aPath.First() == PRUnichar('/')) {
-    return false;
-  }
-
-#if defined(XP_WIN)
-  static const nsString kInvalidChars = NS_LITERAL_STRING("|\\?*<\":>+[]\0");
-#elif defined (XP_OS2)
-  static const nsString kInvalidChars = NS_LITERAL_STRING(":\0");
-#elif defined (XP_UNIX)
-  static const nsString kInvalidChars = NS_LITERAL_STRING("\0");
-#endif
-
-  if (aPath.Find(kInvalidChars, 0, -1) != kNotFound) {
-    return false;
-  }
-
-  static const PRUnichar kSeparatorChar = PRUnichar('/');
-  static const nsString kCurrentDir = NS_LITERAL_STRING(".");
-  static const nsString kParentDir = NS_LITERAL_STRING("..");
-
-  // Split path and check each path component.
-  PRInt32 begin = 0;
-  PRInt32 end;
-  for (begin = 0;
-       (end = aPath.FindChar(kSeparatorChar, begin)) != kNotFound;
-       begin = end + 1) {
-    // The path containing empty components, such as "foo//bar", is invalid.
-    if (begin == end) {
-      return false;
-    }
-    // We don't allow paths, such as "../foo", "foo/./bar" and "foo/../bar",
-    // to walk up the directory.
-    nsDependentSubstring pathComponent = Substring(aPath, begin, end - begin);
-    if (pathComponent.Equals(kCurrentDir) || pathComponent.Equals(kParentDir)) {
-      return false;
-    }
-  }
+  aRealPath = mFile->GetPath() + relativePath;
 
   return true;
 }

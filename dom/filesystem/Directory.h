@@ -86,8 +86,6 @@ public:
   bool DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath);
 
 private:
-  static bool IsValidDOMPath(const nsString& aPath);
-
   // Weak reference to nsDOMDeviceStorage
   nsWeakPtr mDeviceStorage;
   nsRefPtr<FilesystemFile> mFile;
