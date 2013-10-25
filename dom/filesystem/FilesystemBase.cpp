@@ -29,5 +29,20 @@ FilesystemBase::GetInvalidPathChars() const
   return kInvalidChars;
 }
 
+FilesystemWeakRef::FilesystemWeakRef(FilesystemBase* aFilesystem)
+{
+  mFilesystem = do_GetWeakReference(aFilesystem);
+}
+
+already_AddRefed<FilesystemBase>
+FilesystemWeakRef::Get()
+{
+  nsRefPtr<FilesystemBase> target = do_QueryReferent(mFilesystem);
+  if (!target) {
+    return nullptr;
+  }
+  return target.forget();
+}
+
 } // namespace dom
 } // namespace mozilla

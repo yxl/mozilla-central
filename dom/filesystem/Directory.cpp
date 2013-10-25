@@ -14,8 +14,6 @@
 #include "GetFileOrDirectoryTask.h"
 
 #include "nsStringGlue.h"
-#include "nsWeakReference.h"
-#include "nsXULAppAPI.h"
 
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -43,7 +41,7 @@ Directory::GetRoot(FilesystemBase* aFilesystem)
 
 Directory::Directory(FilesystemBase* aFilesystem,
                      FilesystemFile* aFile)
-  : mFilesystem(do_GetWeakReference(aFilesystem)),
+  : mFilesystem(new FilesystemWeakRef(aFilesystem)),
     mFile(aFile)
 {
   SetIsDOMBinding();
@@ -81,7 +79,13 @@ Directory::CreateFile(const nsAString& path, const CreateFileOptions& options, E
 already_AddRefed<Promise>
 Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
 {
-  nsRefPtr<CreateDirectoryTask> task = new CreateDirectoryTask(this, aPath);
+  nsString errorName;
+  nsString realPath;
+  if (!DOMPathToRealPath(aPath, realPath)) {
+    errorName = FilesystemError::DOM_ERROR_INVALID_PATH;
+  }
+  nsRefPtr<FilesystemBase> fs = mFilesystem->Get();
+  nsRefPtr<CreateDirectoryTask> task = new CreateDirectoryTask(fs, realPath, errorName);
   return task->GetPromise();
 }
 
@@ -139,16 +143,6 @@ Directory::EnumerateDeep(const Optional<nsAString >& path)
   return nullptr;
 }
 
-already_AddRefed<FilesystemBase>
-Directory::GetFilesystem()
-{
-  nsRefPtr<FilesystemBase> target = do_QueryReferent(mFilesystem);
-  if (!target) {
-    return nullptr;
-  }
-  return target.forget();
-}
-
 bool
 Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath)
 {
@@ -161,54 +155,12 @@ Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath)
     relativePath = aPath;
   }
 
-  if (!IsValidRelativePath(relativePath)) {
+  nsRefPtr<FilesystemBase> fs = mFilesystem->Get();
+  if (!FilesystemFile::IsValidRelativePath(fs, relativePath)) {
     return false;
   }
 
   aRealPath = mFile->GetPath() + relativePath;
-
-  return true;
-}
-
-// static
-bool
-Directory::IsValidRelativePath(const nsString& aPath)
-{
-  if (aPath.IsEmpty()) {
-    return true;
-  }
-
-  // Absolute path is not allowed.
-  if (aPath.First() == kSeparatorChar) {
-    return false;
-  }
-
-  // Make sure there is no invalid path character.
-  nsRefPtr<FilesystemBase> fs = GetFilesystem();
-  if (aPath.Find(fs->GetInvalidPathChars(), 0, -1) != kNotFound) {
-    return false;
-  }
-
-  static const nsString kCurrentDir = NS_LITERAL_STRING(".");
-  static const nsString kParentDir = NS_LITERAL_STRING("..");
-
-  // Split path and check each path component.
-  PRInt32 begin = 0;
-  PRInt32 end;
-  for (begin = 0;
-       (end = aPath.FindChar(kSeparatorChar, begin)) != kNotFound;
-       begin = end + 1) {
-    // The path containing empty components, such as "foo//bar", is invalid.
-    if (begin == end) {
-      return false;
-    }
-    // We don't allow paths, such as "../foo", "foo/./bar" and "foo/../bar",
-    // to walk up the directory.
-    nsDependentSubstring pathComponent = Substring(aPath, begin, end - begin);
-    if (pathComponent.Equals(kCurrentDir) || pathComponent.Equals(kParentDir)) {
-      return false;
-    }
-  }
 
   return true;
 }

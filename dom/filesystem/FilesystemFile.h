@@ -11,15 +11,18 @@
 #include "nsISupportsUtils.h"
 #include "nsString.h"
 
-class nsIFile;
-
 namespace mozilla {
 namespace dom {
+
+class FilesystemBase;
 
 class FilesystemFile MOZ_FINAL : public nsISupports
 {
   NS_DECL_THREADSAFE_ISUPPORTS
 public:
+  static bool IsValidRelativePath(FilesystemBase* aFilesystem,
+                                  const nsString& aPath);
+
   FilesystemFile(const nsString& aPath, bool aIsDirectory);
   virtual ~FilesystemFile();
 
@@ -27,6 +30,7 @@ public:
   bool IsDirectory() const { return mIsDirectory; }
   void GetName(nsAString& aName) const;
 private:
+  static const PRUnichar kSeparatorChar = PRUnichar('/');
   const nsString mPath;
   bool mIsDirectory;
 };

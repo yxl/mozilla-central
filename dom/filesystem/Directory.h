@@ -12,23 +12,23 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "nsWeakReference.h"
 #include "nsAutoPtr.h"
 #include "nsDOMFile.h"
 
 namespace mozilla {
 namespace dom {
 
-class Promise;
 class AbortableProgressPromise;
 class CreateFileOptions;
 class EventStream;
+class FilesystemBase;
+class FilesystemFile;
+class FilesystemWeakRef;
 class OpenWriteOptions;
+class Promise;
 class StringOrDirectoryOrDestinationDict;
 class StringOrFileOrDirectory;
 class StringOrFile;
-class FilesystemFile;
-class FilesystemBase;
 
 class Directory MOZ_FINAL : public nsISupports,
                             public nsWrapperCache
@@ -76,21 +76,14 @@ public:
   already_AddRefed<EventStream> EnumerateDeep(const Optional<nsAString >& path);
 
   // =========== End WebIDL bindings.============
-public:
-  static const PRUnichar kSeparatorChar = PRUnichar('/');
-
-  already_AddRefed<FilesystemBase> GetFilesystem();
+private:
   /*
    * Convert relative DOM path to the absolute real path.
    * @return true if succeed. false if the DOM path is invalid.
    */
   bool DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath);
 
-private:
-  bool IsValidRelativePath(const nsString& aPath);
-
-  // Weak reference to FilesystemBase
-  nsWeakPtr mFilesystem;
+  nsAutoPtr<FilesystemWeakRef> mFilesystem;
   nsRefPtr<FilesystemFile> mFile;
 };
 

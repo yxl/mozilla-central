@@ -135,7 +135,7 @@ TaskBase::ActorDestroy(ActorDestroyReason why)
 }
 
 void
-TaskBase::SetError(const nsString& aErrorName)
+TaskBase::SetError(const nsAString& aErrorName)
 {
   mErrorName = aErrorName;
 }

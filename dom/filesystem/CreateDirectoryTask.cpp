@@ -6,13 +6,13 @@
  */
 
 #include "CreateDirectoryTask.h"
-#include "nsString.h"
 #include "Directory.h"
-#include "FilesystemUtils.h"
-#include "nsIFile.h"
-#include "DeviceStorage.h"
-#include "FilesystemFile.h"
 #include "FilesystemBase.h"
+#include "FilesystemFile.h"
+#include "FilesystemUtils.h"
+
+#include "nsString.h"
+#include "nsIFile.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
@@ -20,17 +20,18 @@
 namespace mozilla {
 namespace dom {
 
-CreateDirectoryTask::CreateDirectoryTask(
-  Directory* aDir, const nsAString& aPath)
+CreateDirectoryTask::CreateDirectoryTask(FilesystemBase* aFilesystem,
+                                         const nsAString& aPath,
+                                         const nsAString& aErrorName)
+  : mFilesystem(new FilesystemWeakRef(aFilesystem))
+  , mTargetRealPath(aPath)
 {
-  nsRefPtr<FilesystemBase> filesystem = aDir->GetFilesystem();
-  mPromise = new Promise(filesystem->GetWindow());
-  mFilesystem = do_GetWeakReference(filesystem);
+  mPromise = new Promise(aFilesystem->GetWindow());
 
-  if (aDir->DOMPathToRealPath(aPath, mTargetRealPath)) {
+  if (aErrorName.IsEmpty()) {
     Start();
   } else {
-    SetError(FilesystemError::DOM_ERROR_INVALID_PATH);
+    SetError(aErrorName);
     HandlerCallback();
   }
 }
@@ -102,7 +103,7 @@ CreateDirectoryTask::Work()
 void
 CreateDirectoryTask::HandlerCallback()
 {
-  nsRefPtr<FilesystemBase> filesystem = GetFilesystem();
+  nsRefPtr<FilesystemBase> filesystem = mFilesystem->Get();
   if (!filesystem) {
     return;
   }
@@ -129,16 +130,6 @@ CreateDirectoryTask::HandlerCallback()
   Optional<JS::Handle<JS::Value> > val(cx,
       OBJECT_TO_JSVAL(domError->WrapObject(cx, global)));
   mPromise->MaybeReject(cx, val);
-}
-
-already_AddRefed<FilesystemBase>
-CreateDirectoryTask::GetFilesystem()
-{
-  nsRefPtr<FilesystemBase> target = do_QueryReferent(mFilesystem);
-  if (!target) {
-    return nullptr;
-  }
-  return target.forget();
 }
 
 }

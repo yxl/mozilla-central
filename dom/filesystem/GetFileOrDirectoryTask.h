@@ -10,7 +10,6 @@
 
 #include "TaskBase.h"
 #include "nsAutoPtr.h"
-#include "nsWeakReference.h"
 
 class nsString;
 
@@ -19,7 +18,7 @@ namespace dom {
 
 class FilesystemBase;
 class FilesystemFile;
-class Directory;
+class FilesystemWeakRef;
 
 class GetFileOrDirectoryTask : public TaskBase
 {
@@ -41,10 +40,7 @@ protected:
   virtual void HandlerCallback() MOZ_OVERRIDE;
 
 private:
-  // Weak reference to FilesystemBase
-  nsWeakPtr mFilesystem;
-
-  already_AddRefed<FilesystemBase> GetFilesystem();
+  nsAutoPtr<FilesystemWeakRef> mFilesystem;
 
   nsString mTargetRealPath;
   nsRefPtr<FilesystemFile> mTargetFile;

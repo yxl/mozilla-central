@@ -9,8 +9,8 @@
 #define CREATEDIRECTORYTASK_H_
 
 #include "TaskBase.h"
+
 #include "nsAutoPtr.h"
-#include "nsWeakReference.h"
 
 class nsString;
 
@@ -20,12 +20,14 @@ namespace dom {
 class FilesystemBase;
 class FilesystemCreateDirectoryParams;
 class FilesystemFile;
-class Directory;
+class FilesystemWeakRef;
 
 class CreateDirectoryTask : public TaskBase
 {
 public:
-  CreateDirectoryTask(Directory* aDir, const nsAString& aPath);
+  CreateDirectoryTask(FilesystemBase* aFilesystem,
+                      const nsAString& aPath,
+                      const nsAString& aErrorName);
   CreateDirectoryTask(const FilesystemCreateDirectoryParams& aParam,
                       FilesystemRequestParent* aParent);
 
@@ -42,10 +44,7 @@ protected:
 
 private:
   static const uint32_t CREATE_DIRECTORY_PERMISSION = 0700;
-  // Weak reference to FilesystemBase
-  nsWeakPtr mFilesystem;
-
-  already_AddRefed<FilesystemBase> GetFilesystem();
+  nsAutoPtr<FilesystemWeakRef> mFilesystem;
 
   nsString mTargetRealPath;
   nsRefPtr<FilesystemFile> mTargetFile;

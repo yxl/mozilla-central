@@ -6,12 +6,13 @@
  */
 
 #include "GetFileOrDirectoryTask.h"
-#include "nsString.h"
 #include "Directory.h"
-#include "FilesystemUtils.h"
-#include "nsIFile.h"
 #include "FilesystemBase.h"
+#include "FilesystemUtils.h"
 #include "FilesystemFile.h"
+
+#include "nsIFile.h"
+#include "nsString.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
@@ -22,11 +23,10 @@ namespace dom {
 GetFileOrDirectoryTask::GetFileOrDirectoryTask(
   FilesystemBase* aFilesystem,
   const nsString& aTargetPath)
-  : mTargetRealPath(aTargetPath)
+  : mFilesystem(new FilesystemWeakRef(aFilesystem))
+  , mTargetRealPath(aTargetPath)
 {
   mPromise = new Promise(aFilesystem->GetWindow());
-  mFilesystem = do_GetWeakReference(aFilesystem);
-
   Start();
 }
 
@@ -114,7 +114,7 @@ GetFileOrDirectoryTask::Work()
 void
 GetFileOrDirectoryTask::HandlerCallback()
 {
-  nsRefPtr<FilesystemBase> filesystem = GetFilesystem();
+  nsRefPtr<FilesystemBase> filesystem = mFilesystem->Get();
   if (!filesystem) {
     return;
   }
@@ -141,16 +141,6 @@ GetFileOrDirectoryTask::HandlerCallback()
   Optional<JS::Handle<JS::Value> > val(cx,
       OBJECT_TO_JSVAL(domError->WrapObject(cx, global)));
   mPromise->MaybeReject(cx, val);
-}
-
-already_AddRefed<FilesystemBase>
-GetFileOrDirectoryTask::GetFilesystem()
-{
-  nsRefPtr<FilesystemBase> target = do_QueryReferent(mFilesystem);
-  if (!target) {
-    return nullptr;
-  }
-  return target.forget();
 }
 
 }

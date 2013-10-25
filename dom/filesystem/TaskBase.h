@@ -41,7 +41,7 @@ protected:
   virtual void SetSuccessRequestResult(const FilesystemResponseValue& aValue) = 0;
 
   void Start();
-  void SetError(const nsString& aErrorName);
+  void SetError(const nsAString& aErrorName);
   void SetError(const nsresult& aErrorCode);
 
   // Overrides PFilesystemRequestChild
