@@ -26,11 +26,7 @@ public:
   const nsString& GetPath() const { return mPath; }
   bool IsDirectory() const { return mIsDirectory; }
   void GetName(nsAString& aName) const;
-
-public:
-  static bool IsValidRelativePath(const nsString& aPath);
 private:
-  static const PRUnichar kSeparatorChar = PRUnichar('/');
   const nsString mPath;
   bool mIsDirectory;
 };

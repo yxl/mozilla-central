@@ -12,6 +12,7 @@
 #include "nsIFile.h"
 #include "DeviceStorage.h"
 #include "FilesystemFile.h"
+#include "FilesystemBase.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
@@ -22,9 +23,9 @@ namespace dom {
 CreateDirectoryTask::CreateDirectoryTask(
   Directory* aDir, const nsAString& aPath)
 {
-  nsRefPtr<nsDOMDeviceStorage> s = aDir->GetDeviceStorage();
-  mPromise = new Promise(s->GetOwner());
-  mDeviceStorage = do_GetWeakReference(static_cast<nsIDOMDeviceStorage*>(s));
+  nsRefPtr<FilesystemBase> filesystem = aDir->GetFilesystem();
+  mPromise = new Promise(filesystem->GetWindow());
+  mFilesystem = do_GetWeakReference(filesystem);
 
   if (aDir->DOMPathToRealPath(aPath, mTargetRealPath)) {
     Start();
@@ -101,12 +102,12 @@ CreateDirectoryTask::Work()
 void
 CreateDirectoryTask::HandlerCallback()
 {
-  nsRefPtr<nsDOMDeviceStorage> d = GetDeviceStorage();
-  if (!d) {
+  nsRefPtr<FilesystemBase> filesystem = GetFilesystem();
+  if (!filesystem) {
     return;
   }
   nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(
-      d->GetOwner());
+      filesystem->GetWindow());
   if (!globalObject) {
     return;
   }
@@ -115,7 +116,7 @@ CreateDirectoryTask::HandlerCallback()
   JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   if (!HasError()) {
-    nsRefPtr<Directory> dir = new Directory(d, mTargetFile);
+    nsRefPtr<Directory> dir = new Directory(filesystem, mTargetFile);
     if (dir) {
       Optional<JS::Handle<JS::Value> > val(cx,
           OBJECT_TO_JSVAL(dir->WrapObject(cx, global)));
@@ -124,21 +125,20 @@ CreateDirectoryTask::HandlerCallback()
     }
     mErrorName = FilesystemError::DOM_ERROR_SECURITY;
   }
-  nsRefPtr<DOMError> domError = new DOMError(d->GetOwner(), mErrorName);
+  nsRefPtr<DOMError> domError = new DOMError(filesystem->GetWindow(), mErrorName);
   Optional<JS::Handle<JS::Value> > val(cx,
       OBJECT_TO_JSVAL(domError->WrapObject(cx, global)));
   mPromise->MaybeReject(cx, val);
 }
 
-already_AddRefed<nsDOMDeviceStorage>
-CreateDirectoryTask::GetDeviceStorage()
+already_AddRefed<FilesystemBase>
+CreateDirectoryTask::GetFilesystem()
 {
-  nsRefPtr<nsIDOMDeviceStorage> target = do_QueryReferent(mDeviceStorage);
+  nsRefPtr<FilesystemBase> target = do_QueryReferent(mFilesystem);
   if (!target) {
     return nullptr;
   }
-  nsRefPtr<nsDOMDeviceStorage> storage = static_cast<nsDOMDeviceStorage*>(target.get());
-  return storage.forget();
+  return target.forget();
 }
 
 }

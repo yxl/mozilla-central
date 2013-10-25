@@ -13,19 +13,18 @@
 #include "nsWeakReference.h"
 
 class nsString;
-class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
 
+class FilesystemBase;
 class FilesystemFile;
-class FilesystemEntranceParams;
 class Directory;
 
 class GetFileOrDirectoryTask : public TaskBase
 {
 public:
-  GetFileOrDirectoryTask(nsDOMDeviceStorage* aDeviceStorage,
+  GetFileOrDirectoryTask(FilesystemBase* aFilesystem,
                          const nsString& aTargetPath);
   GetFileOrDirectoryTask(const FilesystemGetFileOrDirectoryParams& aParam,
                       FilesystemRequestParent* aParent);
@@ -42,10 +41,10 @@ protected:
   virtual void HandlerCallback() MOZ_OVERRIDE;
 
 private:
-  // Weak reference to nsDOMDeviceStorage
-  nsWeakPtr mDeviceStorage;
+  // Weak reference to FilesystemBase
+  nsWeakPtr mFilesystem;
 
-  already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
+  already_AddRefed<FilesystemBase> GetFilesystem();
 
   nsString mTargetRealPath;
   nsRefPtr<FilesystemFile> mTargetFile;

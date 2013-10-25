@@ -13,13 +13,13 @@
 #include "nsWeakReference.h"
 
 class nsString;
-class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
 
-class FilesystemFile;
+class FilesystemBase;
 class FilesystemCreateDirectoryParams;
+class FilesystemFile;
 class Directory;
 
 class CreateDirectoryTask : public TaskBase
@@ -42,10 +42,10 @@ protected:
 
 private:
   static const uint32_t CREATE_DIRECTORY_PERMISSION = 0700;
-  // Weak reference to nsDOMDeviceStorage
-  nsWeakPtr mDeviceStorage;
+  // Weak reference to FilesystemBase
+  nsWeakPtr mFilesystem;
 
-  already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
+  already_AddRefed<FilesystemBase> GetFilesystem();
 
   nsString mTargetRealPath;
   nsRefPtr<FilesystemFile> mTargetFile;

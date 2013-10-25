@@ -16,8 +16,6 @@
 #include "nsAutoPtr.h"
 #include "nsDOMFile.h"
 
-class nsDOMDeviceStorage;
-
 namespace mozilla {
 namespace dom {
 
@@ -30,6 +28,7 @@ class StringOrDirectoryOrDestinationDict;
 class StringOrFileOrDirectory;
 class StringOrFile;
 class FilesystemFile;
+class FilesystemBase;
 
 class Directory MOZ_FINAL : public nsISupports,
                             public nsWrapperCache
@@ -39,9 +38,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Directory)
 
 public:
-  static already_AddRefed<Promise> GetRoot(nsDOMDeviceStorage* aDeviceStorage);
+  static already_AddRefed<Promise> GetRoot(FilesystemBase* aFilesystem);
 
-  Directory(nsDOMDeviceStorage* aDeviceStorage, FilesystemFile* aFile);
+  Directory(FilesystemBase* aFilesystem, FilesystemFile* aFile);
   ~Directory();
 
   // ========= Begin WebIDL bindings. ===========
@@ -78,7 +77,9 @@ public:
 
   // =========== End WebIDL bindings.============
 public:
-  already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage();
+  static const PRUnichar kSeparatorChar = PRUnichar('/');
+
+  already_AddRefed<FilesystemBase> GetFilesystem();
   /*
    * Convert relative DOM path to the absolute real path.
    * @return true if succeed. false if the DOM path is invalid.
@@ -86,8 +87,10 @@ public:
   bool DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath);
 
 private:
-  // Weak reference to nsDOMDeviceStorage
-  nsWeakPtr mDeviceStorage;
+  bool IsValidRelativePath(const nsString& aPath);
+
+  // Weak reference to FilesystemBase
+  nsWeakPtr mFilesystem;
   nsRefPtr<FilesystemFile> mFile;
 };
 
