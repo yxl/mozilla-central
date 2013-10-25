@@ -20,7 +20,7 @@ class FilesystemBase;
 class FilesystemFile;
 class FilesystemWeakRef;
 
-class GetFileOrDirectoryTask : public TaskBase
+class GetFileOrDirectoryTask MOZ_FINAL : public TaskBase
 {
 public:
   GetFileOrDirectoryTask(FilesystemBase* aFilesystem,
@@ -29,6 +29,8 @@ public:
                       FilesystemRequestParent* aParent);
 
   virtual ~GetFileOrDirectoryTask();
+
+  already_AddRefed<Promise> GetPromise();
 
 protected:
   virtual FilesystemParams GetRequestParams() MOZ_OVERRIDE;
@@ -40,10 +42,11 @@ protected:
   virtual void HandlerCallback() MOZ_OVERRIDE;
 
 private:
+  nsRefPtr<Promise> mPromise;
   nsAutoPtr<FilesystemWeakRef> mFilesystem;
-
   nsString mTargetRealPath;
   nsRefPtr<FilesystemFile> mTargetFile;
+
 };
 
 }

@@ -29,13 +29,6 @@ TaskBase::TaskBase(FilesystemRequestParent* aParent)
 
 TaskBase::~TaskBase()
 {
-  // TODO Auto-generated destructor stub
-}
-
-already_AddRefed<Promise>
-TaskBase::GetPromise()
-{
-  return nsRefPtr<Promise>(mPromise).forget();
 }
 
 void

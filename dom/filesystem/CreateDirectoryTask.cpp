@@ -49,6 +49,12 @@ CreateDirectoryTask::~CreateDirectoryTask()
 {
 }
 
+already_AddRefed<Promise>
+CreateDirectoryTask::GetPromise()
+{
+  return nsRefPtr<Promise>(mPromise).forget();
+}
+
 FilesystemParams
 CreateDirectoryTask::GetRequestParams()
 {

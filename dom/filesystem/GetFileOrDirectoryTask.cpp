@@ -43,6 +43,12 @@ GetFileOrDirectoryTask::~GetFileOrDirectoryTask()
 {
 }
 
+already_AddRefed<Promise>
+GetFileOrDirectoryTask::GetPromise()
+{
+  return nsRefPtr<Promise>(mPromise).forget();
+}
+
 FilesystemParams
 GetFileOrDirectoryTask::GetRequestParams()
 {

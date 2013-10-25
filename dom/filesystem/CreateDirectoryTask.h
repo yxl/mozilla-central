@@ -33,6 +33,8 @@ public:
 
   virtual ~CreateDirectoryTask();
 
+  already_AddRefed<Promise> GetPromise();
+
 protected:
   virtual FilesystemParams GetRequestParams() MOZ_OVERRIDE;
 
@@ -44,8 +46,8 @@ protected:
 
 private:
   static const uint32_t CREATE_DIRECTORY_PERMISSION = 0700;
+  nsRefPtr<Promise> mPromise;
   nsAutoPtr<FilesystemWeakRef> mFilesystem;
-
   nsString mTargetRealPath;
   nsRefPtr<FilesystemFile> mTargetFile;
 };

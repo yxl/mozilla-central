@@ -27,8 +27,6 @@ public:
 
   virtual ~TaskBase();
 
-  already_AddRefed<Promise> GetPromise();
-
   // Overrides nsIRunnable.
   NS_IMETHOD Run() MOZ_OVERRIDE;
 
@@ -50,7 +48,6 @@ protected:
 
   bool HasError() { return !mErrorName.IsEmpty(); }
 
-  nsRefPtr<Promise> mPromise;
   nsString mErrorName;
 private:
   void HandleResult();
