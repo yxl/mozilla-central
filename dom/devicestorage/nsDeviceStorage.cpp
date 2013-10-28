@@ -3129,10 +3129,20 @@ nsDOMDeviceStorage::GetInvalidPathChars() const
   return kInvalidChars;
 }
 
+// Overrides FilesystemBase::GetWindow.
 nsPIDOMWindow*
 nsDOMDeviceStorage::GetWindow() const
 {
   return GetOwner();
+}
+
+// Overrides FilesystemBase::GetRootDirectory.
+void
+nsDOMDeviceStorage::GetRootDirectory(nsAString& aRoot) const
+{
+  if (mRootDirectory) {
+    mRootDirectory->GetPath(aRoot);
+  }
 }
 
 NS_IMETHODIMP

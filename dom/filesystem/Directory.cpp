@@ -33,9 +33,11 @@ NS_INTERFACE_MAP_END
 already_AddRefed<Promise>
 Directory::GetRoot(FilesystemBase* aFilesystem)
 {
+  nsString root;
+  aFilesystem->GetRootDirectory(root);
   nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
       aFilesystem,
-      NS_LITERAL_STRING("/sdcard"));
+      root);
   return task->GetPromise();
 }
 

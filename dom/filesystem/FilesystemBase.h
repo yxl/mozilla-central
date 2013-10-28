@@ -10,8 +10,8 @@
 
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
+#include "nsString.h"
 
-class nsString;
 class nsPIDOMWindow; // You need |#include "nsPIDOMWindow.h"| in CPP file.
 
 namespace mozilla {
@@ -25,6 +25,7 @@ public:
 
   virtual const nsString& GetInvalidPathChars() const;
   virtual nsPIDOMWindow* GetWindow() const = 0;
+  virtual void GetRootDirectory(nsAString& aRoot) const = 0;
 };
 
 /*

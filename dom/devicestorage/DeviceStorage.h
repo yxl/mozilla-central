@@ -244,6 +244,7 @@ public:
   // Overrides FileystemBase.
   virtual const nsString& GetInvalidPathChars() const MOZ_OVERRIDE;
   virtual nsPIDOMWindow* GetWindow() const MOZ_OVERRIDE;
+  virtual void GetRootDirectory(nsAString& aRoot) const MOZ_OVERRIDE;
 
   // Uses XPCOM GetStorageName
 
