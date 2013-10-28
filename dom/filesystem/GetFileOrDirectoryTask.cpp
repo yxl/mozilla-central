@@ -22,12 +22,20 @@ namespace dom {
 
 GetFileOrDirectoryTask::GetFileOrDirectoryTask(
   FilesystemBase* aFilesystem,
-  const nsString& aTargetPath)
+  const nsAString& aTargetPath,
+  const nsAString& aErrorName,
+  bool aDirectoryOnly /*= false*/)
   : mFilesystem(new FilesystemWeakRef(aFilesystem))
   , mTargetRealPath(aTargetPath)
+  , mDirectoryOnly(aDirectoryOnly)
 {
   mPromise = new Promise(aFilesystem->GetWindow());
-  Start();
+  if (aErrorName.IsEmpty()) {
+    Start();
+  } else {
+    SetError(aErrorName);
+    HandlerCallback();
+  }
 }
 
 GetFileOrDirectoryTask::GetFileOrDirectoryTask(
@@ -36,6 +44,7 @@ GetFileOrDirectoryTask::GetFileOrDirectoryTask(
   : TaskBase(aParent)
 {
   mTargetRealPath = aParam.realPath();
+  mDirectoryOnly = aParam.directoryOnly();
   Start();
 }
 
@@ -52,7 +61,7 @@ GetFileOrDirectoryTask::GetPromise()
 FilesystemParams
 GetFileOrDirectoryTask::GetRequestParams()
 {
-  return FilesystemGetFileOrDirectoryParams(mTargetRealPath);
+  return FilesystemGetFileOrDirectoryParams(mTargetRealPath, mDirectoryOnly);
 }
 
 FilesystemResponseValue
@@ -101,6 +110,11 @@ GetFileOrDirectoryTask::Work()
   }
 
   if (!isDirectory) {
+    if (mDirectoryOnly) {
+      SetError(FilesystemUtils::DOM_ERROR_TYPE_MISMATCH);
+      return;
+    }
+
     // Get isFile
     rv = file->IsFile(&ret);
     if (NS_FAILED(rv)) {

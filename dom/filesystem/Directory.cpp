@@ -35,9 +35,9 @@ Directory::GetRoot(FilesystemBase* aFilesystem)
 {
   nsString root;
   aFilesystem->GetRootDirectory(root);
+  nsString errorName;
   nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
-      aFilesystem,
-      root);
+      aFilesystem, root, errorName, true);
   return task->GetPromise();
 }
 
@@ -92,10 +92,16 @@ Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-Directory::Get(const nsAString& path, ErrorResult& aRv)
+Directory::Get(const nsAString& aPath, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  nsString errorName;
+  nsString realPath;
+  if (!DOMPathToRealPath(aPath, realPath)) {
+    errorName = FilesystemUtils::DOM_ERROR_INVALID_PATH;
+  }
+  nsRefPtr<FilesystemBase> fs = mFilesystem->Get();
+  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(fs, realPath, errorName);
+  return task->GetPromise();
 }
 
 already_AddRefed<AbortableProgressPromise>

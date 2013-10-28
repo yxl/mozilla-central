@@ -57,7 +57,7 @@ public:
 
   already_AddRefed<Promise> CreateDirectory(const nsAString& path, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Get(const nsAString& path, ErrorResult& aRv);
+  already_AddRefed<Promise> Get(const nsAString& aPath, ErrorResult& aRv);
 
   already_AddRefed<AbortableProgressPromise> Move(const StringOrFileOrDirectory& path, const StringOrDirectoryOrDestinationDict& dest, ErrorResult& aRv);
 

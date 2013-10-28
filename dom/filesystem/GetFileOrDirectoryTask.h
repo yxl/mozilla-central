@@ -23,8 +23,11 @@ class FilesystemWeakRef;
 class GetFileOrDirectoryTask MOZ_FINAL : public TaskBase
 {
 public:
+  // If aDirectoryOnly is set, we should ensure that the target is a directory.
   GetFileOrDirectoryTask(FilesystemBase* aFilesystem,
-                         const nsString& aTargetPath);
+                         const nsAString& aTargetPath,
+                         const nsAString& aErrorName,
+                         bool aDirectoryOnly = false);
   GetFileOrDirectoryTask(const FilesystemGetFileOrDirectoryParams& aParam,
                       FilesystemRequestParent* aParent);
 
@@ -45,6 +48,8 @@ private:
   nsRefPtr<Promise> mPromise;
   nsAutoPtr<FilesystemWeakRef> mFilesystem;
   nsString mTargetRealPath;
+  // If true, the task can only get a file.
+  bool mDirectoryOnly;
   nsRefPtr<FilesystemFile> mTargetFile;
 
 };

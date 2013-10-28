@@ -173,6 +173,7 @@ struct FilesystemCreateDirectoryParams
 struct FilesystemGetFileOrDirectoryParams
 {
   nsString realPath;
+  bool directoryOnly;
 };
 
 union FilesystemParams
