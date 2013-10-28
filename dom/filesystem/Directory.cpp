@@ -84,7 +84,7 @@ Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
   nsString errorName;
   nsString realPath;
   if (!DOMPathToRealPath(aPath, realPath)) {
-    errorName = FilesystemError::DOM_ERROR_INVALID_PATH;
+    errorName = FilesystemUtils::DOM_ERROR_INVALID_PATH;
   }
   nsRefPtr<FilesystemBase> fs = mFilesystem->Get();
   nsRefPtr<CreateDirectoryTask> task = new CreateDirectoryTask(fs, realPath, errorName);

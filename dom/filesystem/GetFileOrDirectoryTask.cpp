@@ -87,7 +87,7 @@ GetFileOrDirectoryTask::Work()
   }
 
   if (!ret) {
-    SetError(FilesystemError::DOM_ERROR_NOT_FOUND);
+    SetError(FilesystemUtils::DOM_ERROR_NOT_FOUND);
     return;
   }
 
@@ -109,7 +109,7 @@ GetFileOrDirectoryTask::Work()
     }
     if (!ret) {
       // Neither directory or file.
-      SetError(FilesystemError::DOM_ERROR_TYPE_MISMATCH);
+      SetError(FilesystemUtils::DOM_ERROR_TYPE_MISMATCH);
       return;
     }
   }
@@ -141,7 +141,7 @@ GetFileOrDirectoryTask::HandlerCallback()
       mPromise->MaybeResolve(cx, val);
       return;
     }
-    mErrorName = FilesystemError::DOM_ERROR_SECURITY;
+    mErrorName = FilesystemUtils::DOM_ERROR_SECURITY;
   }
   nsRefPtr<DOMError> domError = new DOMError(filesystem->GetWindow(), mErrorName);
   Optional<JS::Handle<JS::Value> > val(cx,

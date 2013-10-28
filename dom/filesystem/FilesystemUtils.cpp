@@ -9,32 +9,32 @@
 namespace mozilla {
 namespace dom {
 
-const nsString FilesystemError::DOM_ERROR_INVALID_PATH =
+const nsString FilesystemUtils::DOM_ERROR_INVALID_PATH =
   NS_LITERAL_STRING("EncodingError");
-const nsString FilesystemError::DOM_ERROR_INVALID_MODIFICATION =
+const nsString FilesystemUtils::DOM_ERROR_INVALID_MODIFICATION =
   NS_LITERAL_STRING("InvalidModificationError");
-const nsString FilesystemError::DOM_ERROR_INVALID_STATE =
+const nsString FilesystemUtils::DOM_ERROR_INVALID_STATE =
   NS_LITERAL_STRING("InvalidStateError");
-const nsString FilesystemError::DOM_ERROR_NOT_FOUND =
+const nsString FilesystemUtils::DOM_ERROR_NOT_FOUND =
   NS_LITERAL_STRING("NotFoundError");
-const nsString FilesystemError::DOM_ERROR_NOT_READABLE =
+const nsString FilesystemUtils::DOM_ERROR_NOT_READABLE =
   NS_LITERAL_STRING("NotReadableError");
-const nsString FilesystemError::DOM_ERROR_NO_MODIFICATION_ALLOWED =
+const nsString FilesystemUtils::DOM_ERROR_NO_MODIFICATION_ALLOWED =
   NS_LITERAL_STRING("NoModificationAllowedError");
-const nsString FilesystemError::DOM_ERROR_PATH_EXISTS =
+const nsString FilesystemUtils::DOM_ERROR_PATH_EXISTS =
   NS_LITERAL_STRING("PathExistsError");
-const nsString FilesystemError::DOM_ERROR_QUOTA_EXCEEDED =
+const nsString FilesystemUtils::DOM_ERROR_QUOTA_EXCEEDED =
   NS_LITERAL_STRING("QuotaExceededError");
-const nsString FilesystemError::DOM_ERROR_SECURITY =
+const nsString FilesystemUtils::DOM_ERROR_SECURITY =
   NS_LITERAL_STRING("SecurityError");
-const nsString FilesystemError::DOM_ERROR_TYPE_MISMATCH =
+const nsString FilesystemUtils::DOM_ERROR_TYPE_MISMATCH =
   NS_LITERAL_STRING("TypeMismatchError");
-const nsString FilesystemError::DOM_ERROR_UNKNOWN =
+const nsString FilesystemUtils::DOM_ERROR_UNKNOWN =
   NS_LITERAL_STRING("Unknown");
 
 // static
 const nsString&
-FilesystemError::ErrorNameFromCode(const nsresult& aErrorCode)
+FilesystemUtils::ErrorNameFromCode(const nsresult& aErrorCode)
 {
   switch (aErrorCode) {
 

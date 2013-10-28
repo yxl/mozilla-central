@@ -27,7 +27,7 @@ namespace dom {
  * This class is for error handling.
  * All methods in this class are static.
  */
-class FilesystemError
+class FilesystemUtils
 {
 public:
   static const nsString& ErrorNameFromCode(const nsresult& aErrorCode);

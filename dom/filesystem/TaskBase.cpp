@@ -136,7 +136,7 @@ TaskBase::SetError(const nsAString& aErrorName)
 void
 TaskBase::SetError(const nsresult& aErrorCode)
 {
-  mErrorName = FilesystemError::ErrorNameFromCode(aErrorCode);
+  mErrorName = FilesystemUtils::ErrorNameFromCode(aErrorCode);
 }
 
 }

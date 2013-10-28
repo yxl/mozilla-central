@@ -93,7 +93,7 @@ CreateDirectoryTask::Work()
   }
 
   if (ret) {
-    SetError(FilesystemError::DOM_ERROR_PATH_EXISTS);
+    SetError(FilesystemUtils::DOM_ERROR_PATH_EXISTS);
     return;
   }
 
@@ -130,7 +130,7 @@ CreateDirectoryTask::HandlerCallback()
       mPromise->MaybeResolve(cx, val);
       return;
     }
-    mErrorName = FilesystemError::DOM_ERROR_SECURITY;
+    mErrorName = FilesystemUtils::DOM_ERROR_SECURITY;
   }
   nsRefPtr<DOMError> domError = new DOMError(filesystem->GetWindow(), mErrorName);
   Optional<JS::Handle<JS::Value> > val(cx,
