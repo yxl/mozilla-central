@@ -8,8 +8,13 @@
 #ifndef FILESYSTEMFILE_H_
 #define FILESYSTEMFILE_H_
 
+#include "js/Value.h"
+#include "nsAutoPtr.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
+
+class nsIDOMFile;
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -29,6 +34,8 @@ public:
   const nsString& GetPath() const { return mPath; }
   bool IsDirectory() const { return mIsDirectory; }
   void GetName(nsAString& aName) const;
+
+  JS::Value ToJsValue(JSContext* cx, FilesystemBase* aFilesystem) const;
 private:
   static const PRUnichar kSeparatorChar = PRUnichar('/');
   const nsString mPath;

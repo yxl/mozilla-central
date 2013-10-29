@@ -5,9 +5,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FilesystemUtils.h"
+#include "nsCxPusher.h"
+#include "nsIGlobalObject.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {
+
+// static
+JS::Value
+FilesystemUtils::WrapperCacheObjectToJsval(JSContext* cx,
+                                           nsPIDOMWindow* aWindow,
+                                           nsWrapperCache* aObject)
+{
+  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aWindow);
+  if (!globalObject) {
+    return JSVAL_NULL;
+  }
+
+  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
+
+  return OBJECT_TO_JSVAL(aObject->WrapObject(cx, global));
+}
 
 const nsString FilesystemUtils::DOM_ERROR_INVALID_PATH =
   NS_LITERAL_STRING("EncodingError");

@@ -7,6 +7,10 @@
 #ifndef mozilla_dom_filesystemutils_h__
 #define mozilla_dom_filesystemutils_h__
 
+#include "js/Value.h"
+#include "nsStringGlue.h"
+#include "nsWrapperCache.h"
+
 #ifdef DEBUG
   #ifdef MOZ_WIDGET_GONK
     #include <android/log.h>
@@ -18,7 +22,7 @@
   #define FILESYSTEM_LOG(fmt, ...)
 #endif
 
-#include "nsStringGlue.h"
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -29,6 +33,11 @@ namespace dom {
  */
 class FilesystemUtils
 {
+public:
+  static JS::Value WrapperCacheObjectToJsval(JSContext* cx,
+                                             nsPIDOMWindow* aWindow,
+                                             nsWrapperCache* aObject);
+
 public:
   static const nsString& ErrorNameFromCode(const nsresult& aErrorCode);
 

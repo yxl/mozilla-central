@@ -8,6 +8,11 @@
 #include "FilesystemFile.h"
 #include "Directory.h"
 #include "FilesystemBase.h"
+#include "FilesystemUtils.h"
+
+#include "nsDeviceStorage.h"
+#include "nsIFile.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {
@@ -72,6 +77,24 @@ FilesystemFile::IsValidRelativePath(FilesystemBase* aFilesystem,
   }
 
   return true;
+}
+
+JS::Value
+FilesystemFile::ToJsValue(JSContext* cx, FilesystemBase* aFilesystem) const
+{
+  if (IsDirectory()) {
+    nsRefPtr<Directory> dir = new Directory(aFilesystem, const_cast<FilesystemFile *>(this));
+    return FilesystemUtils::WrapperCacheObjectToJsval(cx, aFilesystem->GetWindow(), dir);
+  } else {
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_NewLocalFile(mPath, false, getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+      return JSVAL_NULL;
+    }
+    nsCOMPtr<nsIDOMFile> domFile = new nsDOMFileFile(file);
+    return InterfaceToJsval(aFilesystem->GetWindow(), domFile,
+        &NS_GET_IID(nsIDOMFile));
+  }
 }
 
 } /* namespace dom */

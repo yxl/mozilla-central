@@ -15,7 +15,6 @@
 #include "nsIFile.h"
 
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PContent.h"
 
 namespace mozilla {
 namespace dom {
@@ -113,29 +112,22 @@ CreateDirectoryTask::HandlerCallback()
   if (!filesystem) {
     return;
   }
-  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(
-      filesystem->GetWindow());
-  if (!globalObject) {
-    return;
-  }
 
   AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   if (!HasError()) {
-    nsRefPtr<Directory> dir = new Directory(filesystem, mTargetFile);
-    if (dir) {
-      Optional<JS::Handle<JS::Value> > val(cx,
-          OBJECT_TO_JSVAL(dir->WrapObject(cx, global)));
-      mPromise->MaybeResolve(cx, val);
-      return;
-    }
-    mErrorName = FilesystemUtils::DOM_ERROR_SECURITY;
+    JS::Value value = mTargetFile->ToJsValue(cx, filesystem);
+    MOZ_ASSERT(!JSVAL_IS_NULL(value));
+    Optional<JS::Handle<JS::Value> > val(cx, value);
+    mPromise->MaybeResolve(cx, val);
+  } else {
+    nsRefPtr<DOMError> domError = new DOMError(filesystem->GetWindow(),
+        mErrorName);
+    JS::Value error = FilesystemUtils::WrapperCacheObjectToJsval(cx,
+        filesystem->GetWindow(), domError);
+    Optional<JS::Handle<JS::Value> > val(cx, error);
+    mPromise->MaybeReject(cx, val);
   }
-  nsRefPtr<DOMError> domError = new DOMError(filesystem->GetWindow(), mErrorName);
-  Optional<JS::Handle<JS::Value> > val(cx,
-      OBJECT_TO_JSVAL(domError->WrapObject(cx, global)));
-  mPromise->MaybeReject(cx, val);
 }
 
 }
