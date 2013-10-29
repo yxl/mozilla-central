@@ -29,7 +29,7 @@ FilesystemUtils::WrapperCacheObjectToJsval(JSContext* cx,
 }
 
 const nsString FilesystemUtils::DOM_ERROR_INVALID_PATH =
-  NS_LITERAL_STRING("EncodingError");
+  NS_LITERAL_STRING("InvalidPath");
 const nsString FilesystemUtils::DOM_ERROR_INVALID_MODIFICATION =
   NS_LITERAL_STRING("InvalidModificationError");
 const nsString FilesystemUtils::DOM_ERROR_INVALID_STATE =

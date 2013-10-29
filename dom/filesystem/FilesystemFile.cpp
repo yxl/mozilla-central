@@ -20,9 +20,14 @@ namespace dom {
 NS_IMPL_ISUPPORTS0(FilesystemFile)
 
 FilesystemFile::FilesystemFile(const nsString& aPath, bool aIsDirectory)
-  : mPath(aPath)
-  , mIsDirectory(aIsDirectory)
+  : mIsDirectory(aIsDirectory)
 {
+  // Remove the trailing "/".
+  if (aPath.Last() == kSeparatorChar) {
+    mPath = Substring(aPath, 0, aPath.Length() - 1);
+  } else {
+    mPath = aPath;
+  }
 }
 
 FilesystemFile::~FilesystemFile()

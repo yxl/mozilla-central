@@ -31,6 +31,7 @@ public:
   FilesystemFile(const nsString& aPath, bool aIsDirectory);
   virtual ~FilesystemFile();
 
+  // The trailing "/" is not included.
   const nsString& GetPath() const { return mPath; }
   bool IsDirectory() const { return mIsDirectory; }
   void GetName(nsAString& aName) const;
@@ -38,7 +39,8 @@ public:
   JS::Value ToJsValue(JSContext* cx, FilesystemBase* aFilesystem) const;
 private:
   static const PRUnichar kSeparatorChar = PRUnichar('/');
-  const nsString mPath;
+
+  nsString mPath;
   bool mIsDirectory;
 };
 

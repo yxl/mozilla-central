@@ -156,11 +156,14 @@ Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath)
 {
   nsString relativePath;
 
-  // Normalize the DOM path to remove the leading "./".
+  // Normalize the DOM path to remove the leading "./" and the trailing "/"
   if (StringBeginsWith(aPath, NS_LITERAL_STRING("./"))) {
     relativePath = Substring(aPath, 2);
   } else {
     relativePath = aPath;
+  }
+  if (StringEndsWith(relativePath, NS_LITERAL_STRING("/"))) {
+    relativePath = Substring(relativePath, 0, relativePath.Length() - 1);
   }
 
   nsRefPtr<FilesystemBase> fs = mFilesystem->Get();
@@ -168,7 +171,7 @@ Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath)
     return false;
   }
 
-  aRealPath = mFile->GetPath() + relativePath;
+  aRealPath = mFile->GetPath() + NS_LITERAL_STRING("/") + relativePath;
 
   return true;
 }
