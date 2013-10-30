@@ -50,7 +50,7 @@ PARALLEL_DIRS += [
     'devicestorage',
     'encoding',
     'file',
-    'filesystem',
+    'directory',
     'fmradio',
     'media',
     'messages',
