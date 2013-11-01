@@ -15,6 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "DOMRequest.h"
+#include "mozilla/dom/FilesystemBase.h"
 
 #define DEVICESTORAGE_PICTURES   "pictures"
 #define DEVICESTORAGE_VIDEOS     "videos"
@@ -30,6 +31,7 @@ namespace dom {
 class DeviceStorageEnumerationParameters;
 class DOMCursor;
 class DOMRequest;
+class Promise;
 } // namespace dom
 } // namespace mozilla
 
@@ -142,12 +144,14 @@ class nsDOMDeviceStorage MOZ_FINAL
   : public nsDOMEventTargetHelper
   , public nsIDOMDeviceStorage
   , public nsIObserver
+  , public mozilla::dom::FilesystemBase
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::DeviceStorageEnumerationParameters
     EnumerationParameters;
   typedef mozilla::dom::DOMCursor DOMCursor;
   typedef mozilla::dom::DOMRequest DOMRequest;
+  typedef mozilla::dom::Promise Promise;
 public:
   typedef nsTArray<nsString> VolumeNameArray;
 
@@ -241,6 +245,14 @@ public:
   bool Default();
 
   // Uses XPCOM GetStorageName
+
+  already_AddRefed<Promise> GetRoot();
+
+  // Overrides FileystemBase.
+  virtual const nsString& GetInvalidPathChars() const MOZ_OVERRIDE;
+  virtual nsPIDOMWindow* GetWindow() const MOZ_OVERRIDE;
+  virtual void GetRootDirectory(nsAString& aRoot) const MOZ_OVERRIDE;
+  virtual void GetRootName(nsAString& aRoot) const MOZ_OVERRIDE;
 
   static void
   CreateDeviceStorageFor(nsPIDOMWindow* aWin,

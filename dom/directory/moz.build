@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom += [
     'EventStream.h',
     'FilesystemBase.h',
     'FilesystemRequestParent.h',
+    'TaskBase.h',
 ]
 
 SOURCES += [

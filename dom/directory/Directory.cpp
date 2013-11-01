@@ -72,7 +72,18 @@ Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 Directory::GetName(nsString& retval) const
 {
-  mFile->GetName(retval);
+  nsRefPtr<FilesystemBase> fs = mFilesystem->Get();
+  NS_ENSURE_TRUE_VOID(fs);
+
+  nsString root;
+  fs->GetRootDirectory(root);
+  if (root.Equals(mFile->GetPath())) {
+    // If it is the root directory, returns a virtual name other than the real
+    // directory name.
+    fs->GetRootName(retval);
+  } else {
+    mFile->GetName(retval);
+  }
 }
 
 already_AddRefed<Promise>
