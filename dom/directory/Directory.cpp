@@ -72,7 +72,18 @@ Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 Directory::GetName(nsString& retval) const
 {
-  mFile->GetName(retval);
+  nsRefPtr<FilesystemBase> fs = mFilesystem->Get();
+  NS_ENSURE_TRUE_VOID(fs);
+
+  nsString root;
+  fs->GetRootDirectory(root);
+  if (root.Equals(mFile->GetPath())) {
+    // If it is the root directory, returns a virtual name other than the real
+    // directory name.
+    fs->GetRootName(retval);
+  } else {
+    mFile->GetName(retval);
+  }
 }
 
 already_AddRefed<Promise>
@@ -161,6 +172,9 @@ Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath)
     relativePath = Substring(aPath, 2);
   } else {
     relativePath = aPath;
+  }
+  if (relativePath.IsEmpty()) {
+    return false;
   }
   if (StringEndsWith(relativePath, NS_LITERAL_STRING("/"))) {
     relativePath = Substring(relativePath, 0, relativePath.Length() - 1);

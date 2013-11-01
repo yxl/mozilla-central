@@ -9,6 +9,8 @@ EXPORTS.mozilla.dom += [
     'EventStream.h',
     'FilesystemBase.h',
     'FilesystemRequestParent.h',
+    'FilesystemUtils.h',
+    'TaskBase.h',
 ]
 
 SOURCES += [
@@ -18,6 +20,7 @@ SOURCES += [
     'FilesystemBase.cpp',
     'FilesystemFile.cpp',
     'FilesystemRequestParent.cpp',
+    'FilesystemThreadPool.cpp',
     'FilesystemUtils.cpp',
     'GetFileOrDirectoryTask.cpp',
     'TaskBase.cpp',
