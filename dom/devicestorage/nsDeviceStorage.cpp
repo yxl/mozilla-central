@@ -16,6 +16,8 @@
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Directory.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -2481,6 +2483,7 @@ NS_IMPL_CYCLE_COLLECTION_4(DeviceStorageRequest,
 NS_INTERFACE_MAP_BEGIN(nsDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
@@ -3107,6 +3110,42 @@ nsDOMDeviceStorage::Default()
   nsString defaultStorageName;
   GetDefaultStorageName(mStorageType, defaultStorageName);
   return mStorageName.Equals(defaultStorageName);
+}
+
+already_AddRefed<Promise>
+nsDOMDeviceStorage::GetRoot()
+{
+  return mozilla::dom::Directory::GetRoot(this);
+}
+
+// Overrides FilesystemBase::GetInvalidPathChars.
+const nsString&
+nsDOMDeviceStorage::GetInvalidPathChars() const
+{
+#if defined(XP_WIN)
+  static const nsString kInvalidChars = NS_LITERAL_STRING("|\\?*<\":>+[]\0");
+#elif defined (XP_OS2)
+  static const nsString kInvalidChars = NS_LITERAL_STRING(":\0");
+#elif defined (XP_UNIX)
+  static const nsString kInvalidChars = NS_LITERAL_STRING("\0");
+#endif
+  return kInvalidChars;
+}
+
+// Overrides FilesystemBase::GetWindow.
+nsPIDOMWindow*
+nsDOMDeviceStorage::GetWindow() const
+{
+  return GetOwner();
+}
+
+// Overrides FilesystemBase::GetRootDirectory.
+void
+nsDOMDeviceStorage::GetRootDirectory(nsAString& aRoot) const
+{
+  if (mRootDirectory) {
+    mRootDirectory->GetPath(aRoot);
+  }
 }
 
 NS_IMETHODIMP
