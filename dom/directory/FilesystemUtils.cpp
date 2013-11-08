@@ -7,6 +7,7 @@
 #include "FilesystemUtils.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
+#include "nsIDOMFile.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
 #include "nsPIDOMWindow.h"
@@ -99,6 +100,25 @@ FilesystemUtils::NormalizedPathToLocalPath(const nsAString& aNorm, nsAString& aL
   aLocal = result;
 }
 
+// static
+void
+FilesystemUtils::GetRealPath(nsIDOMFile *aFile, nsAString& aRealPath)
+{
+  NS_ASSERTION(aFile, "aFile Should not be nullptr.");
+  if (NS_FAILED(aFile->GetMozFullPathInternal(aRealPath))) {
+    aRealPath.Truncate();
+    return;
+  }
+#if defined(XP_WIN)
+  PRUnichar* cur = aRealPath.BeginWriting();
+  PRUnichar* end = aRealPath.EndWriting();
+  for (; cur < end; ++cur) {
+    if (PRUnichar('\\') == *cur)
+      *cur = PRUnichar('/');
+  }
+#endif
+}
+
 const nsString FilesystemUtils::DOM_ERROR_INVALID_PATH =
   NS_LITERAL_STRING("InvalidPath");
 const nsString FilesystemUtils::DOM_ERROR_INVALID_MODIFICATION =
@@ -121,6 +141,8 @@ const nsString FilesystemUtils::DOM_ERROR_TYPE_MISMATCH =
   NS_LITERAL_STRING("TypeMismatchError");
 const nsString FilesystemUtils::DOM_ERROR_UNKNOWN =
   NS_LITERAL_STRING("Unknown");
+const nsString FilesystemUtils::DOM_ERROR_TYPE =
+  NS_LITERAL_STRING("TypeError");
 
 // static
 const nsString&

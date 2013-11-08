@@ -25,6 +25,8 @@ public:
   NS_IMETHOD_(nsrefcnt) Release();
 
   void Dispatch();
+
+  virtual bool RecvAbort() MOZ_OVERRIDE;
 private:
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD

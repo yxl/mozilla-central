@@ -176,6 +176,7 @@ protected:
 
   // Overrides PFilesystemRequestChild
   virtual bool Recv__delete__(const FilesystemResponseValue& value) MOZ_OVERRIDE;
+  virtual bool RecvNotifyProgress(const nsString& value) MOZ_OVERRIDE;
 
   nsString mErrorName;
 private:

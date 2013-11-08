@@ -25,8 +25,8 @@ class PromiseCallback;
 class PromiseInit;
 class PromiseNativeHandler;
 
-class Promise MOZ_FINAL : public nsISupports,
-                          public nsWrapperCache
+class Promise : public nsISupports,
+                public nsWrapperCache
 {
   friend class NativePromiseCallback;
   friend class PromiseResolverMixin;

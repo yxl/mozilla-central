@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_AbortableProgressPromise_h__
 #define mozilla_dom_AbortableProgressPromise_h__
 
+#include "Promise.h"
+
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -21,20 +23,16 @@ namespace dom {
 
 class VoidAnyCallback;
 
-class AbortableProgressPromise MOZ_FINAL : public nsISupports /* Change nativeOwnership in the binding configuration if you don't want this */,
-                                           public nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */
+class AbortableProgressPromise MOZ_FINAL : public Promise
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AbortableProgressPromise)
 
 public:
-  AbortableProgressPromise();
+  AbortableProgressPromise(nsPIDOMWindow* aWindow);
 
   ~AbortableProgressPromise();
-
-  // TODO: return something sensible here, and change the return type
-  AbortableProgressPromise* GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 

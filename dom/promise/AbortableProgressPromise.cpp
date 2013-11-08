@@ -18,19 +18,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortableProgressPromise)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-AbortableProgressPromise::AbortableProgressPromise()
+AbortableProgressPromise::AbortableProgressPromise(nsPIDOMWindow* aWindow)
+  : Promise(aWindow)
 {
-  SetIsDOMBinding();
 }
 
 AbortableProgressPromise::~AbortableProgressPromise()
 {
-}
-
-AbortableProgressPromise*
-AbortableProgressPromise::GetParentObject() const
-{
-  return nullptr;
 }
 
 JSObject*

@@ -12,6 +12,7 @@
 #include "nsStringGlue.h"
 
 class nsPIDOMWindow;
+class nsIDOMFile;
 class nsIFile;
 class nsISupports;
 class nsWrapperCache;
@@ -55,6 +56,12 @@ public:
    */
   static void NormalizedPathToLocalPath(const nsAString& aNorm,
                                         nsAString& aLocal);
+
+  /*
+   * Get the real path (absolute DOM path) of the DOM file.
+   */
+  static void GetRealPath(nsIDOMFile *aFile, nsAString& aRealPath);
+
 public:
   static const nsString& ErrorNameFromCode(const nsresult& aErrorCode);
 
@@ -69,6 +76,7 @@ public:
   static const nsString DOM_ERROR_SECURITY;
   static const nsString DOM_ERROR_TYPE_MISMATCH;
   static const nsString DOM_ERROR_UNKNOWN;
+  static const nsString DOM_ERROR_TYPE;
 };
 
 } // namespace dom
